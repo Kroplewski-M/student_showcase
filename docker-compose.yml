@@ -1,0 +1,40 @@
+services:
+  postgres:
+    image: postgres:18
+    env_file:
+      - .env.db
+    volumes:
+      - pgdata:/var/lib/postgresql
+    networks:
+      - appnet
+  api:
+    build: ./api
+    env_file: .env.dev
+    depends_on:
+      - postgres
+    networks:
+      - appnet
+  frontend:
+    build: ./frontend
+    env_file: .env.dev
+    depends_on:
+      - api
+    networks:
+      - appnet
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/dev.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+      - api
+    networks:
+      - appnet
+
+volumes:
+  pgdata:
+
+networks:
+  appnet:
