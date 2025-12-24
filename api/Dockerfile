@@ -1,3 +1,11 @@
+# ===== DEV =====
+FROM rust:1.90-slim-bullseye AS dev
+WORKDIR /api
+COPY . .
+CMD ["cargo", "run"]
+
+
+# ===== Build =====
 FROM rust:1.90-slim-bullseye AS build
 
 WORKDIR /api

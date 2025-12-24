@@ -2,7 +2,7 @@ services:
   postgres:
     image: postgres:18
     env_file:
-      - .env
+      - .env.dev
     volumes:
       - pgdata:/var/lib/postgresql
     networks:
@@ -10,8 +10,12 @@ services:
   api:
     build:
       context: ./api
-      target: build
-    env_file: .env
+      target: dev
+    command: cargo run
+    volumes:
+      - ./api:/api
+      - cargo-cache:/usr/local/cargo
+    env_file: .env.dev
     depends_on:
       - postgres
     networks:
@@ -19,8 +23,11 @@ services:
   frontend:
     build:
       context: ./frontend
-      target: prod
-    env_file: .env
+      target: dev
+    env_file: .env.dev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
     depends_on:
       - api
     networks:
@@ -29,10 +36,8 @@ services:
     image: nginx:alpine
     ports:
       - "80:80"
-      - "443:443"
     volumes:
-      - ./nginx/prod.conf:/etc/nginx/nginx.conf:ro
-      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - ./nginx/dev.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - frontend
       - api
