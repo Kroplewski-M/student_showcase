@@ -1,15 +1,32 @@
-use actix_web::{App, HttpServer, Responder, get};
+use actix_web::cookie::Cookie;
+use actix_web::cookie::time::Duration;
+use actix_web::{App, HttpRequest, HttpResponse, HttpServer, Responder, get};
 
 #[get("/health")]
 async fn health() -> impl Responder {
-    "ok"
-}
+    let cookie = Cookie::build("health_test", "alive")
+        .path("/")
+        .http_only(true)
+        // .secure(true) // enable in prod HTTPS
+        .same_site(actix_web::cookie::SameSite::Lax)
+        .max_age(Duration::days(1))
+        .finish();
 
+    HttpResponse::Ok().cookie(cookie).body("Ok")
+}
+#[get("/health/check")]
+async fn health_check(req: HttpRequest) -> impl Responder {
+    let has_cookie = req.cookie("health_test").is_some();
+    if has_cookie {
+        return "true";
+    }
+    "false"
+}
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     println!("API starting on 0.0.0.0:8080");
 
-    HttpServer::new(|| App::new().service(health))
+    HttpServer::new(|| App::new().service(health).service(health_check))
         .bind(("0.0.0.0", 8080))?
         .run()
         .await

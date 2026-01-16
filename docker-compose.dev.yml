@@ -46,6 +46,7 @@ services:
 
 volumes:
   pgdata:
+  cargo-cache:
 
 networks:
   appnet:
