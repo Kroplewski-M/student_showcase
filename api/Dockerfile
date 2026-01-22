@@ -14,13 +14,10 @@ COPY . .
 
 RUN cargo build --release
 
-FROM gcr.io/distroless/cc
+FROM debian:bookworm-slim
 
 WORKDIR /api
-
 COPY --from=build /api/target/release/api .
 
 EXPOSE 8080
-
 CMD ["./api"]
-
