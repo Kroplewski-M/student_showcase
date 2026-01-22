@@ -26,12 +26,14 @@ services:
     networks:
       - appnet
   nginx:
-    image: nginx:alpine
+    build:
+      context: ./nginx
+      args:
+        ENV: prod
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/prod.conf:/etc/nginx/nginx.conf:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - frontend

@@ -33,7 +33,10 @@ services:
     networks:
       - appnet
   nginx:
-    image: nginx:alpine
+    build:
+      context: ./nginx
+      args:
+        ENV: dev
     ports:
       - "80:80"
     volumes:
