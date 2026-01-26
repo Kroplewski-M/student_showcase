@@ -2,6 +2,7 @@ use actix_web::cookie::Cookie;
 use actix_web::cookie::time::Duration;
 use actix_web::{App, HttpRequest, HttpResponse, HttpServer, Responder, get};
 use dotenv::dotenv;
+use sqlx::postgres::PgPoolOptions;
 
 #[get("/health")]
 async fn health() -> impl Responder {
@@ -24,6 +25,7 @@ async fn health_check(req: HttpRequest) -> impl Responder {
     }
     "false"
 }
+
 #[actix_web::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok();
