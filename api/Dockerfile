@@ -1,5 +1,12 @@
 # ===== DEV =====
 FROM rust:1.90-slim-bullseye AS dev
+
+RUN apt-get update && apt-get install -y \
+    pkg-config \
+    libssl-dev \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /api
 COPY . .
 CMD ["cargo", "run"]
@@ -7,6 +14,12 @@ CMD ["cargo", "run"]
 
 # ===== Build =====
 FROM rust:1.90-slim-bullseye AS build
+
+RUN apt-get update && apt-get install -y \
+    pkg-config \
+    libssl-dev \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /api
 
