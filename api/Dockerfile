@@ -27,7 +27,7 @@ COPY . .
 
 RUN cargo build --release
 
-FROM debian:bookworm-slim
+FROM debian:bullseye-slim
 
 WORKDIR /api
 COPY --from=build /api/target/release/api .
