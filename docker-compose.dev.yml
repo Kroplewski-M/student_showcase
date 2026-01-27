@@ -14,10 +14,9 @@ services:
       context: ./api
       target: dev
     command: cargo run
+    env_file: .env.dev
     volumes:
       - ./api:/api
-      - cargo-cache:/usr/local/cargo
-    env_file: .env.dev
     depends_on:
       - postgres
     networks:
