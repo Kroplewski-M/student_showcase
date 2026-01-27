@@ -13,7 +13,7 @@ CMD ["cargo", "run"]
 
 
 # ===== Build =====
-FROM rust:1.90-slim-bullseye AS build
+FROM rust:1.90-slim-bookworm AS build
 
 RUN apt-get update && apt-get install -y \
     pkg-config \
@@ -27,7 +27,7 @@ COPY . .
 
 RUN cargo build --release
 
-FROM debian:bullseye-slim
+FROM debian:bookworm-slim
 
 WORKDIR /api
 COPY --from=build /api/target/release/api .
