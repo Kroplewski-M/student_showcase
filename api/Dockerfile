@@ -1,5 +1,5 @@
 # ===== DEV =====
-FROM rust:1.90-slim-bullseye AS dev
+FROM rust:1.90-slim-bookworm AS dev
 
 RUN apt-get update && apt-get install -y \
     pkg-config \
@@ -28,6 +28,11 @@ COPY . .
 RUN cargo build --release
 
 FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y \
+    libssl3 \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /api
 COPY --from=build /api/target/release/api .
