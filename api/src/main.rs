@@ -36,9 +36,6 @@ pub struct AppState {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok();
 
-    unsafe {
-        openssl_probe::try_init_openssl_env_vars();
-    }
     if std::env::var_os("RUST_LOG").is_none() {
         unsafe {
             std::env::set_var("RUST_LOG", "actix_web=info");
