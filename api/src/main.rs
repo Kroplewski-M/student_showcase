@@ -6,6 +6,11 @@ use sqlx::postgres::PgPoolOptions;
 
 use crate::db::DbClient;
 mod db;
+mod dtos;
+mod errors;
+mod models;
+mod utils;
+
 #[get("/health")]
 async fn health() -> impl Responder {
     let is_prod = std::env::var("RUST_ENV").unwrap_or_default() == "production";
