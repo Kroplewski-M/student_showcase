@@ -16,7 +16,8 @@ impl Deref for StudentId {
 }
 
 fn validate_student_id(id: &str) -> Result<(), validator::ValidationError> {
-    if id.trim().len() != 7 {
+    let trimmed = id.trim();
+    if trimmed.len() != 7 || trimmed != id {
         let mut err = validator::ValidationError::new("invalid_student_id");
         err.message = Some("Id must be exactly 7 characters".into());
         return Err(err);

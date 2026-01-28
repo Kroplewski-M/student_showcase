@@ -10,5 +10,6 @@ pub struct User {
     pub verified: bool,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    #[serde(skip_serializing)]
     pub password: String,
 }
