@@ -3,7 +3,6 @@ use argon2::{
     Argon2, Params,
     password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString, rand_core::OsRng},
 };
-use futures_util::future::ok;
 
 const MAX_PASSWORD_LENGTH: usize = 64;
 
