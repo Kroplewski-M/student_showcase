@@ -7,6 +7,10 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
+RUN cargo install sqlx-cli \
+    --no-default-features \
+    --features postgres
+
 WORKDIR /api
 COPY . .
 CMD ["cargo", "run"]
