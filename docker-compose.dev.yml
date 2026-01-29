@@ -15,6 +15,8 @@ services:
       target: dev
     command: cargo run
     env_file: .env.dev
+    environment:
+      - CARGO_TARGET_DIR=/cargo/target
     volumes:
       - ./api:/api
     depends_on:
