@@ -56,7 +56,8 @@ impl PasswordHasherService {
     }
     /// Verifies a plaintext password against a stored Argon2 hash.
     ///
-    /// Returns `Ok(true)` if the password matches, `Ok(false)` otherwise.
+    /// Returns `Ok(true)` if the password matches, `Err(HashingError)` if there is an unsupported
+    /// hash, Ok(false) if the password is incorrect.
     pub fn compare(&self, password: &str, hashed_password: &str) -> Result<bool, ErrorMessage> {
         if password.is_empty() {
             return Err(ErrorMessage::EmptyPassword);
@@ -67,10 +68,14 @@ impl PasswordHasherService {
         let parsed_hash =
             PasswordHash::new(hashed_password).map_err(|_| ErrorMessage::InvalidHashFormat)?;
 
-        let password_matches = self
+        let password_matches = match self
             .argon2
             .verify_password(password.as_bytes(), &parsed_hash)
-            .map_or(false, |_| true);
+        {
+            Ok(()) => true,
+            Err(argon2::password_hash::Error::Password) => false,
+            Err(_) => return Err(ErrorMessage::HashingError),
+        };
 
         Ok(password_matches)
     }
