@@ -30,6 +30,7 @@ pub struct TokenClaims {
 /// Returns an error if:
 /// - the user id is empty
 /// - token encoding fails
+/// - expires_in_minutes is less than or equal to 0
 pub fn create_token(
     user_id: &str,
     secret: &[u8],
@@ -38,7 +39,9 @@ pub fn create_token(
     if user_id.is_empty() {
         return Err(jsonwebtoken::errors::ErrorKind::InvalidSubject.into());
     }
-
+    if expires_in_minutes <= 0 {
+        return Err(jsonwebtoken::errors::ErrorKind::InvalidToken.into());
+    }
     let now = Utc::now();
     let iat = now.timestamp();
     let exp = (now + Duration::minutes(expires_in_minutes)).timestamp();
