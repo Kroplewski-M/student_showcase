@@ -4,14 +4,32 @@ use serde::{Deserialize, Serialize};
 
 use crate::errors::{ErrorMessage, HttpError};
 
+/// JWT signing algorithm used across the application
 const ALGORITH_SET: Algorithm = Algorithm::HS256;
 
+/// Claims stored inside the JWT token.
+///
+/// - `sub`: subject (user identifier)
+/// - `iat`: issued-at timestamp (unix seconds)
+/// - `exp`: expiration timestamp (unix seconds)
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TokenClaims {
     pub sub: String,
     pub iat: i64,
     pub exp: i64,
 }
+
+/// Creates a signed JWT for the given user.
+///
+/// # Arguments
+/// - `user_id` – Unique identifier of the user (stored as `sub`)
+/// - `secret` – HMAC secret used to sign the token
+/// - `expires_in_minutes` – Token lifetime in minutes
+///
+/// # Errors
+/// Returns an error if:
+/// - the user id is empty
+/// - token encoding fails
 pub fn create_token(
     user_id: &str,
     secret: &[u8],
@@ -34,6 +52,20 @@ pub fn create_token(
     let header = &Header::new(ALGORITH_SET);
     encode(header, &claims, key)
 }
+
+/// Decodes and validates a JWT token.
+///
+/// # Arguments
+/// - `token` – JWT string received from the client
+/// - `secret` – HMAC secret used to verify the token signature
+///
+/// # Returns
+/// - `Ok(user_id)` if the token is valid
+/// - `Err(HttpError)` if the token is invalid or expired
+///
+/// # Security notes
+/// - Uses default validation (including `exp` check with leeway)
+/// - All JWT errors are intentionally mapped to a generic 401 response
 pub fn decode_token<T: Into<String>>(token: T, secret: &[u8]) -> Result<String, HttpError> {
     let decoding_key = &DecodingKey::from_secret(secret);
     let validation = &Validation::new(ALGORITH_SET);
