@@ -1,10 +1,12 @@
 use actix_web::cookie::Cookie;
 use actix_web::cookie::time::Duration;
-use actix_web::{App, HttpRequest, HttpResponse, HttpServer, Responder, get, web};
+use actix_web::{App, HttpRequest, HttpResponse, HttpServer, Responder, get, post, web};
 use dotenv::dotenv;
 use sqlx::postgres::PgPoolOptions;
 
 use crate::db::DbClient;
+use crate::errors::HttpError;
+use crate::utils::email::EmailService;
 mod db;
 mod dtos;
 mod errors;
@@ -31,6 +33,22 @@ async fn health_check(req: HttpRequest) -> impl Responder {
         return "true";
     }
     "false"
+}
+#[post("/testemail")]
+async fn test_email() -> Result<HttpResponse, HttpError> {
+    let sender = EmailService::new();
+    let response = sender
+        .send_email(
+            "U2272098@unimail.hud.ac.uk",
+            "test",
+            "test",
+            "<h1>Test</h1><p>another p</p>",
+        )
+        .await;
+    match response {
+        Ok(_) => Ok(HttpResponse::Ok().json("email sent")),
+        Err(e) => Err(HttpError::server_error(e.to_string())),
+    }
 }
 #[derive(Debug, Clone)]
 pub struct AppState {
@@ -65,6 +83,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .app_data(web::Data::new(app_state.clone()))
             .service(health)
             .service(health_check)
+            .service(test_email)
     })
     .bind(("0.0.0.0", 8080))?
     .run()
