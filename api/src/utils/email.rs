@@ -22,8 +22,9 @@ pub struct EmailService {
 
 impl EmailService {
     pub fn new() -> Self {
-        let private_key = std::env::var("MAILJET_API_SECRET").expect("MAILJET API KEY IS MISSING");
-        let public_key = std::env::var("MAILJET_API_KEY").expect("MAILJET API SECRET IS MISSING");
+        let private_key =
+            std::env::var("MAILJET_API_SECRET").expect("MAILJET API SECRET IS MISSING");
+        let public_key = std::env::var("MAILJET_API_KEY").expect("MAILJET API KEY IS MISSING");
         let from_email =
             std::env::var("MAILJET_API_FROM_EMAIL").expect("MAILJET API FROM EMAIL IS MISSING");
 
