@@ -5,7 +5,7 @@ use crate::errors::ErrorMessage;
 
 #[derive(Serialize)]
 struct Message {
-    to: String,
+    to: Vec<String>,
     from: String,
     subject: String,
     text_part: String,
@@ -42,7 +42,7 @@ impl EmailService {
         html_part: &str,
     ) -> Result<(), ErrorMessage> {
         let payload = Message {
-            to: to_email.to_string(),
+            to: vec![to_email.to_string()],
             from: self.from_email.to_string(),
             subject: subject.to_string(),
             text_part: text_part.to_string(),
