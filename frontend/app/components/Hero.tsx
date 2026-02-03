@@ -12,7 +12,7 @@ export default function Hero() {
   const opacity = useTransform(scrollY, [0, 300], [1, 0]);
 
   return (
-    <section className="relative mt-90 text-light">
+    <section className="relative md:mt-90 mt-16 text-light min-h-screen">
       <div
         className="
       grid h-full
@@ -52,7 +52,7 @@ export default function Hero() {
         text-end
         text-support
         font-extrabold tracking-tight
-        text-[clamp(2.5rem,18vw,18rem)]
+        text-[clamp(2rem,15vw,16rem)]
         sm:text-[clamp(3rem,15vw,20rem)]
         leading-none
         text-shadow-lg
