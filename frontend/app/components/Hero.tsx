@@ -72,14 +72,15 @@ export default function Hero() {
             ease: [0.16, 1, 0.3, 1],
           }}
           className="
-          absolute
-          left-1/2
-          bottom-10
           rotate-180
           animate-bounce
+          mx-auto
+          w-[100px]
+          mt-16
+          md:mt-32
       "
         >
-          <ArrowSVG fill="#CCCCCC" width={120} height={120} />
+          <ArrowSVG fill="#CCCCCC" width={100} height={100} />
         </motion.div>
       </div>
     </section>
