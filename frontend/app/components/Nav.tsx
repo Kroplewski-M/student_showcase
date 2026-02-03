@@ -19,7 +19,8 @@ export default function Nav() {
           <a
             href="https://www.hud.ac.uk/"
             target="_blank"
-            className="underline"
+            rel="noopener noreferrer"
+            className="underline cursor-pointer-default"
           >
             University Of Huddersfield
           </a>

@@ -12,14 +12,15 @@
 html,
 body {
   cursor:
-    url("/cursors/default.png") 16 16,
+    url("/cursors/default.png") 4 2,
     auto;
 }
-.cursor-pointer {
+.cursor-pointer-default {
   cursor:
-    url("/cursors/pointer.png") 16 16,
-    pointer;
+    url("/cursors/default.png") 4 2,
+    auto;
 }
 body {
   background: var(--color-primary);
+  font-family: "Poppins", sans-serif;
 }
