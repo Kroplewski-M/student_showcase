@@ -62,26 +62,6 @@ export default function Hero() {
         >
           <StretchWord text="SHOWCASE" origin="origin-top" />
         </motion.h1>
-
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 0.7, y: 0 }}
-          transition={{
-            duration: 1,
-            delay: 0.6,
-            ease: [0.16, 1, 0.3, 1],
-          }}
-          className="
-          rotate-180
-          animate-bounce
-          mx-auto
-          w-[100px]
-          mt-16
-          md:mt-32
-      "
-        >
-          <ArrowSVG fill="#CCCCCC" width={100} height={100} />
-        </motion.div>
       </div>
     </section>
   );
