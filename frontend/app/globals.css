@@ -1,15 +1,26 @@
 @import "tailwindcss";
 
 @theme {
-    --color-primary: #204346;
-    --color-secondary: #a1e9f0;
-    --color-support: #a5c3c5;
-    --color-third: #476d70;
-    --color-light: #f7f9f9;
-    --color-dark: #333333;
-    --color-danger: #bf2417;
+  --color-primary: #204346;
+  --color-secondary: #a1e9f0;
+  --color-support: #a5c3c5;
+  --color-third: #476d70;
+  --color-light: #f7f9f9;
+  --color-dark: #333333;
+  --color-danger: #bf2417;
 }
-
+html,
 body {
-    background: var(--color-primary);
+  cursor:
+    url("/cursors/default.png") 4 2,
+    auto;
+}
+.cursor-pointer-default {
+  cursor:
+    url("/cursors/default.png") 4 2,
+    auto;
+}
+body {
+  background: var(--color-primary);
+  font-family: "Poppins", sans-serif;
 }
