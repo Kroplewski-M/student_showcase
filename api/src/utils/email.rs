@@ -1,40 +1,28 @@
-use reqwest::Client;
-use serde::Serialize;
-
 use crate::errors::ErrorMessage;
-
-#[derive(Serialize)]
-struct Message {
-    to: Vec<String>,
-    from: String,
-    subject: String,
-    text_part: String,
-    html_part: String,
-}
+use aws_config::BehaviorVersion;
+use aws_sdk_sesv2::{
+    Client,
+    types::{Body, Content, Destination, EmailContent, Message},
+};
 
 #[derive(Clone)]
 pub struct EmailService {
     client: Client,
     from_email: String,
-    api_key_public: String,
-    api_key_private: String,
 }
 
 impl EmailService {
-    pub fn new() -> Self {
-        let private_key =
-            std::env::var("MAILJET_API_SECRET").expect("MAILJET API SECRET IS MISSING");
-        let public_key = std::env::var("MAILJET_API_KEY").expect("MAILJET API KEY IS MISSING");
-        let from_email =
-            std::env::var("MAILJET_API_FROM_EMAIL").expect("MAILJET API FROM EMAIL IS MISSING");
+    pub async fn new() -> Self {
+        let config = aws_config::defaults(BehaviorVersion::v2026_01_12())
+            .load()
+            .await;
+        let client = Client::new(&config);
 
-        Self {
-            client: Client::new(),
-            api_key_public: public_key,
-            api_key_private: private_key,
-            from_email,
-        }
+        let from_email = std::env::var("SES_FROM_EMAIL").expect("SES_FROM_EMAIL IS MISSING");
+
+        Self { client, from_email }
     }
+
     pub async fn send_email(
         &self,
         to_email: &str,
@@ -42,31 +30,42 @@ impl EmailService {
         text_part: &str,
         html_part: &str,
     ) -> Result<(), ErrorMessage> {
-        let payload = Message {
-            to: vec![to_email.to_string()],
-            from: self.from_email.to_string(),
-            subject: subject.to_string(),
-            text_part: text_part.to_string(),
-            html_part: html_part.to_string(),
-        };
+        let subject = Content::builder()
+            .data(subject)
+            .charset("UTF-8")
+            .build()
+            .map_err(|e| ErrorMessage::EmailSendingFailed(e.to_string()))?;
 
-        let response = self
-            .client
-            .post("https://api.mailjet.com/v3.1/send")
-            .basic_auth(&self.api_key_public, Some(self.api_key_private.clone()))
-            .json(&payload)
+        let body = Body::builder()
+            .text(
+                Content::builder()
+                    .data(text_part)
+                    .charset("UTF-8")
+                    .build()
+                    .map_err(|e| ErrorMessage::EmailSendingFailed(e.to_string()))?,
+            )
+            .html(
+                Content::builder()
+                    .data(html_part)
+                    .charset("UTF-8")
+                    .build()
+                    .map_err(|e| ErrorMessage::EmailSendingFailed(e.to_string()))?,
+            )
+            .build();
+
+        let message = Message::builder().subject(subject).body(body).build();
+
+        let email = EmailContent::builder().simple(message).build();
+
+        self.client
+            .send_email()
+            .from_email_address(&self.from_email)
+            .destination(Destination::builder().to_addresses(to_email).build())
+            .content(email)
             .send()
             .await
             .map_err(|e| ErrorMessage::EmailSendingFailed(e.to_string()))?;
 
-        if !response.status().is_success() {
-            let body = response
-                .text()
-                .await
-                .unwrap_or_else(|e| format!("Failed to read response body: {e}"));
-
-            return Err(ErrorMessage::EmailSendingFailed(body));
-        }
         Ok(())
     }
 }

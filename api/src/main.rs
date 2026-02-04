@@ -36,10 +36,10 @@ async fn health_check(req: HttpRequest) -> impl Responder {
 }
 #[post("/testemail")]
 async fn test_email() -> Result<HttpResponse, HttpError> {
-    let sender = EmailService::new();
+    let sender = EmailService::new().await;
     let response = sender
         .send_email(
-            "U2272098@unimail.hud.ac.uk",
+            "matkdev@proton.me",
             "test",
             "test",
             "<h1>Test</h1><p>another p</p>",
