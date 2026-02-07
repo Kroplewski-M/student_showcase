@@ -27,7 +27,7 @@ pub enum ErrorMessage {
     UserNoLongerExists,
     TokenNotProvided,
     PermissionDenied,
-    EmailSendingFailed,
+    EmailSendingFailed(String),
 }
 impl ToString for ErrorMessage {
     fn to_string(&self) -> String {
@@ -61,7 +61,9 @@ impl ErrorMessage {
             ErrorMessage::PermissionDenied => {
                 "You do not have permission to perform this action".to_string()
             }
-            ErrorMessage::EmailSendingFailed => "Error occured while sending an email".to_string(),
+            ErrorMessage::EmailSendingFailed(error) => {
+                format!("Error occured while sending an email: {}", error)
+            }
         }
     }
 }

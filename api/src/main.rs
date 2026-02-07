@@ -1,10 +1,10 @@
+use crate::db::DbClient;
 use actix_web::cookie::Cookie;
 use actix_web::cookie::time::Duration;
 use actix_web::{App, HttpRequest, HttpResponse, HttpServer, Responder, get, web};
 use dotenv::dotenv;
 use sqlx::postgres::PgPoolOptions;
-
-use crate::db::DbClient;
+use tracing_subscriber::EnvFilter;
 mod db;
 mod dtos;
 mod errors;
@@ -32,6 +32,7 @@ async fn health_check(req: HttpRequest) -> impl Responder {
     }
     "false"
 }
+
 #[derive(Debug, Clone)]
 pub struct AppState {
     pub db_client: DbClient,
@@ -40,21 +41,22 @@ pub struct AppState {
 #[actix_web::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok();
-
     if std::env::var_os("RUST_LOG").is_none() {
         unsafe {
             std::env::set_var("RUST_LOG", "actix_web=info");
         }
     }
+    init_logging();
     let pool = PgPoolOptions::new()
         .max_connections(10)
         .connect(std::env::var("DATABASE_URL").unwrap().as_str())
         .await?;
-    match sqlx::migrate!("./migrations").run(&pool).await {
-        Ok(_) => println!("Migrations executed successfully"),
-        Err(e) => println!("Error running migrations: {}", e),
-    }
 
+    sqlx::migrate!("./migrations")
+        .run(&pool)
+        .await
+        .expect("Failed to run database migrations");
+    println!("Migrations executed successfully");
     let db_client = DbClient::new(pool);
     let app_state = AppState { db_client };
 
@@ -71,4 +73,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     .await?;
 
     Ok(())
+}
+
+pub fn init_logging() {
+    tracing_subscriber::fmt()
+        .with_env_filter(EnvFilter::try_from_default_env().unwrap_or_else(|_| "info".into()))
+        .init();
 }
