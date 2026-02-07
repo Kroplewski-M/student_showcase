@@ -52,11 +52,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .connect(std::env::var("DATABASE_URL").unwrap().as_str())
         .await?;
 
-    match sqlx::migrate!("./migrations").run(&pool).await {
-        Ok(_) => println!("Migrations executed successfully"),
-        Err(e) => println!("Error running migrations: {}", e),
-    }
-
+    sqlx::migrate!("./migrations")
+        .run(&pool)
+        .await
+        .expect("Failed to run database migrations");
+    println!("Migrations executed successfully");
     let db_client = DbClient::new(pool);
     let app_state = AppState { db_client };
 
