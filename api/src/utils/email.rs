@@ -2,8 +2,11 @@ use crate::errors::ErrorMessage;
 use reqwest::Client;
 use serde::Serialize;
 
+/// Represents the JSON payload expected by the Postmark `/email` API.
+/// Field names must match Postmark's casing exactly, hence the serde renames.
 #[derive(Serialize)]
 struct PostmarkEmail<'a> {
+    /// Sender email address (must be verified in Postmark)
     #[serde(rename = "From")]
     from: &'a str,
     #[serde(rename = "To")]
@@ -18,6 +21,7 @@ struct PostmarkEmail<'a> {
     message_stream: &'a str,
 }
 
+/// Email service responsible for sending emails via Postmark
 #[derive(Clone)]
 pub struct EmailService {
     client: Client,
@@ -40,7 +44,12 @@ impl EmailService {
             server_token,
         }
     }
-
+    /// Sends an email using Postmark.
+    ///
+    /// - `to_email`   → recipient address
+    /// - `subject`    → email subject
+    /// - `text_part`  → plain-text body
+    /// - `html_part`  → HTML body
     pub async fn send_email(
         &self,
         to_email: &str,

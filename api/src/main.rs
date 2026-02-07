@@ -51,6 +51,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .max_connections(10)
         .connect(std::env::var("DATABASE_URL").unwrap().as_str())
         .await?;
+
     match sqlx::migrate!("./migrations").run(&pool).await {
         Ok(_) => println!("Migrations executed successfully"),
         Err(e) => println!("Error running migrations: {}", e),
