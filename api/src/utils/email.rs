@@ -1,6 +1,7 @@
 use crate::errors::ErrorMessage;
 use reqwest::Client;
 use serde::Serialize;
+use tracing::error;
 
 /// Represents the JSON payload expected by the Postmark `/email` API.
 /// Field names must match Postmark's casing exactly, hence the serde renames.
@@ -78,12 +79,21 @@ impl EmailService {
             .map_err(|e| ErrorMessage::EmailSendingFailed(e.to_string()))?;
 
         if !response.status().is_success() {
+            let status = response.status();
             let body = response
                 .text()
                 .await
                 .unwrap_or_else(|_| "Unknown error".to_string());
 
-            return Err(ErrorMessage::EmailSendingFailed(body));
+            error!(
+                to = %to_email,
+                status = %status.as_u16(),
+                error_body = %body,
+                "Postmark rejected auth email"
+            );
+            return Err(ErrorMessage::EmailSendingFailed(
+                "An Error occured sending an email".to_string(),
+            ));
         }
 
         Ok(())
