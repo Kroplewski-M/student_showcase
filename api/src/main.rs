@@ -1,3 +1,5 @@
+mod config;
+use crate::config::Config;
 use crate::db::DbClient;
 use actix_web::cookie::Cookie;
 use actix_web::cookie::time::Duration;
@@ -8,6 +10,7 @@ use tracing_subscriber::EnvFilter;
 mod db;
 mod dtos;
 mod errors;
+mod middleware;
 mod models;
 mod utils;
 
@@ -33,9 +36,10 @@ async fn health_check(req: HttpRequest) -> impl Responder {
     "false"
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct AppState {
     pub db_client: DbClient,
+    pub config: Config,
 }
 
 #[actix_web::main]
@@ -47,20 +51,27 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
     init_logging();
+
+    let config = Config::init();
     let pool = PgPoolOptions::new()
         .max_connections(10)
-        .connect(std::env::var("DATABASE_URL").unwrap().as_str())
+        .connect(config.database_url.as_str())
         .await?;
 
     sqlx::migrate!("./migrations")
         .run(&pool)
         .await
         .expect("Failed to run database migrations");
-    println!("Migrations executed successfully");
-    let db_client = DbClient::new(pool);
-    let app_state = AppState { db_client };
 
-    println!("API starting on 0.0.0.0:8080");
+    println!("Migrations executed successfully");
+
+    let db_client = DbClient::new(pool);
+    let app_state = AppState {
+        db_client,
+        config: config.clone(),
+    };
+
+    println!("API starting on 0.0.0.0:{}", config.port);
 
     HttpServer::new(move || {
         App::new()
@@ -68,7 +79,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .service(health)
             .service(health_check)
     })
-    .bind(("0.0.0.0", 8080))?
+    .bind(("0.0.0.0", config.port))?
     .run()
     .await?;
 
