@@ -36,7 +36,7 @@ async fn health_check(req: HttpRequest) -> impl Responder {
     "false"
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct AppState {
     pub db_client: DbClient,
     pub config: Config,
@@ -71,7 +71,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         config: config.clone(),
     };
 
-    println!("API starting on 0.0.0.0:8080");
+    println!("API starting on 0.0.0.0:{}", config.port);
 
     HttpServer::new(move || {
         App::new()

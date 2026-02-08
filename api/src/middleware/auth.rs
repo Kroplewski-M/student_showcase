@@ -12,9 +12,13 @@ use futures_util::FutureExt;
 use futures_util::future::{LocalBoxFuture, Ready, ready};
 use std::rc::Rc;
 
+/// Newtype wrapper around a user ID that has already been authenticated.
+/// This is what handlers will extract once authentication succeeds.
 #[derive(Clone)]
-pub struct AuthenticatedUserId(String);
+pub struct AuthenticatedUserId(pub String);
 
+/// Allows `AuthenticatedUserId` to be extracted in handlers like:
+/// `fn handler(user_id: AuthenticatedUserId) -> impl Responder`
 impl FromRequest for AuthenticatedUserId {
     type Error = actix_web::Error;
     type Future = Ready<Result<Self, Self::Error>>;
@@ -31,10 +35,13 @@ impl FromRequest for AuthenticatedUserId {
     }
 }
 
+/// Middleware struct.
+/// Wraps the inner service (next handler/middleware in the chain).
 pub struct AuthMiddleware<S> {
     service: Rc<S>,
 }
 
+/// Implementation of the actual middleware logic.
 impl<S> Service<ServiceRequest> for AuthMiddleware<S>
 where
     S: Service<
@@ -109,5 +116,31 @@ where
             }
         }
         .boxed_local()
+    }
+}
+
+/// Public middleware type used in route configuration:
+/// `.wrap(RequireAuth)`
+pub struct RequireAuth;
+
+/// Factory that creates `AuthMiddleware` and wraps the inner service
+impl<S> actix_web::dev::Transform<S, ServiceRequest> for RequireAuth
+where
+    S: Service<
+            ServiceRequest,
+            Response = ServiceResponse<actix_web::body::BoxBody>,
+            Error = actix_web::Error,
+        > + 'static,
+{
+    type Response = ServiceResponse<actix_web::body::BoxBody>;
+    type Error = actix_web::Error;
+    type Transform = AuthMiddleware<S>;
+    type InitError = ();
+    type Future = Ready<Result<Self::Transform, Self::InitError>>;
+
+    fn new_transform(&self, service: S) -> Self::Future {
+        ready(Ok(AuthMiddleware {
+            service: Rc::new(service),
+        }))
     }
 }
