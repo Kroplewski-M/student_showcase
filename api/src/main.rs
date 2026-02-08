@@ -51,9 +51,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
     init_logging();
+
+    let config = Config::init();
     let pool = PgPoolOptions::new()
         .max_connections(10)
-        .connect(std::env::var("DATABASE_URL").unwrap().as_str())
+        .connect(config.database_url.as_str())
         .await?;
 
     sqlx::migrate!("./migrations")
@@ -64,7 +66,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Migrations executed successfully");
 
     let db_client = DbClient::new(pool);
-    let config = Config::init();
     let app_state = AppState {
         db_client,
         config: config.clone(),
