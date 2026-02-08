@@ -1,4 +1,4 @@
-use crate::errors::ErrorMessage;
+use crate::{config::PostMarkConfig, errors::ErrorMessage};
 use reqwest::Client;
 use serde::Serialize;
 use tracing::error;
@@ -30,19 +30,13 @@ pub struct EmailService {
     server_token: String,
 }
 impl EmailService {
-    pub async fn new() -> Self {
-        let from_email =
-            std::env::var("POSTMARK_FROM_EMAIL").expect("POSTMARK_FROM_EMAIL is missing");
-
-        let server_token =
-            std::env::var("POSTMARK_SERVER_TOKEN").expect("POSTMARK_SERVER_TOKEN is missing");
-
+    pub async fn new(postmark: &PostMarkConfig) -> Self {
         let client = Client::new();
 
         Self {
             client,
-            from_email,
-            server_token,
+            from_email: postmark.mail_from_email.clone(),
+            server_token: postmark.server_token.clone(),
         }
     }
     /// Sends an email using Postmark.

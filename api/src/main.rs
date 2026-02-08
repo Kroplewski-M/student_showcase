@@ -1,3 +1,5 @@
+mod config;
+use crate::config::Config;
 use crate::db::DbClient;
 use actix_web::cookie::Cookie;
 use actix_web::cookie::time::Duration;
@@ -8,6 +10,7 @@ use tracing_subscriber::EnvFilter;
 mod db;
 mod dtos;
 mod errors;
+mod middleware;
 mod models;
 mod utils;
 
@@ -36,6 +39,7 @@ async fn health_check(req: HttpRequest) -> impl Responder {
 #[derive(Debug, Clone)]
 pub struct AppState {
     pub db_client: DbClient,
+    pub config: Config,
 }
 
 #[actix_web::main]
@@ -56,9 +60,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .run(&pool)
         .await
         .expect("Failed to run database migrations");
+
     println!("Migrations executed successfully");
+
     let db_client = DbClient::new(pool);
-    let app_state = AppState { db_client };
+    let config = Config::init();
+    let app_state = AppState {
+        db_client,
+        config: config.clone(),
+    };
 
     println!("API starting on 0.0.0.0:8080");
 
@@ -68,7 +78,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .service(health)
             .service(health_check)
     })
-    .bind(("0.0.0.0", 8080))?
+    .bind(("0.0.0.0", config.port))?
     .run()
     .await?;
 
