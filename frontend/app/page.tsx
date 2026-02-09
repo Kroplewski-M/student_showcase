@@ -1,6 +1,5 @@
-import Footer from "./components/Footer";
-import Nav from "./components/Nav";
 import Hero from "./components/Hero";
+import Nav from "./components/Nav";
 
 export default async function Home() {
   return (
@@ -17,7 +16,6 @@ export default async function Home() {
           </div>
         </section>
       </main>
-      <Footer />
     </div>
   );
 }

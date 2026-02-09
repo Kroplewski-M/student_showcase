@@ -9,17 +9,6 @@
   --color-dark: #333333;
   --color-danger: #bf2417;
 }
-html,
-body {
-  cursor:
-    url("/cursors/default.png") 4 2,
-    auto;
-}
-.cursor-pointer-default {
-  cursor:
-    url("/cursors/default.png") 4 2,
-    auto;
-}
 body {
   background: var(--color-primary);
   font-family: "Poppins", sans-serif;
