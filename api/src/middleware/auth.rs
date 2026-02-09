@@ -62,8 +62,9 @@ where
     }
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
+        let app_state = req.app_data::<web::Data<AppState>>().unwrap();
         let token = req
-            .cookie("token")
+            .cookie(app_state.config.auth_cookie_name.as_str())
             .map(|c| c.value().to_owned())
             .or_else(|| {
                 req.headers()
@@ -79,7 +80,6 @@ where
             };
             return Box::pin(ready(Err(ErrorUnauthorized(json_error))));
         }
-        let app_state = req.app_data::<web::Data<AppState>>().unwrap();
 
         let user_id = match utils::token::decode_token(
             token.unwrap(),
