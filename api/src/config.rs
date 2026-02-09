@@ -5,6 +5,7 @@ pub struct Config {
     pub jwt_max_age_mins: i64,
     pub port: u16,
     pub post_mark_config: PostMarkConfig,
+    pub auth_cookie_name: String,
 }
 
 #[derive(Clone)]
@@ -25,6 +26,8 @@ impl Config {
         let mail_server_token = std::env::var("POSTMARK_SERVER_TOKEN")
             .expect("POSTMARK_SERVER_TOKEN IS NOT SET IN THE ENV");
 
+        let auth_cookie_name =
+            std::env::var("COOKIE_NAME").expect("COOKIE_NAME IS NOT SET IN THE ENV");
         Config {
             database_url,
             jwt_secret,
@@ -36,6 +39,7 @@ impl Config {
                 mail_from_email,
                 server_token: mail_server_token,
             },
+            auth_cookie_name,
         }
     }
 }
