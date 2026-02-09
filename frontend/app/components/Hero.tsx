@@ -2,7 +2,6 @@
 
 import { motion, useScroll, useTransform } from "framer-motion";
 import { StretchWord } from "./StretchWord";
-import ArrowSVG from "../SVGS/Arrow";
 
 export default function Hero() {
   const { scrollY } = useScroll();
