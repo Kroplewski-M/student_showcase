@@ -12,15 +12,20 @@ type AuthStep =
 export default function AuthSteps() {
   const [step, setStep] = useState<AuthStep>("student_id");
   const [studentId, setStudentId] = useState("");
+  const [errors, setErrors] = useState("");
   async function submitStudentId() {
     const res = await fetch("/api/auth/identify", {
       method: "POST",
+      headers: { "content-type": "application/json" },
       credentials: "include",
       body: JSON.stringify({ studentId }),
     });
+    const data = await res.json().catch(() => null);
 
-    const data = await res.json();
-
+    if (!res.ok) {
+      setErrors(data?.error ?? "An unexpected error occurred.");
+      return;
+    }
     switch (data.next) {
       case "login":
         setStep("login_password");
