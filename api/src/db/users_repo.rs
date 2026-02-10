@@ -67,7 +67,7 @@ impl UsersRepo {
         Ok(user_id)
     }
     pub async fn create_user_verification(&self, student_id: &str) -> Result<Uuid, sqlx::Error> {
-        let mut tx = self.pool.begin().await?;
+        let tx = self.pool.begin().await?;
         //delete all prev tokens for this user, so theres only one active one
         sqlx::query!(
             "DELETE FROM user_verifications WHERE user_id = $1",
