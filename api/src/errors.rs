@@ -1,6 +1,6 @@
 use actix_web::{HttpResponse, ResponseError};
 use serde::{Deserialize, Serialize};
-use std::fmt;
+use std::fmt::{self};
 
 use crate::dtos::Response;
 
@@ -23,20 +23,20 @@ pub enum ErrorMessage {
     InvalidToken,
     ServerError,
     WrongCredentials,
-    EmailAlreadyExists,
+    UserAlreadyExists,
     UserNoLongerExists,
     TokenNotProvided,
     PermissionDenied,
     EmailSendingFailed(String),
 }
-impl ToString for ErrorMessage {
-    fn to_string(&self) -> String {
-        self.to_str().to_owned()
+impl fmt::Display for ErrorMessage {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.to_str())
     }
 }
-impl Into<String> for ErrorMessage {
-    fn into(self) -> String {
-        self.to_string()
+impl From<ErrorMessage> for String {
+    fn from(value: ErrorMessage) -> Self {
+        value.to_string()
     }
 }
 impl ErrorMessage {
@@ -51,7 +51,9 @@ impl ErrorMessage {
             ErrorMessage::InvalidToken => "Authentication token is invalid or expired".to_string(),
             ErrorMessage::ServerError => "Server error. Please try again later.".to_string(),
             ErrorMessage::WrongCredentials => "Email or password is incorrect".to_string(),
-            ErrorMessage::EmailAlreadyExists => "A user with this email already exists".to_string(),
+            ErrorMessage::UserAlreadyExists => {
+                "A user with this student id already exists".to_string()
+            }
             ErrorMessage::UserNoLongerExists => {
                 "User belonging to this token no longer exists".to_string()
             }
@@ -97,19 +99,19 @@ impl HttpError {
         match self.status {
             400 => HttpResponse::BadRequest().json(Response {
                 status: "fail",
-                message: self.message.into(),
+                message: self.message,
             }),
             401 => HttpResponse::Unauthorized().json(Response {
                 status: "fail",
-                message: self.message.into(),
+                message: self.message,
             }),
             409 => HttpResponse::Conflict().json(Response {
                 status: "fail",
-                message: self.message.into(),
+                message: self.message,
             }),
             500 => HttpResponse::InternalServerError().json(Response {
                 status: "fail",
-                message: self.message.into(),
+                message: self.message,
             }),
             _ => {
                 eprint!(

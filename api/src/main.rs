@@ -1,6 +1,8 @@
 mod config;
 use crate::config::Config;
 use crate::db::DbClient;
+use crate::service::auth_service::AuthService;
+use crate::utils::email::EmailService;
 use actix_web::cookie::Cookie;
 use actix_web::cookie::time::Duration;
 use actix_web::{App, HttpRequest, HttpResponse, HttpServer, Responder, get, web};
@@ -41,6 +43,7 @@ async fn health_check(req: HttpRequest) -> impl Responder {
 pub struct AppState {
     pub db_client: DbClient,
     pub config: Config,
+    pub auth_service: AuthService,
 }
 
 #[actix_web::main]
@@ -67,9 +70,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Migrations executed successfully");
 
     let db_client = DbClient::new(pool);
+    let email_service = EmailService::new(config.clone()).await;
     let app_state = AppState {
-        db_client,
         config: config.clone(),
+        db_client: db_client.clone(),
+        auth_service: AuthService::new(db_client.users.clone(), email_service.clone()),
     };
 
     println!("API starting on 0.0.0.0:{}", config.port);
@@ -79,6 +84,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .app_data(web::Data::new(app_state.clone()))
             .service(health)
             .service(health_check)
+            .service(handler::auth_handler::auth_handler())
     })
     .bind(("0.0.0.0", config.port))?
     .run()

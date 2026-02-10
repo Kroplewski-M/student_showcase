@@ -1,6 +1,5 @@
 use std::ops::Deref;
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
@@ -17,9 +16,9 @@ impl Deref for StudentId {
 
 fn validate_student_id(id: &str) -> Result<(), validator::ValidationError> {
     let trimmed = id.trim();
-    if trimmed.len() != 7 || trimmed != id {
+    if (trimmed.len() != 7 || trimmed != id) || !trimmed.chars().all(|c| c.is_ascii_digit()) {
         let mut err = validator::ValidationError::new("invalid_student_id");
-        err.message = Some("Id must be exactly 7 characters".into());
+        err.message = Some("Id must be exactly 7 numbers".into());
         return Err(err);
     }
     Ok(())
@@ -42,16 +41,11 @@ pub struct RegisterUserDto {
     pub id: StudentId,
     #[validate(length(
         min = 5,
-        max = 64,
+        max = 20,
         message = "Password must be between 5 and 20 characters"
     ))]
     pub password: String,
     #[validate(must_match(other = "password", message = "Passwords do not match"))]
     #[serde(rename = "passwordConfirmation")]
     pub password_confirmation: String,
-}
-#[derive(Serialize, Deserialize)]
-pub struct Response {
-    pub status: &'static str,
-    pub message: String,
 }

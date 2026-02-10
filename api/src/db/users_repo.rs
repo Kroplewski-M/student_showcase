@@ -1,0 +1,93 @@
+use sqlx::{Pool, Postgres};
+use uuid::Uuid;
+
+use crate::models::User;
+
+#[derive(Debug, Clone)]
+pub struct UsersRepo {
+    pool: Pool<Postgres>,
+}
+
+impl UsersRepo {
+    pub fn new(pool: Pool<Postgres>) -> Self {
+        Self { pool }
+    }
+
+    pub async fn exists_verified(&self, student_id: &str) -> Result<bool, sqlx::Error> {
+        let exists = sqlx::query_scalar!(
+            r#"
+            SELECT EXISTS (
+            SELECT 1
+            FROM users
+            WHERE id = $1
+            AND verified = true
+        )
+        "#,
+            student_id
+        )
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(exists.unwrap_or(false))
+    }
+    pub async fn get_user_by_id(&self, student_id: &str) -> Result<Option<User>, sqlx::Error> {
+        sqlx::query_as!(
+            User,
+            r#"SELECT
+            id,
+            first_name,
+            last_name,
+            personal_email,
+            verified,
+            created_at,
+            updated_at,
+            password
+            FROM users WHERE id = $1"#,
+            student_id
+        )
+        .fetch_optional(&self.pool)
+        .await
+    }
+    pub async fn create_user(
+        &self,
+        student_id: &str,
+        password: &str,
+    ) -> Result<String, sqlx::Error> {
+        let user_id = sqlx::query_scalar!(
+            r#"
+            INSERT INTO users (id, password)
+            VALUES ($1,$2)
+            RETURNING id
+            "#,
+            student_id,
+            password
+        )
+        .fetch_one(&self.pool)
+        .await?;
+        Ok(user_id)
+    }
+    pub async fn create_user_verification(&self, student_id: &str) -> Result<Uuid, sqlx::Error> {
+        let tx = self.pool.begin().await?;
+        //delete all prev tokens for this user, so theres only one active one
+        sqlx::query!(
+            "DELETE FROM user_verifications WHERE user_id = $1",
+            student_id
+        )
+        .execute(&self.pool)
+        .await?;
+
+        let token = sqlx::query_scalar!(
+            r#"
+            INSERT INTO user_verifications (token, user_id, expired_at)
+            VALUES ($1, $2, now() + interval '15 minutes')
+            RETURNING token
+            "#,
+            Uuid::new_v4(),
+            student_id
+        )
+        .fetch_one(&self.pool)
+        .await?;
+        tx.commit().await?;
+        Ok(token)
+    }
+}

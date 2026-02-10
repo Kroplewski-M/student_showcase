@@ -6,6 +6,7 @@ pub struct Config {
     pub port: u16,
     pub post_mark_config: PostMarkConfig,
     pub auth_cookie_name: String,
+    pub base_url: String,
 }
 
 #[derive(Clone)]
@@ -26,6 +27,7 @@ impl Config {
         let mail_server_token = std::env::var("POSTMARK_SERVER_TOKEN")
             .expect("POSTMARK_SERVER_TOKEN IS NOT SET IN THE ENV");
 
+        let base_url = std::env::var("BASE_URL").expect("BASE_URL IS NOT SET IN THE ENV");
         let auth_cookie_name =
             std::env::var("COOKIE_NAME").expect("COOKIE_NAME IS NOT SET IN THE ENV");
         Config {
@@ -40,6 +42,7 @@ impl Config {
                 server_token: mail_server_token,
             },
             auth_cookie_name,
+            base_url,
         }
     }
 }
