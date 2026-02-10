@@ -1,7 +1,9 @@
-use crate::{config::PostMarkConfig, errors::ErrorMessage};
+use crate::{config::Config, errors::ErrorMessage, utils::generic};
 use reqwest::Client;
 use serde::Serialize;
+use tera::{Context, Tera};
 use tracing::error;
+use uuid::Uuid;
 
 /// Represents the JSON payload expected by the Postmark `/email` API.
 /// Field names must match Postmark's casing exactly, hence the serde renames.
@@ -28,15 +30,17 @@ pub struct EmailService {
     client: Client,
     from_email: String,
     server_token: String,
+    base_url: String,
 }
 impl EmailService {
-    pub async fn new(postmark: &PostMarkConfig) -> Self {
+    pub async fn new(config: Config) -> Self {
         let client = Client::new();
 
         Self {
             client,
-            from_email: postmark.mail_from_email.clone(),
-            server_token: postmark.server_token.clone(),
+            from_email: config.post_mark_config.mail_from_email.clone(),
+            server_token: config.post_mark_config.server_token.clone(),
+            base_url: config.base_url,
         }
     }
     /// Sends an email using Postmark.
@@ -91,5 +95,28 @@ impl EmailService {
         }
 
         Ok(())
+    }
+    pub async fn send_verification_email(
+        &self,
+        student_id: String,
+        token: Uuid,
+    ) -> Result<(), ErrorMessage> {
+        let email = generic::get_email_for_student(student_id.as_str());
+        let verify_url = format!("{}/verifytoken/{}", self.base_url, token);
+        let tera = Tera::new("templates/**/*")
+            .map_err(|e| ErrorMessage::EmailSendingFailed(e.to_string()))?;
+
+        let mut ctx = Context::new();
+        ctx.insert("verify_url", verify_url.as_str());
+        let template = tera
+            .render("emails/verify_account.html", &ctx)
+            .map_err(|e| ErrorMessage::EmailSendingFailed(e.to_string()))?;
+        self.send_email(
+            &email,
+            "Verify Your Account",
+            "Please verify your account using the link provided.",
+            &template,
+        )
+        .await
     }
 }
