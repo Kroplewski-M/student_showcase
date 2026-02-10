@@ -1,4 +1,5 @@
 use tracing::error;
+use uuid::Uuid;
 
 use crate::{
     db::users_repo::UsersRepo,
@@ -61,5 +62,14 @@ impl AuthService {
                 )
             })?;
         Ok(())
+    }
+    pub async fn validate_user(&self, token: Uuid) -> Result<(), ErrorMessage> {
+        match self.user_repo.validate_user(token).await {
+            Ok(_) => Ok(()),
+            Err(e) => match &e {
+                sqlx::Error::RowNotFound => Err(ErrorMessage::VerifyTokenDoesNotExist),
+                _ => Err(ErrorMessage::ServerError),
+            },
+        }
     }
 }
