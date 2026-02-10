@@ -67,7 +67,7 @@ impl UsersRepo {
         Ok(user_id)
     }
     pub async fn create_user_verification(&self, student_id: &str) -> Result<Uuid, sqlx::Error> {
-        let tx = self.pool.begin().await?;
+        let mut tx = self.pool.begin().await?;
         //delete all prev tokens for this user, so theres only one active one
         sqlx::query!(
             "DELETE FROM user_verifications WHERE user_id = $1",
@@ -85,9 +85,40 @@ impl UsersRepo {
             Uuid::new_v4(),
             student_id
         )
-        .fetch_one(&self.pool)
+        .fetch_one(tx.as_mut())
         .await?;
         tx.commit().await?;
         Ok(token)
+    }
+    pub async fn validate_user(&self, token: Uuid) -> Result<(), sqlx::Error> {
+        let mut tx = self.pool.begin().await?;
+        let student_id: Option<String> = sqlx::query_scalar!(
+            r#"
+            DELETE FROM user_verifications
+            WHERE token = $1
+            AND expired_at > now()
+            RETURNING user_id
+            "#,
+            token,
+        )
+        .fetch_optional(tx.as_mut())
+        .await?;
+        if student_id.is_none() {
+            tx.rollback().await?;
+            return Err(sqlx::Error::RowNotFound);
+        }
+        sqlx::query!(
+            r#"
+            UPDATE users
+            SET verified = true
+            WHERE id = $1
+            "#,
+            student_id.unwrap()
+        )
+        .execute(tx.as_mut())
+        .await?;
+
+        tx.commit().await?;
+        Ok(())
     }
 }

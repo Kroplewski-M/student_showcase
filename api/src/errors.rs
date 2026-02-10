@@ -28,6 +28,7 @@ pub enum ErrorMessage {
     TokenNotProvided,
     PermissionDenied,
     EmailSendingFailed(String),
+    VerifyTokenDoesNotExist,
 }
 impl fmt::Display for ErrorMessage {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -65,6 +66,9 @@ impl ErrorMessage {
             }
             ErrorMessage::EmailSendingFailed(error) => {
                 format!("Error occured while sending an email: {}", error)
+            }
+            ErrorMessage::VerifyTokenDoesNotExist => {
+                "The token provided does not exist".to_string()
             }
         }
     }
