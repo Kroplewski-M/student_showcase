@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>{% block title %}{% endblock %}</title>
+  </head>
+
+  <body style="margin: 0; padding: 0; background-color: #204346">
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td align="center" style="padding: 32px 16px">
+          <!-- Email container -->
+          <table
+            width="600"
+            cellpadding="0"
+            cellspacing="0"
+            style="
+              background-color: #f7f9f9;
+              border-radius: 8px;
+              font-family: &quot;Poppins&quot;, Arial, Helvetica, sans-serif;
+              color: #333333;
+            "
+          >
+            <!-- Header -->
+            <tr>
+              <td
+                style="
+                  padding: 24px;
+                  text-align: center;
+                  background-color: #204346;
+                  color: #ffffff;
+                  border-radius: 8px 8px 0 0;
+                "
+              >
+                <h1 style="margin: 0; font-size: 22px; font-weight: 600">
+                  Student Showcase
+                </h1>
+              </td>
+            </tr>
+
+            <!-- Main content -->
+            <tr>
+              <td style="padding: 32px">{% block content %}{% endblock %}</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

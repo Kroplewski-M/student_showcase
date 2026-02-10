@@ -10,8 +10,10 @@ use tracing_subscriber::EnvFilter;
 mod db;
 mod dtos;
 mod errors;
+mod handler;
 mod middleware;
 mod models;
+mod service;
 mod utils;
 
 #[get("/health")]
@@ -35,7 +37,6 @@ async fn health_check(req: HttpRequest) -> impl Responder {
     }
     "false"
 }
-
 #[derive(Clone)]
 pub struct AppState {
     pub db_client: DbClient,
