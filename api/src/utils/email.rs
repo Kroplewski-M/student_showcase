@@ -31,16 +31,19 @@ pub struct EmailService {
     from_email: String,
     server_token: String,
     base_url: String,
+    tera: Tera,
 }
 impl EmailService {
     pub async fn new(config: Config) -> Self {
         let client = Client::new();
+        let tera = Tera::new("templates/**/*").expect("Failed to load email templates");
 
         Self {
             client,
             from_email: config.post_mark_config.mail_from_email.clone(),
             server_token: config.post_mark_config.server_token.clone(),
             base_url: config.base_url,
+            tera,
         }
     }
     /// Sends an email using Postmark.
@@ -103,19 +106,18 @@ impl EmailService {
     ) -> Result<(), ErrorMessage> {
         let email = generic::get_email_for_student(student_id.as_str());
         let verify_url = format!("{}/verifytoken/{}", self.base_url, token);
-        let tera = Tera::new("templates/**/*")
-            .map_err(|e| ErrorMessage::EmailSendingFailed(e.to_string()))?;
 
         let mut ctx = Context::new();
         ctx.insert("verify_url", verify_url.as_str());
-        let template = tera
+        let template = &self
+            .tera
             .render("emails/verify_account.html", &ctx)
             .map_err(|e| ErrorMessage::EmailSendingFailed(e.to_string()))?;
         self.send_email(
             &email,
             "Verify Your Account",
             "Please verify your account using the link provided.",
-            &template,
+            template,
         )
         .await
     }

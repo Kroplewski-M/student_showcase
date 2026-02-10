@@ -41,7 +41,7 @@ pub struct RegisterUserDto {
     pub id: StudentId,
     #[validate(length(
         min = 5,
-        max = 64,
+        max = 20,
         message = "Password must be between 5 and 20 characters"
     ))]
     pub password: String,

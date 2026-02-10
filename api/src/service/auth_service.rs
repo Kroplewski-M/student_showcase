@@ -55,7 +55,10 @@ impl AuthService {
             .await
             .map_err(|e| {
                 error!("Failed sending email: {:?}", e);
-                ErrorMessage::ServerError
+                ErrorMessage::EmailSendingFailed(
+                    "Verification email failed to send but account created successfully"
+                        .to_string(),
+                )
             })?;
         Ok(())
     }
