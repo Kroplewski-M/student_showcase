@@ -4,7 +4,7 @@ use uuid::Uuid;
 use validator::Validate;
 
 use crate::{
-    AppState,
+    AppState, config,
     dtos::{
         Response,
         auth::{LoginUserDto, RegisterUserDto},
@@ -109,7 +109,7 @@ pub async fn logout(app_state: web::Data<AppState>) -> impl Responder {
         .max_age(actix_web::cookie::time::Duration::new(-1, 0))
         .secure(app_state.config.is_prod) // enable in prod HTTPS
         .same_site(actix_web::cookie::SameSite::Lax)
-        .http_only(app_state.config.is_prod)
+        .http_only(true)
         .finish();
 
     HttpResponse::Ok()
