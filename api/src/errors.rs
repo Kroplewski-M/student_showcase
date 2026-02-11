@@ -29,6 +29,7 @@ pub enum ErrorMessage {
     PermissionDenied,
     EmailSendingFailed(String),
     VerifyTokenDoesNotExist,
+    UserNotVerified,
 }
 impl fmt::Display for ErrorMessage {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -69,6 +70,9 @@ impl ErrorMessage {
             }
             ErrorMessage::VerifyTokenDoesNotExist => {
                 "The token provided does not exist".to_string()
+            }
+            ErrorMessage::UserNotVerified => {
+                "User has not verified their account, please check your email".to_string()
             }
         }
     }

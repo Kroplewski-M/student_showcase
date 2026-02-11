@@ -3,9 +3,7 @@ use crate::config::Config;
 use crate::db::DbClient;
 use crate::service::auth_service::AuthService;
 use crate::utils::email::EmailService;
-use actix_web::cookie::Cookie;
-use actix_web::cookie::time::Duration;
-use actix_web::{App, HttpRequest, HttpResponse, HttpServer, Responder, get, web};
+use actix_web::{App, HttpServer, web};
 use dotenv::dotenv;
 use sqlx::postgres::PgPoolOptions;
 use tracing_subscriber::EnvFilter;
@@ -18,27 +16,6 @@ mod models;
 mod service;
 mod utils;
 
-#[get("/health")]
-async fn health() -> impl Responder {
-    let is_prod = std::env::var("RUST_ENV").unwrap_or_default() == "production";
-    let cookie = Cookie::build("health_test", "alive")
-        .path("/")
-        .http_only(true)
-        .secure(is_prod) // enable in prod HTTPS
-        .same_site(actix_web::cookie::SameSite::Lax)
-        .max_age(Duration::days(1))
-        .finish();
-
-    HttpResponse::Ok().cookie(cookie).body("Ok")
-}
-#[get("/health/check")]
-async fn health_check(req: HttpRequest) -> impl Responder {
-    let has_cookie = req.cookie("health_test").is_some();
-    if has_cookie {
-        return "true";
-    }
-    "false"
-}
 #[derive(Clone)]
 pub struct AppState {
     pub db_client: DbClient,
@@ -74,7 +51,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let app_state = AppState {
         config: config.clone(),
         db_client: db_client.clone(),
-        auth_service: AuthService::new(db_client.users.clone(), email_service.clone()),
+        auth_service: AuthService::new(
+            db_client.users.clone(),
+            email_service.clone(),
+            config.clone(),
+        ),
     };
 
     println!("API starting on 0.0.0.0:{}", config.port);
@@ -82,8 +63,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(app_state.clone()))
-            .service(health)
-            .service(health_check)
             .service(handler::auth_handler::auth_handler())
     })
     .bind(("0.0.0.0", config.port))?

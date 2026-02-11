@@ -1,11 +1,19 @@
-use actix_web::{HttpResponse, Responder, Scope, cookie::Cookie, web};
+use actix_web::{
+    HttpResponse, Responder, Scope, body,
+    cookie::{self, Cookie},
+    web,
+};
+use chrono::Duration;
 use serde_json::json;
 use uuid::Uuid;
 use validator::Validate;
 
 use crate::{
     AppState,
-    dtos::{Response, auth::RegisterUserDto},
+    dtos::{
+        Response,
+        auth::{LoginUserDto, RegisterUserDto},
+    },
     errors::{ErrorMessage, HttpError},
     middleware::auth::RequireAuth,
 };
@@ -19,8 +27,41 @@ pub fn auth_handler() -> Scope {
         .route("/logout", web::post().to(logout).wrap(RequireAuth))
 }
 
-pub async fn login() -> Result<HttpResponse, HttpError> {
-    Ok(HttpResponse::Ok().body("ok"))
+pub async fn login(
+    app_state: web::Data<AppState>,
+    body: web::Json<LoginUserDto>,
+) -> Result<HttpResponse, HttpError> {
+    body.validate()
+        .map_err(|e| HttpError::bad_request(e.to_string()))?;
+
+    match app_state
+        .auth_service
+        .login(body.id.to_string(), body.password.to_string())
+        .await
+    {
+        Ok(token) => {
+            let cookie = Cookie::build(&app_state.config.auth_cookie_name, token)
+                .path("/")
+                .http_only(true)
+                .secure(app_state.config.is_prod) // enable in prod HTTPS
+                .same_site(actix_web::cookie::SameSite::Lax)
+                .max_age(actix_web::cookie::time::Duration::minutes(
+                    app_state.config.jwt_max_age_mins,
+                ))
+                .finish();
+            Ok(HttpResponse::Ok().cookie(cookie).json(Response {
+                status: "success",
+                message: "user logged in successfully".to_string(),
+            }))
+        }
+        Err(ErrorMessage::WrongCredentials) => {
+            Err(HttpError::unauthorized("User credentials are invalid"))
+        }
+        Err(ErrorMessage::UserNotVerified) => Err(HttpError::unauthorized(
+            "User is not verified, please check your emails to verify your account",
+        )),
+        Err(_) => Err(HttpError::server_error("error logging in user")),
+    }
 }
 
 pub async fn register(
