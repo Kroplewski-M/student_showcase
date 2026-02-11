@@ -121,4 +121,20 @@ impl EmailService {
         )
         .await
     }
+    pub async fn send_reset_password_email(
+        &self,
+        student_id: String,
+        token: Uuid,
+    ) -> Result<(), ErrorMessage> {
+        let email = generic::get_email_for_student(student_id.as_str());
+        let reset_url = format!("{}/resetpassword/{}", self.base_url, token);
+        let mut ctx = Context::new();
+        ctx.insert("reset_url", reset_url.as_str());
+        let template = &self
+            .tera
+            .render("emails/reset_password.html", &ctx)
+            .map_err(|e| ErrorMessage::EmailSendingFailed(e.to_string()))?;
+        self.send_email(&email, "Reset Password", "Reset password request", template)
+            .await
+    }
 }

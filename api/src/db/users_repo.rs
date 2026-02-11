@@ -73,7 +73,7 @@ impl UsersRepo {
             "DELETE FROM user_verifications WHERE user_id = $1",
             student_id
         )
-        .execute(&self.pool)
+        .execute(tx.as_mut())
         .await?;
 
         let token = sqlx::query_scalar!(
@@ -82,6 +82,34 @@ impl UsersRepo {
             VALUES ($1, $2, now() + interval '15 minutes')
             RETURNING token
             "#,
+            Uuid::new_v4(),
+            student_id
+        )
+        .fetch_one(tx.as_mut())
+        .await?;
+        tx.commit().await?;
+        Ok(token)
+    }
+    pub async fn create_user_reset_password(&self, student_id: &str) -> Result<Uuid, sqlx::Error> {
+        let user_exists = self.exists_verified(student_id).await?;
+        if !user_exists {
+            return Err(sqlx::Error::RowNotFound);
+        }
+        let mut tx = self.pool.begin().await?;
+        //delete all prev tokens for user so theres only one active
+        sqlx::query!(
+            "DELETE FROM user_password_resets WHERE user_id = $1",
+            student_id
+        )
+        .execute(tx.as_mut())
+        .await?;
+
+        let token = sqlx::query_scalar!(
+            r#"
+        INSERT INTO user_password_resets (token, user_id, expired_at)
+        VALUES ($1, $2, now() + interval '15 minutes')
+        RETURNING token
+        "#,
             Uuid::new_v4(),
             student_id
         )
