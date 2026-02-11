@@ -36,12 +36,13 @@ impl AuthService {
 
         let user = result.ok_or(ErrorMessage::WrongCredentials)?;
 
+        let user_password = user.password.ok_or(ErrorMessage::ServerError)?;
+
         if !user.verified {
             self.create_verification_token_and_send_email(user.id.as_str())
                 .await?;
             return Err(ErrorMessage::UserNotVerified);
         }
-        let user_password = user.password.ok_or(ErrorMessage::ServerError)?;
 
         let hasher = PasswordHasherService::new();
         let password_matches = hasher
@@ -112,10 +113,7 @@ impl AuthService {
             .await
             .map_err(|e| {
                 error!("Failed sending email: {:?}", e);
-                ErrorMessage::EmailSendingFailed(
-                    "Verification email failed to send but account created successfully"
-                        .to_string(),
-                )
+                ErrorMessage::EmailSendingFailed("Verification email failed to send".to_string())
             })?;
         Ok(())
     }

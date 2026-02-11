@@ -1,9 +1,4 @@
-use actix_web::{
-    HttpResponse, Responder, Scope, body,
-    cookie::{self, Cookie},
-    web,
-};
-use chrono::Duration;
+use actix_web::{HttpResponse, Responder, Scope, cookie::Cookie, web};
 use serde_json::json;
 use uuid::Uuid;
 use validator::Validate;
@@ -109,12 +104,12 @@ pub async fn reset_password() -> Result<HttpResponse, HttpError> {
     Ok(HttpResponse::Ok().body("ok"))
 }
 pub async fn logout(app_state: web::Data<AppState>) -> impl Responder {
-    let is_prod = std::env::var("RUST_ENV").unwrap_or_default() == "production";
-
     let cookie = Cookie::build(&app_state.config.auth_cookie_name, "")
         .path("/")
         .max_age(actix_web::cookie::time::Duration::new(-1, 0))
-        .http_only(is_prod)
+        .secure(app_state.config.is_prod) // enable in prod HTTPS
+        .same_site(actix_web::cookie::SameSite::Lax)
+        .http_only(app_state.config.is_prod)
         .finish();
 
     HttpResponse::Ok()
