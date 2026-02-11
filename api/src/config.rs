@@ -7,6 +7,7 @@ pub struct Config {
     pub post_mark_config: PostMarkConfig,
     pub auth_cookie_name: String,
     pub base_url: String,
+    pub is_prod: bool,
 }
 
 #[derive(Clone)]
@@ -30,6 +31,8 @@ impl Config {
         let base_url = std::env::var("BASE_URL").expect("BASE_URL IS NOT SET IN THE ENV");
         let auth_cookie_name =
             std::env::var("COOKIE_NAME").expect("COOKIE_NAME IS NOT SET IN THE ENV");
+
+        let is_prod = std::env::var("RUST_ENV").unwrap_or_default() == "production";
         Config {
             database_url,
             jwt_secret,
@@ -43,6 +46,7 @@ impl Config {
             },
             auth_cookie_name,
             base_url,
+            is_prod,
         }
     }
 }
