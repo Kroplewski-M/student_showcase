@@ -19,6 +19,10 @@ pub fn auth_handler() -> Scope {
         .route("/register", web::post().to(register))
         .route("/validate-user/{token}", web::post().to(validate_user))
         .route("/reset-password", web::post().to(reset_password))
+        .route(
+            "/reset-password-exists/{token}",
+            web::get().to(reset_password_exists),
+        )
         .route("/logout", web::post().to(logout).wrap(RequireAuth))
 }
 
@@ -126,6 +130,30 @@ pub async fn reset_password(
                 "If the user exists, you will receive an email with a link to reset your password"
                     .to_string(),
         })),
+    }
+}
+pub async fn reset_password_exists(
+    app_state: web::Data<AppState>,
+    token: web::Path<Uuid>,
+) -> Result<HttpResponse, HttpError> {
+    match app_state
+        .auth_service
+        .user_reset_password_exists(token.into_inner())
+        .await
+    {
+        Ok(res) => {
+            if res {
+                return Ok(HttpResponse::Ok().json(Response {
+                    status: "success",
+                    message: "token is valid".to_string(),
+                }));
+            }
+            Ok(HttpResponse::Unauthorized().json(Response {
+                status: "fail",
+                message: "token is not valid".to_string(),
+            }))
+        }
+        Err(e) => Err(HttpError::server_error(e)),
     }
 }
 pub async fn logout(app_state: web::Data<AppState>) -> impl Responder {

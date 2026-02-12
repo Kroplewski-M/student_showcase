@@ -118,6 +118,20 @@ impl UsersRepo {
         tx.commit().await?;
         Ok(token)
     }
+    pub async fn user_reset_password_exists(&self, token: Uuid) -> Result<bool, sqlx::Error> {
+        sqlx::query_scalar!(
+            r#"
+            SELECT EXISTS(
+            SELECT 1 FROM user_password_resets
+            WHERE token = $1
+            AND expired_at > now()
+            ) as "exists!: bool"
+            "#,
+            token
+        )
+        .fetch_one(&self.pool)
+        .await
+    }
     pub async fn validate_user(&self, token: Uuid) -> Result<(), sqlx::Error> {
         let mut tx = self.pool.begin().await?;
         let student_id: Option<String> = sqlx::query_scalar!(

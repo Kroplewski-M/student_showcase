@@ -112,6 +112,12 @@ impl AuthService {
             .map_err(|_| ErrorMessage::ServerError)?;
         Ok(())
     }
+    pub async fn user_reset_password_exists(&self, token: Uuid) -> Result<bool, ErrorMessage> {
+        self.user_repo
+            .user_reset_password_exists(token)
+            .await
+            .map_err(|_| ErrorMessage::ServerError)
+    }
     async fn create_verification_token_and_send_email(
         &self,
         student_id: &str,
