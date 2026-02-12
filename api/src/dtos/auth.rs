@@ -1,6 +1,7 @@
 use std::ops::Deref;
 
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 use validator::Validate;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -45,7 +46,20 @@ pub struct RegisterUserDto {
     pub password_confirmation: String,
 }
 #[derive(Debug, Deserialize, Clone, Default, Validate)]
-pub struct ResetPasswordDto {
+pub struct GetResetPasswordDto {
     #[validate(custom(function = "validate_student_id"))]
     pub id: StudentId,
+}
+#[derive(Debug, Deserialize, Clone, Default, Validate)]
+pub struct ResetPasswordDto {
+    pub token: Uuid,
+    #[validate(length(
+        min = 5,
+        max = 20,
+        message = "Password must be between 5 and 20 characters"
+    ))]
+    pub password: String,
+    #[validate(must_match(other = "password", message = "Passwords do not match"))]
+    #[serde(rename = "passwordConfirmation")]
+    pub password_confirmation: String,
 }

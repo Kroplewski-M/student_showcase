@@ -118,6 +118,25 @@ impl AuthService {
             .await
             .map_err(|_| ErrorMessage::ServerError)
     }
+    pub async fn reset_user_password(
+        &self,
+        token: Uuid,
+        password: String,
+    ) -> Result<(), ErrorMessage> {
+        let hasher = PasswordHasherService::new();
+        let hashed_password = hasher.hash(&password)?;
+        match self
+            .user_repo
+            .update_user_password(token, &hashed_password)
+            .await
+        {
+            Ok(_) => Ok(()),
+            Err(e) => match &e {
+                sqlx::Error::RowNotFound => Err(ErrorMessage::UserNoLongerExists),
+                _ => Err(ErrorMessage::ServerError),
+            },
+        }
+    }
     async fn create_verification_token_and_send_email(
         &self,
         student_id: &str,

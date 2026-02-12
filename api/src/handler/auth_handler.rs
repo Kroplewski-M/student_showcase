@@ -7,7 +7,7 @@ use crate::{
     AppState,
     dtos::{
         Response,
-        auth::{LoginUserDto, RegisterUserDto, ResetPasswordDto},
+        auth::{GetResetPasswordDto, LoginUserDto, RegisterUserDto, ResetPasswordDto},
     },
     errors::{ErrorMessage, HttpError},
     middleware::auth::RequireAuth,
@@ -22,6 +22,10 @@ pub fn auth_handler() -> Scope {
         .route(
             "/reset-password-exists/{token}",
             web::get().to(reset_password_exists),
+        )
+        .route(
+            "reset-password-confirm",
+            web::post().to(reset_password_confirm),
         )
         .route("/logout", web::post().to(logout).wrap(RequireAuth))
 }
@@ -106,7 +110,7 @@ pub async fn validate_user(
 }
 pub async fn reset_password(
     app_state: web::Data<AppState>,
-    body: web::Json<ResetPasswordDto>,
+    body: web::Json<GetResetPasswordDto>,
 ) -> Result<HttpResponse, HttpError> {
     body.validate()
         .map_err(|e| HttpError::bad_request(e.to_string()))?;
@@ -154,6 +158,31 @@ pub async fn reset_password_exists(
             }))
         }
         Err(e) => Err(HttpError::server_error(e)),
+    }
+}
+pub async fn reset_password_confirm(
+    app_state: web::Data<AppState>,
+    body: web::Json<ResetPasswordDto>,
+) -> Result<HttpResponse, HttpError> {
+    body.validate()
+        .map_err(|e| HttpError::bad_request(e.to_string()))?;
+    match app_state
+        .auth_service
+        .reset_user_password(body.token.to_owned(), body.password.to_owned())
+        .await
+    {
+        Ok(_) => Ok(HttpResponse::Ok().json(Response {
+            status: "success",
+            message: "user password updated successfully".to_string(),
+        })),
+        Err(e) => match &e {
+            ErrorMessage::UserNoLongerExists => {
+                Err(HttpError::unauthorized("unauthorized request"))
+            }
+            _ => Err(HttpError::server_error(
+                "an error occured, please try again later",
+            )),
+        },
     }
 }
 pub async fn logout(app_state: web::Data<AppState>) -> impl Responder {
