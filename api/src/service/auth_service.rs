@@ -96,6 +96,28 @@ impl AuthService {
             },
         }
     }
+    pub async fn create_user_reset_password(&self, student_id: String) -> Result<(), ErrorMessage> {
+        let token = self
+            .user_repo
+            .create_user_reset_password(student_id.as_str())
+            .await
+            .map_err(|e| match &e {
+                sqlx::Error::RowNotFound => ErrorMessage::UserNoLongerExists,
+                _ => ErrorMessage::ServerError,
+            })?;
+
+        self.email_service
+            .send_reset_password_email(student_id, token)
+            .await
+            .map_err(|_| ErrorMessage::ServerError)?;
+        Ok(())
+    }
+    pub async fn user_reset_password_exists(&self, token: Uuid) -> Result<bool, ErrorMessage> {
+        self.user_repo
+            .user_reset_password_exists(token)
+            .await
+            .map_err(|_| ErrorMessage::ServerError)
+    }
     async fn create_verification_token_and_send_email(
         &self,
         student_id: &str,

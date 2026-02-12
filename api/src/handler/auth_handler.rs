@@ -4,10 +4,10 @@ use uuid::Uuid;
 use validator::Validate;
 
 use crate::{
-    AppState, config,
+    AppState,
     dtos::{
         Response,
-        auth::{LoginUserDto, RegisterUserDto},
+        auth::{LoginUserDto, RegisterUserDto, ResetPasswordDto},
     },
     errors::{ErrorMessage, HttpError},
     middleware::auth::RequireAuth,
@@ -19,6 +19,10 @@ pub fn auth_handler() -> Scope {
         .route("/register", web::post().to(register))
         .route("/validate-user/{token}", web::post().to(validate_user))
         .route("/reset-password", web::post().to(reset_password))
+        .route(
+            "/reset-password-exists/{token}",
+            web::get().to(reset_password_exists),
+        )
         .route("/logout", web::post().to(logout).wrap(RequireAuth))
 }
 
@@ -100,8 +104,57 @@ pub async fn validate_user(
         },
     }
 }
-pub async fn reset_password() -> Result<HttpResponse, HttpError> {
-    Ok(HttpResponse::Ok().body("ok"))
+pub async fn reset_password(
+    app_state: web::Data<AppState>,
+    body: web::Json<ResetPasswordDto>,
+) -> Result<HttpResponse, HttpError> {
+    body.validate()
+        .map_err(|e| HttpError::bad_request(e.to_string()))?;
+    match app_state
+        .auth_service
+        .create_user_reset_password(body.id.to_string())
+        .await
+    {
+        Ok(_) => Ok(HttpResponse::Ok().json(Response {
+            status: "success",
+            message:
+                "If the user exists, you will receive an email with a link to reset your password"
+                    .to_string(),
+        })),
+        Err(ErrorMessage::ServerError) => Err(HttpError::server_error(
+            "An error occurred please try again later",
+        )),
+        Err(_) => Ok(HttpResponse::Ok().json(Response {
+            status: "success",
+            message:
+                "If the user exists, you will receive an email with a link to reset your password"
+                    .to_string(),
+        })),
+    }
+}
+pub async fn reset_password_exists(
+    app_state: web::Data<AppState>,
+    token: web::Path<Uuid>,
+) -> Result<HttpResponse, HttpError> {
+    match app_state
+        .auth_service
+        .user_reset_password_exists(token.into_inner())
+        .await
+    {
+        Ok(res) => {
+            if res {
+                return Ok(HttpResponse::Ok().json(Response {
+                    status: "success",
+                    message: "token is valid".to_string(),
+                }));
+            }
+            Ok(HttpResponse::Unauthorized().json(Response {
+                status: "fail",
+                message: "token is not valid".to_string(),
+            }))
+        }
+        Err(e) => Err(HttpError::server_error(e)),
+    }
 }
 pub async fn logout(app_state: web::Data<AppState>) -> impl Responder {
     let cookie = Cookie::build(&app_state.config.auth_cookie_name, "")

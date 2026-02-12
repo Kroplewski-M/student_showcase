@@ -25,11 +25,6 @@ fn validate_student_id(id: &str) -> Result<(), validator::ValidationError> {
 }
 
 #[derive(Debug, Validate, Default, Clone, Serialize, Deserialize)]
-pub struct AuthDto {
-    #[validate(custom(function = "validate_student_id"))]
-    pub id: StudentId,
-}
-#[derive(Debug, Validate, Default, Clone, Serialize, Deserialize)]
 pub struct LoginUserDto {
     #[validate(custom(function = "validate_student_id"))]
     pub id: StudentId,
@@ -48,4 +43,9 @@ pub struct RegisterUserDto {
     #[validate(must_match(other = "password", message = "Passwords do not match"))]
     #[serde(rename = "passwordConfirmation")]
     pub password_confirmation: String,
+}
+#[derive(Debug, Deserialize, Clone, Default, Validate)]
+pub struct ResetPasswordDto {
+    #[validate(custom(function = "validate_student_id"))]
+    pub id: StudentId,
 }
