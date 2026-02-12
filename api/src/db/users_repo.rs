@@ -148,6 +148,7 @@ impl UsersRepo {
         .fetch_optional(tx.as_mut())
         .await?;
         if user_id.is_none() {
+            tx.rollback().await?;
             return Err(sqlx::Error::RowNotFound);
         }
         sqlx::query!(
@@ -157,7 +158,7 @@ impl UsersRepo {
             WHERE id = $2
             "#,
             password,
-            user_id,
+            user_id.unwrap(),
         )
         .execute(tx.as_mut())
         .await?;

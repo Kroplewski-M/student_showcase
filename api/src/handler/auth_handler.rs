@@ -24,7 +24,7 @@ pub fn auth_handler() -> Scope {
             web::get().to(reset_password_exists),
         )
         .route(
-            "reset-password-confirm",
+            "/reset-password-confirm",
             web::post().to(reset_password_confirm),
         )
         .route("/logout", web::post().to(logout).wrap(RequireAuth))
@@ -180,7 +180,7 @@ pub async fn reset_password_confirm(
                 Err(HttpError::unauthorized("unauthorized request"))
             }
             _ => Err(HttpError::server_error(
-                "an error occured, please try again later",
+                "an error occurred, please try again later",
             )),
         },
     }
