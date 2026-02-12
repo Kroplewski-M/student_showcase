@@ -132,6 +132,39 @@ impl UsersRepo {
         .fetch_one(&self.pool)
         .await
     }
+    pub async fn update_user_password(
+        &self,
+        token: Uuid,
+        password: &str,
+    ) -> Result<(), sqlx::Error> {
+        let mut tx = self.pool.begin().await?;
+        let user_id = sqlx::query_scalar!(
+            r#"DELETE FROM user_password_resets
+            WHERE token = $1
+            AND expired_at > now()
+            RETURNING user_id"#,
+            token
+        )
+        .fetch_optional(tx.as_mut())
+        .await?;
+        if user_id.is_none() {
+            tx.rollback().await?;
+            return Err(sqlx::Error::RowNotFound);
+        }
+        sqlx::query!(
+            r#"
+            UPDATE users
+            SET password = $1
+            WHERE id = $2
+            "#,
+            password,
+            user_id.unwrap(),
+        )
+        .execute(tx.as_mut())
+        .await?;
+        tx.commit().await?;
+        Ok(())
+    }
     pub async fn validate_user(&self, token: Uuid) -> Result<(), sqlx::Error> {
         let mut tx = self.pool.begin().await?;
         let student_id: Option<String> = sqlx::query_scalar!(
