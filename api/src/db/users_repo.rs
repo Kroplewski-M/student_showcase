@@ -91,11 +91,11 @@ impl UsersRepo {
         Ok(token)
     }
     pub async fn create_user_reset_password(&self, student_id: &str) -> Result<Uuid, sqlx::Error> {
+        let mut tx = self.pool.begin().await?;
         let user_exists = self.exists_verified(student_id).await?;
         if !user_exists {
             return Err(sqlx::Error::RowNotFound);
         }
-        let mut tx = self.pool.begin().await?;
         //delete all prev tokens for user so theres only one active
         sqlx::query!(
             "DELETE FROM user_password_resets WHERE user_id = $1",

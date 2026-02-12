@@ -122,7 +122,7 @@ pub async fn reset_password(
                     .to_string(),
         })),
         Err(ErrorMessage::ServerError) => Err(HttpError::server_error(
-            "An error occured please try again later",
+            "An error occurred please try again later",
         )),
         Err(_) => Ok(HttpResponse::Ok().json(Response {
             status: "success",
