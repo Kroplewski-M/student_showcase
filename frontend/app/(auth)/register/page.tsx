@@ -39,19 +39,26 @@ function getPasswordStrength(password: string) {
   if (/[^a-zA-Z0-9]/.test(password)) score++;
 
   if (score <= 1)
-    return { score: 1, label: "Weak", color: "bg-danger text-danger" };
+    return { score: 1, label: "Weak", bg: "bg-danger", text: "text-danger" };
   if (score <= 2)
-    return { score: 2, label: "Fair", color: "bg-amber-500 text-amber-500" };
+    return {
+      score: 2,
+      label: "Fair",
+      bg: "bg-amber-500",
+      text: "text-amber-500",
+    };
   if (score <= 3)
     return {
       score: 3,
       label: "Good",
-      color: "bg-secondary text-secondary",
+      bg: "bg-secondary",
+      text: "text-secondary",
     };
   return {
     score: 4,
     label: "Strong",
-    color: "bg-emerald-400 text-emerald-400",
+    bg: "bg-emerald-400",
+    text: "text-emerald-400",
   };
 }
 
@@ -143,6 +150,7 @@ export default function RegisterPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (loading) return;
     setTouched({ id: true, password: true, passwordConfirmation: true });
     const errs = validate();
     setErrors(errs);
@@ -238,7 +246,6 @@ export default function RegisterPage() {
                   }
                   onBlur={() => handleBlur("id")}
                   disabled={loading}
-                  autoFocus
                 />
                 {touched.id && errors.id && (
                   <motion.p
@@ -295,16 +302,14 @@ export default function RegisterPage() {
                         <div
                           key={i}
                           className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
-                            i <= strength.score
-                              ? strength.color.split(" ")[0]
-                              : "bg-third/40"
+                            i <= strength.score ? strength.bg : "bg-third/40"
                           }`}
                         />
                       ))}
                     </div>
                     <span
                       className={`text-[10px] font-semibold uppercase tracking-widest ${
-                        strength.color.split(" ")[1]
+                        strength.text
                       }`}
                     >
                       {strength.label}
