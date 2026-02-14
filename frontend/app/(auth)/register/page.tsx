@@ -6,14 +6,11 @@ import Link from "next/link";
 import EyeIcon from "@/app/SVGS/EyeIcon";
 import ConfirmedRegister from "./ConfirmedRegister";
 import Loading from "@/app/SVGS/Loading";
-import validateStudentId from "@/app/helpers";
-
-function validatePassword(password: string): string | null {
-  if (!password) return "Password is required";
-  if (password.length < 5) return "Password must be at least 5 characters";
-  if (password.length > 20) return "Password must be at most 20 characters";
-  return null;
-}
+import validateStudentId, {
+  getPasswordStrength,
+  validatePassword,
+} from "@/app/helpers";
+import PasswordStrengthMeter from "@/app/components/PasswordStrengthMeter";
 
 function validateConfirmation(
   password: string,
@@ -23,40 +20,6 @@ function validateConfirmation(
   if (password !== confirmation) return "Passwords do not match";
   return null;
 }
-
-function getPasswordStrength(password: string) {
-  if (!password) return { score: 0, label: "", color: "" };
-  let score = 0;
-  if (password.length >= 8) score++;
-  if (password.length >= 12) score++;
-  if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
-  if (/\d/.test(password)) score++;
-  if (/[^a-zA-Z0-9]/.test(password)) score++;
-
-  if (score <= 1)
-    return { score: 1, label: "Weak", bg: "bg-danger", text: "text-danger" };
-  if (score <= 2)
-    return {
-      score: 2,
-      label: "Fair",
-      bg: "bg-amber-500",
-      text: "text-amber-500",
-    };
-  if (score <= 3)
-    return {
-      score: 3,
-      label: "Good",
-      bg: "bg-secondary",
-      text: "text-secondary",
-    };
-  return {
-    score: 4,
-    label: "Strong",
-    bg: "bg-emerald-400",
-    text: "text-emerald-400",
-  };
-}
-
 type FormFields = {
   id: string;
   password: string;
@@ -289,28 +252,7 @@ export default function RegisterPage() {
                     <EyeIcon open={showPassword} />
                   </button>
                 </div>
-                {/* Strength meter */}
-                {form.password && (
-                  <div className="mt-2 flex items-center gap-2.5">
-                    <div className="flex flex-1 gap-1">
-                      {[1, 2, 3, 4].map((i) => (
-                        <div
-                          key={i}
-                          className={`h-1 flex-1 rounded-full transition-colors duration-300 ${
-                            i <= strength.score ? strength.bg : "bg-third/40"
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <span
-                      className={`text-[10px] font-semibold uppercase tracking-widest ${
-                        strength.text
-                      }`}
-                    >
-                      {strength.label}
-                    </span>
-                  </div>
-                )}
+                {form.password && <PasswordStrengthMeter strength={strength} />}
                 {touched.password && errors.password && (
                   <motion.p
                     initial={{ opacity: 0, y: -4 }}
