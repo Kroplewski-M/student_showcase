@@ -105,7 +105,7 @@ impl EmailService {
         token: Uuid,
     ) -> Result<(), ErrorMessage> {
         let email = generic::get_email_for_student(student_id.as_str());
-        let verify_url = format!("{}/verifytoken/{}", self.base_url, token);
+        let verify_url = format!("{}/validate-user/{}", self.base_url, token);
 
         let mut ctx = Context::new();
         ctx.insert("verify_url", verify_url.as_str());

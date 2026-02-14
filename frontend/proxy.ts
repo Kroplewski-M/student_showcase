@@ -5,7 +5,7 @@ if (!COOKIE_NAME) {
   throw new Error("COOKIE_NAME env var is not set");
 }
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const COOKIE_NAME: string = process.env.COOKIE_NAME!;
   const hasAuthCookie = Boolean(req.cookies.get(COOKIE_NAME) !== undefined);
 
