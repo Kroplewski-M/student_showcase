@@ -5,6 +5,9 @@ import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { isValidUuid } from "@/app/helpers";
+import CheckIcon from "@/app/SVGS/CheckIcon";
+import Loading from "@/app/SVGS/Loading";
+import ErrorSVG from "@/app/SVGS/ErrorSVG";
 
 type Status = "loading" | "success" | "error";
 
@@ -57,18 +60,7 @@ export default function ValidateUserPage() {
           animate={{ opacity: 1 }}
           className="relative z-10 flex flex-col items-center gap-4"
         >
-          <svg
-            className="animate-spin text-secondary"
-            width="36"
-            height="36"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          >
-            <path d="M12 2a10 10 0 0 1 10 10" />
-          </svg>
+          <Loading />
           <p className="text-sm text-support">Verifying your account…</p>
         </motion.div>
       )}
@@ -82,20 +74,7 @@ export default function ValidateUserPage() {
           className="relative z-10 w-full max-w-md rounded-2xl border border-third/40 bg-third/20 p-8 text-center backdrop-blur-sm"
         >
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-secondary/15">
-            <svg
-              width="32"
-              height="32"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-secondary"
-            >
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-              <polyline points="22 4 12 14.01 9 11.01" />
-            </svg>
+            <CheckIcon />
           </div>
 
           <h1 className="mb-2 text-2xl font-extrabold tracking-tight text-light">
@@ -124,21 +103,7 @@ export default function ValidateUserPage() {
           className="relative z-10 w-full max-w-md rounded-2xl border border-third/40 bg-third/20 p-8 text-center backdrop-blur-sm"
         >
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-danger/15">
-            <svg
-              width="32"
-              height="32"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-danger"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <line x1="15" y1="9" x2="9" y2="15" />
-              <line x1="9" y1="9" x2="15" y2="15" />
-            </svg>
+            <ErrorSVG />
           </div>
 
           <h1 className="mb-2 text-2xl font-extrabold tracking-tight text-light">
