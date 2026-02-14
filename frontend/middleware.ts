@@ -12,14 +12,17 @@ export function middleware(req: NextRequest) {
   const isProtected = req.nextUrl.pathname.startsWith("/profile");
 
   if (isProtected && !hasAuthCookie) {
-    return NextResponse.redirect(new URL("/signin", req.url));
+    return NextResponse.redirect(new URL("/login", req.url));
   }
-  if (req.nextUrl.pathname == "/signin" && hasAuthCookie) {
+  if (
+    (req.nextUrl.pathname == "/login" || req.nextUrl.pathname == "/register") &&
+    hasAuthCookie
+  ) {
     return NextResponse.redirect(new URL("/profile", req.url));
   }
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/profile/:path*", "/signin"],
+  matcher: ["/profile/:path*", "/login", "/register"],
 };

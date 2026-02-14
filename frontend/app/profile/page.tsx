@@ -1,3 +1,3 @@
 export default function Profile() {
-  return <>Profile</>;
+  return <div className="min-h-screen">Profile</div>;
 }

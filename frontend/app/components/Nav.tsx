@@ -16,8 +16,8 @@ export default function Nav() {
           }}
           className="bg-support  max-w-4xl ml-auto rounded-full py-2 px-5 mr-2"
         >
-          <Link href={"/signin"} className="font-semibold text-dark">
-            Student Sign In
+          <Link href={"/login"} className="font-semibold text-dark">
+            Student Login
           </Link>
         </motion.div>
       </div>
