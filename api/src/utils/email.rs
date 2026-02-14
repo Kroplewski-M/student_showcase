@@ -127,7 +127,7 @@ impl EmailService {
         token: Uuid,
     ) -> Result<(), ErrorMessage> {
         let email = generic::get_email_for_student(student_id.as_str());
-        let reset_url = format!("{}/resetpassword/{}", self.base_url, token);
+        let reset_url = format!("{}/reset-password/{}", self.base_url, token);
         let mut ctx = Context::new();
         ctx.insert("reset_url", reset_url.as_str());
         let template = &self
