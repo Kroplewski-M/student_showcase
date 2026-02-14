@@ -5,13 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import EyeIcon from "@/app/SVGS/EyeIcon";
 import ConfirmedRegister from "./ConfirmedRegister";
-
-function validateStudentId(id: string): string | null {
-  const trimmed = id.trim();
-  if (!trimmed) return "Student ID is required";
-  if (!/^\d{7}$/.test(trimmed)) return "Student ID must be exactly 7 digits";
-  return null;
-}
+import Loading from "@/app/SVGS/Loading";
+import validateStudentId from "@/app/helpers";
 
 function validatePassword(password: string): string | null {
   if (!password) return "Password is required";
@@ -403,18 +398,7 @@ export default function RegisterPage() {
               >
                 {loading ? (
                   <>
-                    <svg
-                      className="animate-spin"
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                    >
-                      <path d="M12 2a10 10 0 0 1 10 10" />
-                    </svg>
+                    <Loading />
                     Creating account…
                   </>
                 ) : (
@@ -429,7 +413,7 @@ export default function RegisterPage() {
                 href="/login"
                 className="font-medium text-secondary transition-colors hover:text-secondary/80"
               >
-                Sign in
+                Login
               </Link>
             </p>
           </motion.div>
