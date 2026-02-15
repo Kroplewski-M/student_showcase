@@ -9,50 +9,64 @@ import CheckIcon from "@/app/SVGS/CheckIcon";
 import Loading from "@/app/SVGS/Loading";
 import ErrorSVG from "@/app/SVGS/ErrorSVG";
 
-type Status = "loading" | "success" | "error";
+type Status = "idle" | "loading" | "success" | "error";
 
 export default function ValidateUserPage() {
   const { token } = useParams<{ token: string }>();
   const router = useRouter();
-  const [status, setStatus] = useState<Status>("loading");
-
+  const [status, setStatus] = useState<Status>("idle");
+  const isTokenValid = token && isValidUuid(token);
   useEffect(() => {
-    if (!token || !isValidUuid(token)) {
+    if (!isTokenValid) {
       router.replace("/404");
       return;
     }
+  }, [isTokenValid, router]);
 
-    const controller = new AbortController();
+  async function verify() {
+    setStatus("loading");
+    try {
+      const res = await fetch(`/api/auth/validate-user/${token}`, {
+        method: "POST",
+      });
 
-    async function verify() {
-      try {
-        const res = await fetch(`/api/auth/validate-user/${token}`, {
-          method: "POST",
-          signal: controller.signal,
-        });
-
-        if (res.ok) {
-          setStatus("success");
-        } else if (res.status === 400) {
-          router.replace("/404");
-        } else {
-          setStatus("error");
-        }
-      } catch (err: unknown) {
-        if (err instanceof DOMException && err.name === "AbortError") return;
+      if (res.ok) {
+        setStatus("success");
+      } else if (res.status === 400) {
+        router.replace("/404");
+      } else {
         setStatus("error");
       }
+    } catch {
+      setStatus("error");
     }
-
-    verify();
-
-    return () => controller.abort();
-  }, [token, router]);
+  }
 
   return (
     <section className="relative flex min-h-screen items-center justify-center px-4 py-12">
       <div className="pointer-events-none absolute -top-1/3 -left-1/4 h-[80vw] w-[80vw] rounded-full bg-secondary/5 blur-3xl" />
-
+      {status === "idle" && isTokenValid && (
+        <motion.div
+          key="idle"
+          initial={{ opacity: 0, y: 20, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="relative z-10 w-full max-w-md rounded-2xl border border-third/40 bg-third/20 p-8 text-center backdrop-blur-sm"
+        >
+          <h1 className="mb-2 text-2xl font-extrabold tracking-tight text-light">
+            Verify your account
+          </h1>
+          <p className="mb-7 text-sm text-support">
+            Click below to confirm your email address.
+          </p>
+          <button
+            onClick={verify}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-secondary py-3.5 text-sm font-bold text-primary transition-all hover:bg-secondary/85 hover:shadow-lg hover:shadow-secondary/20 active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+          >
+            Verify my account
+          </button>
+        </motion.div>
+      )}
       {status === "loading" && (
         <motion.div
           key="loading"
