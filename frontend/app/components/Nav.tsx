@@ -9,7 +9,7 @@ export default function Nav() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <nav className="sticky top-0 z-50 w-full">
+    <nav className="sticky top-0 z-50 w-full backdrop-blur-md">
       <div className="mx-auto flex items-center justify-between px-4 py-4 sm:px-8">
         {/* Logo */}
         <motion.div

@@ -14,7 +14,7 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   title: "C&E Futures '26",
-  description: "Student Showcase 2026 @ University Of Huddersfield",
+  description: "C&E Futures '26 Student Showcase @ University Of Huddersfield",
 };
 
 export default function RootLayout({

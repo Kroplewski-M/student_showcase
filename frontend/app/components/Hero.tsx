@@ -110,7 +110,7 @@ export default function Hero() {
               >
                 Futures
                 <span className="text-secondary">&nbsp;&rsquo;</span>
-                <span className="text-secondary">26</span>
+                <span>26</span>
               </motion.h1>
 
               {/* Decorative glow behind title */}
