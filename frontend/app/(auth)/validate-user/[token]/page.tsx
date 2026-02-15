@@ -15,13 +15,13 @@ export default function ValidateUserPage() {
   const { token } = useParams<{ token: string }>();
   const router = useRouter();
   const [status, setStatus] = useState<Status>("idle");
-
+  const isTokenValid = token && isValidUuid(token);
   useEffect(() => {
-    if (!token || !isValidUuid(token)) {
+    if (!isTokenValid) {
       router.replace("/404");
       return;
     }
-  }, [token, router]);
+  }, [isTokenValid, router]);
 
   async function verify() {
     setStatus("loading");
@@ -45,7 +45,7 @@ export default function ValidateUserPage() {
   return (
     <section className="relative flex min-h-screen items-center justify-center px-4 py-12">
       <div className="pointer-events-none absolute -top-1/3 -left-1/4 h-[80vw] w-[80vw] rounded-full bg-secondary/5 blur-3xl" />
-      {status == "idle" && (
+      {status === "idle" && isTokenValid && (
         <motion.div
           key="idle"
           initial={{ opacity: 0, y: 20, scale: 0.97 }}
