@@ -13,7 +13,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Student Showcase 2026",
+  title: "C&E Futures '26",
   description: "Student Showcase 2026 @ University Of Huddersfield",
 };
 
