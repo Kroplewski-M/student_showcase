@@ -41,6 +41,6 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /api
 COPY --from=build /api/target/release/api .
-
+COPY --from=build /api/templates ./templates
 EXPOSE 8080
 CMD ["./api"]
