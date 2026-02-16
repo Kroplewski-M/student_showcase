@@ -203,6 +203,6 @@ pub async fn logout(app_state: web::Data<AppState>) -> impl Responder {
         .cookie(cookie)
         .json(json!({"status": "success"}))
 }
-pub async fn me(app_state: web::Data<AppState>, user_id: AuthenticatedUserId) -> impl Responder {
+pub async fn me(user_id: AuthenticatedUserId) -> impl Responder {
     HttpResponse::Ok().json(json!({"userId": user_id}))
 }

@@ -1,10 +1,16 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
 import HeroVisuals from "./ParticleNetwork";
 
 export default function Hero() {
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setIsMounted(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
   const { scrollY } = useScroll();
 
   // Multi-speed parallax layers
@@ -23,7 +29,7 @@ export default function Hero() {
 
       {/* Grid overlay */}
       <motion.div
-        style={{ y: yGrid }}
+        style={isMounted ? { y: yGrid } : undefined}
         className="pointer-events-none absolute inset-0 opacity-[0.1]"
       >
         <div
@@ -38,7 +44,7 @@ export default function Hero() {
 
       {/* Primary glow orb */}
       <motion.div
-        style={{ y: yOrb1 }}
+        style={isMounted ? { y: yOrb1 } : undefined}
         className="pointer-events-none absolute -top-[20%] left-[15%] h-[50vw] w-[50vw] rounded-full blur-3xl"
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -49,7 +55,7 @@ export default function Hero() {
 
       {/* Secondary glow orb */}
       <motion.div
-        style={{ y: yOrb2 }}
+        style={isMounted ? { y: yOrb2 } : undefined}
         className="pointer-events-none absolute -bottom-[10%] right-[5%] h-[35vw] w-[35vw] rounded-full blur-3xl"
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -72,7 +78,7 @@ export default function Hero() {
                 delay: 0.3,
                 ease: [0.16, 1, 0.3, 1],
               }}
-              style={{ y: ySubtitle, opacity }}
+              style={isMounted ? { y: ySubtitle, opacity } : undefined}
               className="mb-6 sm:mb-8"
             >
               <span className="inline-flex items-center gap-2 rounded-full border border-secondary/20 bg-secondary/5 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-secondary backdrop-blur-sm">
@@ -83,7 +89,7 @@ export default function Hero() {
 
             {/* Main title */}
             <motion.div
-              style={{ y: yTitle, scale, opacity }}
+              style={isMounted ? { y: yTitle, scale, opacity } : undefined}
               className="relative"
             >
               <motion.h1
@@ -126,7 +132,7 @@ export default function Hero() {
                 delay: 0.6,
                 ease: [0.16, 1, 0.3, 1],
               }}
-              style={{ y: ySubtitle, opacity }}
+              style={isMounted ? { y: ySubtitle, opacity } : undefined}
               className="mt-6 max-w-lg text-sm leading-relaxed text-support/70 sm:mt-8 sm:text-base"
             >
               Discover the next generation of talent. Explore student projects,
@@ -143,7 +149,7 @@ export default function Hero() {
               delay: 0.8,
               ease: [0.16, 1, 0.3, 1],
             }}
-            style={{ y: yCta, opacity }}
+            style={isMounted ? { y: yCta, opacity } : undefined}
             className="flex flex-col gap-6 lg:items-end"
           >
             {/* Stats row */}
@@ -203,7 +209,7 @@ export default function Hero() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.2, duration: 1 }}
-        style={{ opacity }}
+        style={isMounted ? { opacity } : undefined}
         className="pointer-events-none"
       >
         <div className="absolute right-4 top-4 h-16 w-16 border-r border-t border-third/20 sm:right-8 sm:top-8 sm:h-20 sm:w-20" />

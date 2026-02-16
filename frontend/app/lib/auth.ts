@@ -13,13 +13,14 @@ export async function getUser(): Promise<User | null> {
   if (!sessionCookie) return null;
 
   try {
-    const res = await fetch("/api/auth/me", {
-      credentials: "include",
+    const res = await fetch(`${process.env.API_INTERNAL_URL}/auth/me`, {
+      headers: {
+        Cookie: `${cookieName}=${sessionCookie.value}`,
+      },
       cache: "no-store",
     });
     if (!res.ok) return null;
     const data: { userId: string } = await res.json();
-
     return {
       id: data.userId,
     };

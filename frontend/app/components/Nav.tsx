@@ -52,7 +52,7 @@ export default function Nav() {
           ) : (
             <>
               <Link
-                href="/register"
+                href="/profile"
                 className="rounded-xl bg-secondary px-5 py-2 text-sm font-bold text-primary transition-all hover:bg-secondary/85 hover:shadow-lg hover:shadow-secondary/20 active:scale-[0.985]"
               >
                 Profile
@@ -133,7 +133,7 @@ export default function Nav() {
                 ) : (
                   <>
                     <Link
-                      href="/register"
+                      href="/profile"
                       onClick={() => setMenuOpen(false)}
                       className="rounded-xl bg-secondary px-5 py-3.5 text-center text-sm font-bold text-primary transition-all hover:bg-secondary/85 active:scale-[0.985]"
                     >

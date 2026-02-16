@@ -11,7 +11,6 @@ import {
   validatePassword,
 } from "@/app/lib/helpers";
 import Loading from "@/app/SVGS/Loading";
-import CheckIcon from "@/app/SVGS/CheckIcon";
 import ErrorSVG from "@/app/SVGS/ErrorSVG";
 import SuccessfulReset from "../SuccessfulReset";
 import PasswordStrengthMeter from "@/app/components/PasswordStrengthMeter";
