@@ -3,23 +3,12 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import HeroVisuals from "./ParticleNetwork";
+import GridBackground from "./GridBackground";
 
 export default function Hero() {
   return (
     <section className="relative flex min-h-screen items-start pt-32 overflow-hidden px-4 sm:px-8">
-      {/* ── Atmospheric layers ── */}
-
-      {/* Grid overlay */}
-      <motion.div className="pointer-events-none absolute inset-0 opacity-[0.1]">
-        <div
-          className="h-full w-full"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(161,233,240,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(161,233,240,0.4) 1px, transparent 1px)",
-            backgroundSize: "80px 80px",
-          }}
-        />
-      </motion.div>
+      <GridBackground />
 
       {/* Primary glow orb */}
       <motion.div
@@ -156,14 +145,15 @@ export default function Hero() {
             {/* CTA buttons */}
             <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
               <Link
-                href="/register"
+                href="https://forms.office.com/pages/responsepage.aspx?id=2p8utZEGhUW9_FzK4c4YkG46iA9GSCpPssptatZjoWZUNlhVWTJMNDlJWjlKT09CNlhMMTJMUjJRVC4u&route=shorturl"
+                target="_blank"
                 className="rounded-xl bg-secondary px-8 py-3.5 text-center text-sm font-bold text-primary transition-all hover:bg-secondary/85 hover:shadow-lg hover:shadow-secondary/25 active:scale-[0.985]"
               >
-                Showcase your work
+                Register Interest
               </Link>
               <Link
                 href="#students"
-                className="rounded-xl border border-third/40 bg-third/10 px-8 py-3.5 text-center text-sm font-semibold text-light backdrop-blur-sm transition-all hover:border-third/60 hover:bg-third/20 active:scale-[0.985]"
+                className="rounded-xl border border-third/40 bg-third/10 px-8 py-3.5 text-center text-sm font-semibold text-light backdrop-blur-sm transition-all hover:border-third/60 hover:bg-third/20 active:scale-[0.985] cursor-pointer"
               >
                 Browse students
               </Link>
