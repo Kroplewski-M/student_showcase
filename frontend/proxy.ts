@@ -1,25 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const COOKIE_NAME = process.env.COOKIE_NAME;
-if (!COOKIE_NAME) {
-  throw new Error("COOKIE_NAME env var is not set");
-}
+const COOKIE_NAME = process.env.COOKIE_NAME!;
+const PROTECTED_ROUTES = ["/profile"];
+const AUTH_ROUTES = ["/login", "/register"];
 
-export function proxy(req: NextRequest) {
-  const COOKIE_NAME: string = process.env.COOKIE_NAME!;
-  const hasAuthCookie = Boolean(req.cookies.get(COOKIE_NAME) !== undefined);
+export async function proxy(req: NextRequest) {
+  const token = req.cookies.get(COOKIE_NAME)?.value;
+  const { pathname } = req.nextUrl;
 
-  const isProtected = req.nextUrl.pathname.startsWith("/profile");
+  const isProtected = PROTECTED_ROUTES.some((r) => pathname.startsWith(r));
+  const isAuthRoute = AUTH_ROUTES.includes(pathname);
 
-  if (isProtected && !hasAuthCookie) {
-    return NextResponse.redirect(new URL("/login", req.url));
+  if (!token) {
+    if (isProtected) {
+      return NextResponse.redirect(new URL("/login", req.url));
+    }
+    return NextResponse.next();
   }
-  if (
-    (req.nextUrl.pathname == "/login" || req.nextUrl.pathname == "/register") &&
-    hasAuthCookie
-  ) {
+
+  if (isProtected) {
+    const res = await fetch(`${process.env.API_INTERNAL_URL}/auth/me`, {
+      headers: { Cookie: `${COOKIE_NAME}=${token}` },
+    });
+
+    if (!res.ok) {
+      const response = NextResponse.redirect(new URL("/login", req.url));
+      response.cookies.delete(COOKIE_NAME);
+      return response;
+    }
+  }
+
+  if (isAuthRoute) {
     return NextResponse.redirect(new URL("/profile", req.url));
   }
+
   return NextResponse.next();
 }
 

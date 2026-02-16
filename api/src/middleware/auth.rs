@@ -1,5 +1,6 @@
 use crate::errors::{ErrorMessage, ErrorResponse, HttpError};
 use crate::{AppState, utils};
+use actix_web::cookie::Cookie;
 use actix_web::error::{ErrorForbidden, ErrorInternalServerError};
 use actix_web::web;
 use actix_web::{
@@ -72,7 +73,7 @@ where
     }
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
-        let app_state = req.app_data::<web::Data<AppState>>().unwrap();
+        let app_state = req.app_data::<web::Data<AppState>>().unwrap().clone();
         let token = req
             .cookie(app_state.config.auth_cookie_name.as_str())
             .map(|c| c.value().to_owned())
@@ -91,7 +92,7 @@ where
             return Box::pin(ready(Err(ErrorUnauthorized(json_error))));
         }
 
-        let user_id = match utils::token::decode_token(
+        let token_info = match utils::token::decode_token(
             token.unwrap(),
             app_state.config.jwt_secret.as_bytes(),
         ) {
@@ -107,7 +108,7 @@ where
         let srv = Rc::clone(&self.service);
 
         async move {
-            let user_id = user_id.to_string();
+            let user_id = token_info.sub.to_string();
             let exists = cloned_app_state
                 .db_client
                 .users
@@ -115,15 +116,48 @@ where
                 .await
                 .map_err(|e| ErrorInternalServerError(HttpError::server_error(e.to_string())))?;
 
-            if exists {
-                req.extensions_mut().insert(AuthenticatedUserId(user_id));
-                srv.call(req).await
-            } else {
-                Err(ErrorForbidden(ErrorResponse {
+            if !exists {
+                return Err(ErrorUnauthorized(ErrorResponse {
                     status: "fail".into(),
                     message: ErrorMessage::PermissionDenied.to_string(),
-                }))
+                }));
             }
+
+            req.extensions_mut()
+                .insert(AuthenticatedUserId(user_id.clone()));
+            let mut response = srv.call(req).await?;
+
+            //Refresh the token
+            let already_set_cookie = response
+                .response()
+                .cookies()
+                .any(|c| c.name() == app_state.config.auth_cookie_name);
+            let should_renew = !already_set_cookie && {
+                let age = chrono::Utc::now().timestamp() - token_info.iat;
+                age > 60
+            };
+            if should_renew {
+                let new_token = utils::token::create_token(
+                    &user_id,
+                    cloned_app_state.config.jwt_secret.as_bytes(),
+                    cloned_app_state.config.jwt_max_age_mins,
+                )
+                .map_err(|e| ErrorInternalServerError(HttpError::server_error(e.to_string())))?;
+
+                let cookie = Cookie::build(&app_state.config.auth_cookie_name, new_token)
+                    .path("/")
+                    .http_only(true)
+                    .secure(app_state.config.is_prod)
+                    .same_site(actix_web::cookie::SameSite::Lax)
+                    .max_age(actix_web::cookie::time::Duration::minutes(
+                        app_state.config.jwt_max_age_mins,
+                    ))
+                    .finish();
+                response.response_mut().add_cookie(&cookie).map_err(|e| {
+                    ErrorInternalServerError(HttpError::server_error(e.to_string()))
+                })?;
+            }
+            Ok(response)
         }
         .boxed_local()
     }

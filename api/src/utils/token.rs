@@ -69,13 +69,13 @@ pub fn create_token(
 /// # Security notes
 /// - Uses default validation (including `exp` check with leeway)
 /// - All JWT errors are intentionally mapped to a generic 401 response
-pub fn decode_token<T: Into<String>>(token: T, secret: &[u8]) -> Result<String, HttpError> {
+pub fn decode_token<T: Into<String>>(token: T, secret: &[u8]) -> Result<TokenClaims, HttpError> {
     let decoding_key = &DecodingKey::from_secret(secret);
     let validation = &Validation::new(ALGORITH_SET);
     let decoded = decode::<TokenClaims>(&token.into(), decoding_key, validation);
 
     match decoded {
-        Ok(token) => Ok(token.claims.sub),
+        Ok(token) => Ok(token.claims),
         Err(_) => Err(HttpError::new(ErrorMessage::InvalidToken.to_string(), 401)),
     }
 }
@@ -102,7 +102,7 @@ mod tests {
         let token = create_token(user_id, SECRET, 10).unwrap();
         let result = decode_token(&token, SECRET);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), user_id);
+        assert_eq!(result.unwrap().sub, user_id);
     }
     #[test]
     fn decode_token_fails_with_wrong_secret() {
