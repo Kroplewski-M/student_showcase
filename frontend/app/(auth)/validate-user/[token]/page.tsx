@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { isValidUuid } from "@/app/helpers";
+import { isValidUuid } from "@/app/lib/helpers";
 import CheckIcon from "@/app/SVGS/CheckIcon";
 import Loading from "@/app/SVGS/Loading";
 import ErrorSVG from "@/app/SVGS/ErrorSVG";

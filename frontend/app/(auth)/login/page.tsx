@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import EyeIcon from "@/app/SVGS/EyeIcon";
 import Loading from "@/app/SVGS/Loading";
+import LogoWritten from "@/app/components/LogoWritten";
 
 function validateStudentId(id: string): string | null {
   const trimmed = id.trim();
@@ -126,9 +127,13 @@ export default function LoginPage() {
   }
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center px-4 py-12">
+    <section className="relative min-h-screen flex items-center justify-center px-4 py-12 flex-col -pt-16">
+      <div className="text-3xl mb-5">
+        <Link href="/">
+          <LogoWritten />
+        </Link>
+      </div>
       <div className="pointer-events-none absolute -top-1/3 -left-1/4 h-[80vw] w-[80vw] rounded-full bg-secondary/5 blur-3xl" />
-
       <motion.div
         key="login-form"
         initial={{ opacity: 0, y: 20, scale: 0.97 }}

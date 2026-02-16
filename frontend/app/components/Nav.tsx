@@ -4,9 +4,11 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import LogoWritten from "./LogoWritten";
+import { useAuth } from "../context/auth-context";
 
 export default function Nav() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   return (
     <nav className="sticky top-0 z-50 w-full backdrop-blur-md">
@@ -32,18 +34,31 @@ export default function Nav() {
           transition={{ duration: 0.8, delay: 1, ease: [0.16, 1, 0.3, 1] }}
           className="hidden items-center gap-2 sm:flex"
         >
-          <Link
-            href="/login"
-            className="rounded-xl px-5 py-2 text-sm font-semibold text-support transition-colors hover:text-light"
-          >
-            Login
-          </Link>
-          <Link
-            href="/register"
-            className="rounded-xl bg-secondary px-5 py-2 text-sm font-bold text-primary transition-all hover:bg-secondary/85 hover:shadow-lg hover:shadow-secondary/20 active:scale-[0.985]"
-          >
-            Register
-          </Link>
+          {isAuthenticated === false ? (
+            <>
+              <Link
+                href="/login"
+                className="rounded-xl px-5 py-2 text-sm font-semibold text-support transition-colors hover:text-light"
+              >
+                Login
+              </Link>
+              <Link
+                href="/register"
+                className="rounded-xl bg-secondary px-5 py-2 text-sm font-bold text-primary transition-all hover:bg-secondary/85 hover:shadow-lg hover:shadow-secondary/20 active:scale-[0.985]"
+              >
+                Register
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/profile"
+                className="rounded-xl bg-secondary px-5 py-2 text-sm font-bold text-primary transition-all hover:bg-secondary/85 hover:shadow-lg hover:shadow-secondary/20 active:scale-[0.985]"
+              >
+                Profile
+              </Link>
+            </>
+          )}
         </motion.div>
 
         {/* Mobile hamburger */}
@@ -98,20 +113,34 @@ export default function Nav() {
               className="fixed inset-x-0 top-0 z-40 border-b border-third/40 bg-primary/95 px-4 pb-8 pt-20 backdrop-blur-md sm:hidden"
             >
               <div className="flex flex-col gap-3">
-                <Link
-                  href="/login"
-                  onClick={() => setMenuOpen(false)}
-                  className="rounded-xl border border-third/40 bg-third/20 px-5 py-3.5 text-center text-sm font-semibold text-light transition-colors hover:bg-third/30"
-                >
-                  Login
-                </Link>
-                <Link
-                  href="/register"
-                  onClick={() => setMenuOpen(false)}
-                  className="rounded-xl bg-secondary px-5 py-3.5 text-center text-sm font-bold text-primary transition-all hover:bg-secondary/85 active:scale-[0.985]"
-                >
-                  Register
-                </Link>
+                {isAuthenticated === false ? (
+                  <>
+                    <Link
+                      href="/login"
+                      onClick={() => setMenuOpen(false)}
+                      className="rounded-xl border border-third/40 bg-third/20 px-5 py-3.5 text-center text-sm font-semibold text-light transition-colors hover:bg-third/30"
+                    >
+                      Login
+                    </Link>
+                    <Link
+                      href="/register"
+                      onClick={() => setMenuOpen(false)}
+                      className="rounded-xl bg-secondary px-5 py-3.5 text-center text-sm font-bold text-primary transition-all hover:bg-secondary/85 active:scale-[0.985]"
+                    >
+                      Register
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/profile"
+                      onClick={() => setMenuOpen(false)}
+                      className="rounded-xl bg-secondary px-5 py-3.5 text-center text-sm font-bold text-primary transition-all hover:bg-secondary/85 active:scale-[0.985]"
+                    >
+                      Profile
+                    </Link>
+                  </>
+                )}
               </div>
             </motion.div>
           </>

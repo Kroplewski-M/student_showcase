@@ -9,8 +9,9 @@ import Loading from "@/app/SVGS/Loading";
 import validateStudentId, {
   getPasswordStrength,
   validatePassword,
-} from "@/app/helpers";
+} from "@/app/lib/helpers";
 import PasswordStrengthMeter from "@/app/components/PasswordStrengthMeter";
+import LogoWritten from "@/app/components/LogoWritten";
 
 function validateConfirmation(
   password: string,
@@ -152,7 +153,12 @@ export default function RegisterPage() {
   }
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center px-4 py-12">
+    <section className="relative min-h-screen flex items-center justify-center px-4 py-12 flex-col">
+      <div className="text-3xl mb-5">
+        <Link href="/">
+          <LogoWritten />
+        </Link>
+      </div>
       {/* Background accent glow */}
       <div className="pointer-events-none absolute -top-1/3 -left-1/4 h-[80vw] w-[80vw] rounded-full bg-secondary/5 blur-3xl" />
       <AnimatePresence mode="wait">
