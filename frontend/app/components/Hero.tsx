@@ -147,6 +147,7 @@ export default function Hero() {
               <Link
                 href="https://forms.office.com/pages/responsepage.aspx?id=2p8utZEGhUW9_FzK4c4YkG46iA9GSCpPssptatZjoWZUNlhVWTJMNDlJWjlKT09CNlhMMTJMUjJRVC4u&route=shorturl"
                 target="_blank"
+                rel="noopener noreferrer"
                 className="rounded-xl bg-secondary px-8 py-3.5 text-center text-sm font-bold text-primary transition-all hover:bg-secondary/85 hover:shadow-lg hover:shadow-secondary/25 active:scale-[0.985]"
               >
                 Register Interest
