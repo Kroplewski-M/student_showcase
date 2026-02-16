@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import validateStudentId from "@/app/helpers";
+import validateStudentId from "@/app/lib/helpers";
 import ConfirmForgotPassword from "./ConfirmForgotPassword";
 import Loading from "@/app/SVGS/Loading";
 

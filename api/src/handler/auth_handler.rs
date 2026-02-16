@@ -10,7 +10,7 @@ use crate::{
         auth::{GetResetPasswordDto, LoginUserDto, RegisterUserDto, ResetPasswordDto},
     },
     errors::{ErrorMessage, HttpError},
-    middleware::auth::RequireAuth,
+    middleware::auth::{AuthenticatedUserId, RequireAuth},
 };
 
 pub fn auth_handler() -> Scope {
@@ -27,7 +27,12 @@ pub fn auth_handler() -> Scope {
             "/reset-password-confirm",
             web::post().to(reset_password_confirm),
         )
-        .route("/logout", web::post().to(logout).wrap(RequireAuth))
+        .service(
+            web::scope("")
+                .wrap(RequireAuth)
+                .route("/logout", web::post().to(logout))
+                .route("/me", web::get().to(me)),
+        )
 }
 
 pub async fn login(
@@ -197,4 +202,7 @@ pub async fn logout(app_state: web::Data<AppState>) -> impl Responder {
     HttpResponse::Ok()
         .cookie(cookie)
         .json(json!({"status": "success"}))
+}
+pub async fn me(app_state: web::Data<AppState>, user_id: AuthenticatedUserId) -> impl Responder {
+    HttpResponse::Ok().json(json!({"userId": user_id}))
 }

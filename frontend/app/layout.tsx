@@ -4,6 +4,8 @@ import "./globals.css";
 import "@fortawesome/fontawesome-svg-core/styles.css";
 import { config } from "@fortawesome/fontawesome-svg-core";
 import Footer from "./components/Footer";
+import { getUser } from "./lib/auth";
+import { AuthProvider } from "./context/auth-context";
 
 config.autoAddCss = false;
 const poppins = Poppins({
@@ -17,15 +19,16 @@ export const metadata: Metadata = {
   description: "C&E Futures '26 Student Showcase @ University Of Huddersfield",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const user = await getUser();
   return (
     <html lang="en">
       <body className={`${poppins.variable} antialiased`}>
-        {children}
+        <AuthProvider initialUser={user}>{children}</AuthProvider>
         <Footer />
       </body>
     </html>

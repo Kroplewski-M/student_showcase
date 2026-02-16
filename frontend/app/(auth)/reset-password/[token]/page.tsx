@@ -9,7 +9,7 @@ import {
   getPasswordStrength,
   isValidUuid,
   validatePassword,
-} from "@/app/helpers";
+} from "@/app/lib/helpers";
 import Loading from "@/app/SVGS/Loading";
 import CheckIcon from "@/app/SVGS/CheckIcon";
 import ErrorSVG from "@/app/SVGS/ErrorSVG";

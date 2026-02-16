@@ -1,6 +1,5 @@
 import Hero from "./components/Hero";
 import Nav from "./components/Nav";
-import HeroVisuals from "./components/ParticleNetwork";
 
 export default async function Home() {
   return (
