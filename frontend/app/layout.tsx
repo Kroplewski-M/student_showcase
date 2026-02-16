@@ -6,6 +6,7 @@ import { config } from "@fortawesome/fontawesome-svg-core";
 import Footer from "./components/Footer";
 import { getUser } from "./lib/auth";
 import { AuthProvider } from "./context/auth-context";
+import Nav from "./components/Nav";
 
 config.autoAddCss = false;
 const poppins = Poppins({
@@ -28,8 +29,11 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={`${poppins.variable} antialiased`}>
-        <AuthProvider initialUser={user}>{children}</AuthProvider>
-        <Footer />
+        <AuthProvider initialUser={user}>
+          <Nav />
+          {children}
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
   );

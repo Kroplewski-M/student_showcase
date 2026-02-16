@@ -11,7 +11,7 @@ export default function Nav() {
   const { isAuthenticated } = useAuth();
 
   return (
-    <nav className="sticky top-0 z-50 w-full backdrop-blur-md">
+    <nav className="fixed top-0 z-50 w-full backdrop-blur-md">
       <div className="mx-auto flex items-center justify-between px-4 py-4 sm:px-8">
         {/* Logo */}
         <motion.div

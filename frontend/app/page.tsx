@@ -1,20 +1,17 @@
+import About from "./components/About";
 import Hero from "./components/Hero";
-import Nav from "./components/Nav";
 
 export default async function Home() {
   return (
-    <div className="bg-primary text-light">
-      <Nav />
-      <Hero />
-      <main className="relative z-10 bg-primary">
-        <section className="min-h-screen flex flex-col items-center justify-center px-6">
-          <div className="mt-32 mb-8 px-6 py-4 rounded-xl bg-support text-dark shadow-lg">
-            <p className="font-semibold text-center">
-              🚧 This page is currently under construction. Check back soon!
-            </p>
-          </div>
+    <div className="relative bg-primary text-light">
+      <div className="h-[100dvh] overflow-y-auto snap-y snap-mandatory">
+        <section className="snap-start min-h-[100dvh]">
+          <Hero />
         </section>
-      </main>
+        <section className="snap-start min-h-[100dvh]">
+          <About />
+        </section>
+      </div>
     </div>
   );
 }
