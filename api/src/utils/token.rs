@@ -63,7 +63,7 @@ pub fn create_token(
 /// - `secret` – HMAC secret used to verify the token signature
 ///
 /// # Returns
-/// - `Ok(user_id)` if the token is valid
+/// - `Ok(TokenClaims)` if the token is valid
 /// - `Err(HttpError)` if the token is invalid or expired
 ///
 /// # Security notes
