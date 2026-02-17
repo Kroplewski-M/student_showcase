@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRef } from "react";
+import Calendar from "../SVGS/Calendar";
 
 const schedule = [
   { time: "12:00 – 13:00", activity: "Setup" },
@@ -65,11 +66,31 @@ export default function About() {
           <span className="inline-flex items-center gap-2 rounded-full border border-secondary/20 bg-secondary/5 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-secondary backdrop-blur-sm">
             About the Event
           </span>
-          <h2 className="mt-6 text-[clamp(2rem,5vw,4.5rem)] font-extrabold leading-[0.9] tracking-tighter text-light">
-            Where talent
-            <br />
-            meets <span className="text-secondary">opportunity</span>
-          </h2>
+
+          <div className="mt-6 flex flex-col gap-6 sm:flex-row sm:items-end sm:gap-10">
+            <h2 className="text-[clamp(2rem,5vw,4.5rem)] font-extrabold leading-[0.9] tracking-tighter text-light">
+              Where talent
+              <br />
+              meets <span className="text-secondary">opportunity</span>
+            </h2>
+
+            {/* Calendar date card */}
+            <div className="flex shrink-0 items-center gap-3 rounded-2xl border border-third/20 bg-third/[0.04] px-5 py-4 backdrop-blur-sm">
+              <Calendar date={19} />
+              <div className="flex flex-col">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-secondary">
+                  Friday
+                </span>
+                <span className="text-lg font-extrabold leading-tight tracking-tight text-light">
+                  19th June
+                </span>
+                <span className="text-[11px] font-medium text-support/40">
+                  2026
+                </span>
+              </div>
+            </div>
+          </div>
+
           <p className="mt-6 max-w-2xl text-sm leading-relaxed text-support/60 sm:text-base">
             The University of Huddersfield&rsquo;s School of Computing &amp;
             Engineering invites you to SCE Futures 2026 — a student showcase
