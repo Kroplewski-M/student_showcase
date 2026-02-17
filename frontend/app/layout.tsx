@@ -18,6 +18,11 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: "C&E Futures '26",
   description: "C&E Futures '26 Student Showcase @ University Of Huddersfield",
+  other: {
+    "mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "black-translucent",
+  },
 };
 
 export default async function RootLayout({

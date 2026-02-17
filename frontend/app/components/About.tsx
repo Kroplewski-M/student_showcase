@@ -45,7 +45,7 @@ export default function About() {
     <motion.section
       ref={sectionRef}
       id="about"
-      className="relative z-20  bg-primary shadow-[0_-40px_80px_rgba(0,0,0,0.5)] min-h-screen"
+      className="relative z-20  bg-primary shadow-[0_-40px_80px_rgba(0,0,0,0.5)] min-h-screen pb-16"
     >
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-secondary/40 to-transparent" />
 

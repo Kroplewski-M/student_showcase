@@ -12,4 +12,5 @@
 body {
   background: var(--color-primary);
   font-family: "Poppins", sans-serif;
+  overflow-y: hidden;
 }

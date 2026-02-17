@@ -6,7 +6,7 @@ import LogoWritten from "./LogoWritten";
 
 export default function Footer() {
   return (
-    <footer className="relative z-10 border-t border-third/30">
+    <footer className="relative z-10 border-t border-third/30 ">
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-8">
         <div className="flex flex-col items-center gap-6 sm:flex-row sm:justify-between">
           {/* Logo + credit */}
