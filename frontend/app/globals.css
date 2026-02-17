@@ -12,5 +12,26 @@
 body {
   background: var(--color-primary);
   font-family: "Poppins", sans-serif;
-  overflow-y: hidden;
+}
+
+/* Scroll bar styling */
+
+/* width */
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: var(--color-third);
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: var(--color-support);
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-third);
 }

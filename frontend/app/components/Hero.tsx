@@ -7,7 +7,7 @@ import GridBackground from "./GridBackground";
 
 export default function Hero() {
   return (
-    <section className="relative flex min-h-screen items-start pt-32 overflow-hidden px-4 sm:px-8">
+    <section className="relative flex min-h-screen items-start pt-32 px-4 sm:px-8">
       <GridBackground />
 
       {/* Primary glow orb */}

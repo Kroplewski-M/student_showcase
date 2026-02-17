@@ -158,12 +158,20 @@ export default function About() {
             </div>
 
             {/* Decorative separator */}
-            <div className="mt-8 flex items-center gap-3">
+            <div className="mt-8 flex items-center gap-3 mb-16">
               <div className="h-px flex-1 bg-gradient-to-r from-secondary/30 to-transparent" />
               <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-secondary/40">
                 Hands-on demos &bull; Live prototypes &bull; Real-world research
               </span>
             </div>
+            <Link
+              href="https://forms.office.com/pages/responsepage.aspx?id=2p8utZEGhUW9_FzK4c4YkG46iA9GSCpPssptatZjoWZUNlhVWTJMNDlJWjlKT09CNlhMMTJMUjJRVC4u&route=shorturl"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-xl border border-third/40 bg-third/10 px-8 py-3.5 text-center text-sm font-semibold text-light backdrop-blur-sm transition-all hover:border-third/60 hover:bg-third/20 active:scale-[0.985] cursor-pointer"
+            >
+              Register Interest
+            </Link>
           </motion.div>
 
           {/* Schedule */}
@@ -200,16 +208,6 @@ export default function About() {
             </div>
           </motion.div>
         </div>
-      </div>
-      <div className="w-[200px] mx-auto">
-        <Link
-          href="https://forms.office.com/pages/responsepage.aspx?id=2p8utZEGhUW9_FzK4c4YkG46iA9GSCpPssptatZjoWZUNlhVWTJMNDlJWjlKT09CNlhMMTJMUjJRVC4u&route=shorturl"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="rounded-xl border border-third/40 bg-third/10 px-8 py-3.5 text-center text-sm font-semibold text-light backdrop-blur-sm transition-all hover:border-third/60 hover:bg-third/20 active:scale-[0.985] cursor-pointer"
-        >
-          Register Interest
-        </Link>
       </div>
 
       {/* Bottom corner accents */}

@@ -33,6 +33,9 @@ export default async function RootLayout({
   const user = await getUser();
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" href="/favicon.svg" sizes="any" />
+      </head>
       <body className={`${poppins.variable} antialiased`}>
         <AuthProvider initialUser={user}>
           <Nav />
