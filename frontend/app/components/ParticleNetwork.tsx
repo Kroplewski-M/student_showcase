@@ -158,7 +158,7 @@ const CARDS = [
     tags: ["Docker", "Kubernetes"],
     color: "from-third/15 to-secondary/5",
     borderColor: "border-secondary/20",
-    x: "88%",
+    x: "80%",
     y: "25%",
     rotation: -2,
     delay: 0.3,
@@ -215,7 +215,7 @@ export default function HeroVisuals() {
   return (
     <motion.div
       style={{ opacity }}
-      className="relative  h-[50vh] w-full sm:-mt-24 sm:h-[55vh]"
+      className="relative h-[50vh] w-full sm:-mt-24 sm:h-[55vh] overflow-hidden"
     >
       {/* Particle network background */}
       <motion.div style={{ y: yNetwork }} className="absolute inset-0">
