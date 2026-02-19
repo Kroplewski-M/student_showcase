@@ -210,7 +210,7 @@ export default function HeroVisuals() {
   const { scrollY } = useScroll();
   const yCards = useTransform(scrollY, [0, 600], [0, -60]);
   const yNetwork = useTransform(scrollY, [0, 600], [0, -30]);
-  const opacity = useTransform(scrollY, [100, 500], [1, 0]);
+  const opacity = useTransform(scrollY, [600, 800], [1, 0.5]);
 
   return (
     <motion.div
