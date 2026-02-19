@@ -19,6 +19,7 @@ services:
       - CARGO_TARGET_DIR=/cargo/target
     volumes:
       - ./api:/api
+      - uploads:/srv/uploads:ro
     depends_on:
       - postgres
     networks:
@@ -43,6 +44,7 @@ services:
       - "80:80"
     volumes:
       - ./nginx/dev.conf:/etc/nginx/nginx.conf:ro
+      - uploads:/srv/uploads:ro
     depends_on:
       - frontend
       - api
@@ -52,6 +54,7 @@ services:
 volumes:
   pgdata:
   cargo-cache:
+  uploads:
 
 networks:
   appnet:
