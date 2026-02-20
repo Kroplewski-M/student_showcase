@@ -1,7 +1,7 @@
 use crate::errors::{ErrorMessage, ErrorResponse, HttpError};
 use crate::{AppState, utils};
 use actix_web::cookie::Cookie;
-use actix_web::error::{ErrorForbidden, ErrorInternalServerError};
+use actix_web::error::ErrorInternalServerError;
 use actix_web::web;
 use actix_web::{
     FromRequest, HttpMessage,
@@ -111,7 +111,7 @@ where
             let user_id = token_info.sub.to_string();
             let exists = cloned_app_state
                 .db_client
-                .users
+                .auth
                 .exists_verified(&user_id)
                 .await
                 .map_err(|e| ErrorInternalServerError(HttpError::server_error(e.to_string())))?;

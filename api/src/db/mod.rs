@@ -1,14 +1,14 @@
 use sqlx::{Pool, Postgres};
-pub mod users_repo;
+pub mod auth_repo;
 
 #[derive(Debug, Clone)]
 pub struct DbClient {
-    pub users: users_repo::UsersRepo,
+    pub auth: auth_repo::AuthRepo,
 }
 impl DbClient {
     pub fn new(pool: Pool<Postgres>) -> Self {
         Self {
-            users: users_repo::UsersRepo::new(pool.clone()),
+            auth: auth_repo::AuthRepo::new(pool.clone()),
         }
     }
 }

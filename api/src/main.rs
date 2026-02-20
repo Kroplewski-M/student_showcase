@@ -52,7 +52,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         config: config.clone(),
         db_client: db_client.clone(),
         auth_service: AuthService::new(
-            db_client.users.clone(),
+            db_client.auth.clone(),
             email_service.clone(),
             config.clone(),
         ),
@@ -64,6 +64,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         App::new()
             .app_data(web::Data::new(app_state.clone()))
             .service(handler::auth_handler::auth_handler())
+            .service(handler::user_handler::user_handler())
     })
     .bind(("0.0.0.0", config.port))?
     .run()
