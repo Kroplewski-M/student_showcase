@@ -1,4 +1,4 @@
-use actix_web::{HttpResponse, Responder, Scope, cookie::Cookie, web};
+use actix_web::{HttpResponse, Responder, Scope, cookie::Cookie, dev::HttpServiceFactory, web};
 use serde_json::json;
 use uuid::Uuid;
 use validator::Validate;
@@ -13,7 +13,7 @@ use crate::{
     middleware::auth::{AuthenticatedUserId, RequireAuth},
 };
 
-pub fn auth_handler() -> Scope {
+pub fn auth_handler() -> impl HttpServiceFactory {
     web::scope("/auth")
         .route("/login", web::post().to(login))
         .route("/register", web::post().to(register))
