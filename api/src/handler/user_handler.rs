@@ -1,7 +1,11 @@
-use actix_web::{Responder, Scope, web};
+use actix_web::{Responder, dev::HttpServiceFactory, web};
 
-pub fn user_handler() -> Scope {
-    web::scope("/user").route("/test", web::get().to(test))
+use crate::middleware::auth::RequireAuth;
+
+pub fn user_handler() -> impl HttpServiceFactory {
+    web::scope("/user")
+        .wrap(RequireAuth)
+        .route("/test", web::get().to(test))
 }
 
 pub async fn test() -> impl Responder {
