@@ -4,11 +4,11 @@ use uuid::Uuid;
 use crate::models::User;
 
 #[derive(Debug, Clone)]
-pub struct UsersRepo {
+pub struct AuthRepo {
     pool: Pool<Postgres>,
 }
 
-impl UsersRepo {
+impl AuthRepo {
     pub fn new(pool: Pool<Postgres>) -> Self {
         Self { pool }
     }

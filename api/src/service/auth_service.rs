@@ -3,22 +3,22 @@ use uuid::Uuid;
 
 use crate::{
     config::Config,
-    db::users_repo::UsersRepo,
+    db::auth_repo::AuthRepo,
     errors::ErrorMessage,
     utils::{email::EmailService, password::PasswordHasherService, token},
 };
 
 #[derive(Clone)]
 pub struct AuthService {
-    user_repo: UsersRepo,
+    auth_repo: AuthRepo,
     email_service: EmailService,
     config: Config,
 }
 
 impl AuthService {
-    pub fn new(user_repo: UsersRepo, email_service: EmailService, config: Config) -> Self {
+    pub fn new(auth_repo: AuthRepo, email_service: EmailService, config: Config) -> Self {
         Self {
-            user_repo,
+            auth_repo,
             email_service,
             config,
         }
@@ -29,7 +29,7 @@ impl AuthService {
         password: String,
     ) -> Result<String, ErrorMessage> {
         let result = self
-            .user_repo
+            .auth_repo
             .get_user_by_id(student_id.as_str())
             .await
             .map_err(|_| ErrorMessage::ServerError)?;
@@ -67,7 +67,7 @@ impl AuthService {
             e
         })?;
         let id = self
-            .user_repo
+            .auth_repo
             .create_user(&student_id, &hashed_password)
             .await
             .map_err(|e| {
@@ -88,7 +88,7 @@ impl AuthService {
         Ok(())
     }
     pub async fn validate_user(&self, token: Uuid) -> Result<(), ErrorMessage> {
-        match self.user_repo.validate_user(token).await {
+        match self.auth_repo.validate_user(token).await {
             Ok(_) => Ok(()),
             Err(e) => match &e {
                 sqlx::Error::RowNotFound => Err(ErrorMessage::VerifyTokenDoesNotExist),
@@ -98,7 +98,7 @@ impl AuthService {
     }
     pub async fn create_user_reset_password(&self, student_id: String) -> Result<(), ErrorMessage> {
         let token = self
-            .user_repo
+            .auth_repo
             .create_user_reset_password(student_id.as_str())
             .await
             .map_err(|e| match &e {
@@ -113,7 +113,7 @@ impl AuthService {
         Ok(())
     }
     pub async fn user_reset_password_exists(&self, token: Uuid) -> Result<bool, ErrorMessage> {
-        self.user_repo
+        self.auth_repo
             .user_reset_password_exists(token)
             .await
             .map_err(|_| ErrorMessage::ServerError)
@@ -126,7 +126,7 @@ impl AuthService {
         let hasher = PasswordHasherService::new();
         let hashed_password = hasher.hash(&password)?;
         match self
-            .user_repo
+            .auth_repo
             .update_user_password(token, &hashed_password)
             .await
         {
@@ -142,7 +142,7 @@ impl AuthService {
         student_id: &str,
     ) -> Result<(), ErrorMessage> {
         let verification_token = self
-            .user_repo
+            .auth_repo
             .create_user_verification(student_id)
             .await
             .map_err(|e| {
