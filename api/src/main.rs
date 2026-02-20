@@ -1,7 +1,7 @@
 mod config;
 use crate::config::Config;
 use crate::db::DbClient;
-use crate::service::auth_service::AuthService;
+use crate::service::{auth_service::AuthService, user_service::UserService};
 use crate::utils::email::EmailService;
 use actix_web::{App, HttpServer, web};
 use dotenv::dotenv;
@@ -21,6 +21,7 @@ pub struct AppState {
     pub db_client: DbClient,
     pub config: Config,
     pub auth_service: AuthService,
+    pub user_service: UserService,
 }
 
 #[actix_web::main]
@@ -56,6 +57,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             email_service.clone(),
             config.clone(),
         ),
+        user_service: UserService::new(db_client.user.clone(), config.clone()),
     };
 
     println!("API starting on 0.0.0.0:{}", config.port);
