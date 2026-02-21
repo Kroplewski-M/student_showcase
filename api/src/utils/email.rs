@@ -138,3 +138,48 @@ impl EmailService {
             .await
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn postmark_email_serializes_with_correct_field_names() {
+        let email = PostmarkEmail {
+            from: "sender@example.com",
+            to: "recipient@example.com",
+            subject: "Test Subject",
+            html_body: "<p>Hello</p>",
+            text_body: "Hello",
+            message_stream: "outbound",
+        };
+        let json = serde_json::to_value(&email).unwrap();
+
+        assert_eq!(json["From"], "sender@example.com");
+        assert_eq!(json["To"], "recipient@example.com");
+        assert_eq!(json["Subject"], "Test Subject");
+        assert_eq!(json["HtmlBody"], "<p>Hello</p>");
+        assert_eq!(json["TextBody"], "Hello");
+        assert_eq!(json["MessageStream"], "outbound");
+    }
+
+    #[test]
+    fn postmark_email_has_no_lowercase_keys() {
+        let email = PostmarkEmail {
+            from: "a@b.com",
+            to: "c@d.com",
+            subject: "s",
+            html_body: "h",
+            text_body: "t",
+            message_stream: "outbound",
+        };
+        let json = serde_json::to_string(&email).unwrap();
+
+        assert!(!json.contains("\"from\""));
+        assert!(!json.contains("\"to\""));
+        assert!(!json.contains("\"subject\""));
+        assert!(!json.contains("\"html_body\""));
+        assert!(!json.contains("\"text_body\""));
+        assert!(!json.contains("\"message_stream\""));
+    }
+}
