@@ -34,16 +34,6 @@ impl ImageFormat {
             Self::Avif => "image/avif",
         }
     }
-    /// All supported MIME types (useful for early Content-Type header checks)
-    pub fn all_mime_types() -> &'static [&'static str] {
-        &[
-            "image/jpeg",
-            "image/png",
-            "image/webp",
-            "image/gif",
-            "image/avif",
-        ]
-    }
     /// Detect format from magic bytes. Returns None if unrecognised.
     pub fn from_bytes(bytes: &[u8]) -> Option<Self> {
         if bytes.len() < 12 {
@@ -87,14 +77,20 @@ impl ValidatedImage {
         if bytes.len() > max_size {
             return Err(ErrorMessage::FileSizeTooBig(max_size));
         }
-        let format = ImageFormat::from_bytes(&bytes).ok_or_else(|| {
-            ErrorMessage::FileInvalidFormat(
-                ImageFormat::all_mime_types()
-                    .iter()
-                    .map(|s| s.to_string())
-                    .collect(),
-            )
-        })?;
+        let valid_extensions: Vec<String> = [
+            ImageFormat::Jpeg,
+            ImageFormat::Png,
+            ImageFormat::Webp,
+            ImageFormat::Gif,
+            ImageFormat::Avif,
+        ]
+        .iter()
+        .map(|f| f.extension().to_string())
+        .collect();
+
+        let format = ImageFormat::from_bytes(&bytes)
+            .ok_or(ErrorMessage::FileInvalidFormat(valid_extensions))?;
+
         Ok(Self {
             old_name: file_name,
             bytes,
