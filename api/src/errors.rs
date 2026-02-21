@@ -30,6 +30,8 @@ pub enum ErrorMessage {
     EmailSendingFailed(String),
     VerifyTokenDoesNotExist,
     UserNotVerified,
+    FileSizeTooBig(usize),
+    FileInvalidFormat(Vec<String>),
 }
 impl fmt::Display for ErrorMessage {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -73,6 +75,15 @@ impl ErrorMessage {
             }
             ErrorMessage::UserNotVerified => {
                 "User has not verified their account, please check your email".to_string()
+            }
+            ErrorMessage::FileSizeTooBig(size) => {
+                format!("File size exceeds max: {} MiB", size / (1024 * 1024))
+            }
+            ErrorMessage::FileInvalidFormat(file_formats) => {
+                format!(
+                    "Invalid file format. Valid formats: {}",
+                    file_formats.join(", ")
+                )
             }
         }
     }
