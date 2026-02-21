@@ -68,7 +68,7 @@ impl ErrorMessage {
                 "You do not have permission to perform this action".to_string()
             }
             ErrorMessage::EmailSendingFailed(error) => {
-                format!("Error occured while sending an email: {}", error)
+                format!("Error occurred while sending an email: {}", error)
             }
             ErrorMessage::VerifyTokenDoesNotExist => {
                 "The token provided does not exist".to_string()
@@ -262,7 +262,7 @@ mod tests {
         let msg = ErrorMessage::EmailSendingFailed("SMTP timeout".to_string());
         assert_eq!(
             msg.to_string(),
-            "Error occured while sending an email: SMTP timeout"
+            "Error occurred while sending an email: SMTP timeout"
         );
     }
 
@@ -538,7 +538,7 @@ mod tests {
     #[test]
     fn error_message_email_failed_with_empty_string() {
         let msg = ErrorMessage::EmailSendingFailed(String::new());
-        assert_eq!(msg.to_string(), "Error occured while sending an email: ");
+        assert_eq!(msg.to_string(), "Error occurred while sending an email: ");
     }
 
     #[test]
