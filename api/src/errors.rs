@@ -77,7 +77,7 @@ impl ErrorMessage {
                 "User has not verified their account, please check your email".to_string()
             }
             ErrorMessage::FileSizeTooBig(size) => {
-                format!("File size exceeds max: {} Mib", size)
+                format!("File size exceeds max: {} MiB", size / (1024 * 1024))
             }
             ErrorMessage::FileInvalidFormat(file_formats) => {
                 format!(

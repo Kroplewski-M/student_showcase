@@ -136,7 +136,19 @@ mod tests {
         v[8..12].copy_from_slice(b"WEBP");
         v
     }
+    fn dummy_gif() -> Vec<u8> {
+        let mut v = b"GIF89a".to_vec();
+        v.extend_from_slice(&[0u8; 6]); // pad to 12 bytes
+        v
+    }
 
+    fn dummy_avif() -> Vec<u8> {
+        let mut v = vec![0u8; 12];
+        // box-size at [0..4] can be anything; ftyp at [4..8]; avif at [8..12]
+        v[4..8].copy_from_slice(b"ftyp");
+        v[8..12].copy_from_slice(b"avif");
+        v
+    }
     #[test]
     fn detects_jpeg() {
         let format = ImageFormat::from_bytes(&dummy_jpeg());
@@ -195,5 +207,20 @@ mod tests {
 
         let filename = img.generate_new_filename();
         assert!(filename.ends_with(".png"));
+    }
+    #[test]
+    fn detects_gif() {
+        assert_eq!(
+            ImageFormat::from_bytes(&dummy_gif()),
+            Some(ImageFormat::Gif)
+        );
+    }
+
+    #[test]
+    fn detects_avif() {
+        assert_eq!(
+            ImageFormat::from_bytes(&dummy_avif()),
+            Some(ImageFormat::Avif)
+        );
     }
 }
