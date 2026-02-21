@@ -1,4 +1,4 @@
-use actix_web::{HttpResponse, Responder, Scope, cookie::Cookie, dev::HttpServiceFactory, web};
+use actix_web::{HttpResponse, Responder, cookie::Cookie, dev::HttpServiceFactory, web};
 use serde_json::json;
 use uuid::Uuid;
 use validator::Validate;
