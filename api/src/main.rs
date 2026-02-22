@@ -4,6 +4,7 @@ use crate::db::DbClient;
 use crate::service::{auth_service::AuthService, user_service::UserService};
 use crate::utils::email::EmailService;
 use actix_web::{App, HttpServer, web};
+use std::sync::Arc;
 use dotenv::dotenv;
 use sqlx::postgres::PgPoolOptions;
 use tracing_subscriber::EnvFilter;
@@ -53,8 +54,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         config: config.clone(),
         db_client: db_client.clone(),
         auth_service: AuthService::new(
-            db_client.auth.clone(),
-            email_service.clone(),
+            Arc::new(db_client.auth.clone()),
+            Arc::new(email_service.clone()),
             config.clone(),
         ),
         user_service: UserService::new(db_client.user.clone(), config.clone()),

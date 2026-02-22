@@ -1,9 +1,25 @@
+use async_trait::async_trait;
 use crate::{config::Config, errors::ErrorMessage, utils::generic};
 use reqwest::Client;
 use serde::Serialize;
 use tera::{Context, Tera};
 use tracing::error;
 use uuid::Uuid;
+
+#[async_trait]
+pub trait EmailServiceTrait: Send + Sync {
+    async fn send_verification_email(
+        &self,
+        student_id: String,
+        token: Uuid,
+    ) -> Result<(), ErrorMessage>;
+
+    async fn send_reset_password_email(
+        &self,
+        student_id: String,
+        token: Uuid,
+    ) -> Result<(), ErrorMessage>;
+}
 
 /// Represents the JSON payload expected by the Postmark `/email` API.
 /// Field names must match Postmark's casing exactly, hence the serde renames.
@@ -52,7 +68,7 @@ impl EmailService {
     /// - `subject`    → email subject
     /// - `text_part`  → plain-text body
     /// - `html_part`  → HTML body
-    pub async fn send_email(
+    async fn send_email(
         &self,
         to_email: &str,
         subject: &str,
@@ -99,7 +115,11 @@ impl EmailService {
 
         Ok(())
     }
-    pub async fn send_verification_email(
+}
+
+#[async_trait]
+impl EmailServiceTrait for EmailService {
+    async fn send_verification_email(
         &self,
         student_id: String,
         token: Uuid,
@@ -121,7 +141,7 @@ impl EmailService {
         )
         .await
     }
-    pub async fn send_reset_password_email(
+    async fn send_reset_password_email(
         &self,
         student_id: String,
         token: Uuid,
@@ -181,5 +201,30 @@ mod tests {
         assert!(!json.contains("\"html_body\""));
         assert!(!json.contains("\"text_body\""));
         assert!(!json.contains("\"message_stream\""));
+    }
+}
+
+#[cfg(test)]
+pub mod mocks {
+    use super::*;
+    use mockall::mock;
+
+    mock! {
+        pub EmailService {}
+
+        #[async_trait]
+        impl EmailServiceTrait for EmailService {
+            async fn send_verification_email(
+                &self,
+                student_id: String,
+                token: Uuid,
+            ) -> Result<(), ErrorMessage>;
+
+            async fn send_reset_password_email(
+                &self,
+                student_id: String,
+                token: Uuid,
+            ) -> Result<(), ErrorMessage>;
+        }
     }
 }
