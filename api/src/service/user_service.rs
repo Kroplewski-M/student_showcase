@@ -3,11 +3,10 @@ use std::sync::Arc;
 use tracing::error;
 
 use crate::{
-    config::Config,
     db::user_repo::UserRepoTrait,
     errors::ErrorMessage,
     utils::{
-        file_storage::FileStorageType,
+        file_storage::FileStorageTrait,
         images::{DEFAULT_MAX_IMAGE_SIZE, ValidatedImage},
     },
 };
@@ -15,13 +14,17 @@ use crate::{
 #[derive(Clone)]
 pub struct UserService {
     user_repo: Arc<dyn UserRepoTrait>,
-    config: Config,
+    file_storage: Arc<dyn FileStorageTrait>,
 }
 
 impl UserService {
-    pub fn new(user_repo: Arc<dyn UserRepoTrait>, config: Config) -> Self {
-        Self { user_repo, config }
+    pub fn new(user_repo: Arc<dyn UserRepoTrait>, file_storage: Arc<dyn FileStorageTrait>) -> Self {
+        Self {
+            user_repo,
+            file_storage,
+        }
     }
+
     pub async fn update_user_image(
         &self,
         user_id: String,
@@ -30,12 +33,11 @@ impl UserService {
     ) -> Result<(), ErrorMessage> {
         let validated_img = ValidatedImage::from_bytes(image_name, image, DEFAULT_MAX_IMAGE_SIZE)?;
 
-        let file_type = FileStorageType::UserImage;
         let new_stored_name = validated_img.generate_new_filename();
         let disk_filename = format!("{}.{}", new_stored_name, validated_img.format().extension());
 
         //write new file into storage
-        file_type
+        self.file_storage
             .write(disk_filename.as_str(), validated_img.bytes())
             .await
             .map_err(|_| ErrorMessage::ServerError)?;
@@ -45,7 +47,7 @@ impl UserService {
             Ok(img) => img,
             Err(e) => {
                 error!("Error fetching current image: {}", e);
-                let _ = file_type.delete(&disk_filename).await;
+                let _ = self.file_storage.delete(&disk_filename).await;
                 return Err(ErrorMessage::ServerError);
             }
         };
@@ -64,12 +66,12 @@ impl UserService {
         {
             error!("Error updating user image: {}", e);
             // Compensate: remove the file we just wrote
-            let _ = file_type.delete(&disk_filename).await;
+            let _ = self.file_storage.delete(&disk_filename).await;
             return Err(ErrorMessage::ServerError);
         }
 
         if let Some(img) = current_image
-            && let Err(e) = file_type.delete(&img.get_full_name()).await
+            && let Err(e) = self.file_storage.delete(&img.get_full_name()).await
         {
             error!("Failed to delete old image: {}", e);
         }
@@ -81,31 +83,15 @@ impl UserService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::PostMarkConfig;
     use crate::db::user_repo::mocks::MockUserRepo;
     use crate::models::File;
+    use crate::utils::file_storage::mocks::MockFileStorage;
     use crate::utils::images::DEFAULT_MAX_IMAGE_SIZE;
     use chrono::Utc;
     use uuid::Uuid;
 
-    fn test_config() -> Config {
-        Config {
-            database_url: String::new(),
-            jwt_secret: "test_secret".to_string(),
-            jwt_max_age_mins: 60,
-            port: 8080,
-            post_mark_config: PostMarkConfig {
-                mail_from_email: String::new(),
-                server_token: String::new(),
-            },
-            auth_cookie_name: "token".to_string(),
-            base_url: "http://localhost:3000".to_string(),
-            is_prod: false,
-        }
-    }
-
-    fn make_service(repo: MockUserRepo) -> UserService {
-        UserService::new(Arc::new(repo), test_config())
+    fn make_service(repo: MockUserRepo, storage: MockFileStorage) -> UserService {
+        UserService::new(Arc::new(repo), Arc::new(storage))
     }
 
     fn dummy_jpeg() -> Vec<u8> {
@@ -119,7 +105,8 @@ mod tests {
     #[tokio::test]
     async fn update_user_image_invalid_format_returns_error() {
         let repo = MockUserRepo::new();
-        let service = make_service(repo);
+        let storage = MockFileStorage::new();
+        let service = make_service(repo, storage);
 
         let result = service
             .update_user_image("user1".into(), vec![0u8; 12], "photo.jpg".into())
@@ -131,7 +118,8 @@ mod tests {
     #[tokio::test]
     async fn update_user_image_too_large_returns_error() {
         let repo = MockUserRepo::new();
-        let service = make_service(repo);
+        let storage = MockFileStorage::new();
+        let service = make_service(repo, storage);
         let large_bytes = vec![0u8; DEFAULT_MAX_IMAGE_SIZE + 1];
 
         let result = service
@@ -144,12 +132,14 @@ mod tests {
     #[tokio::test]
     async fn update_user_image_success_no_existing_image() {
         let mut repo = MockUserRepo::new();
+        let mut storage = MockFileStorage::new();
 
+        storage.expect_write().returning(|_, _| Ok(()));
         repo.expect_get_user_image().returning(|_| Ok(None));
         repo.expect_update_user_image()
             .returning(|_, _, _, _, _, _| Ok(()));
 
-        let service = make_service(repo);
+        let service = make_service(repo, storage);
         let result = service
             .update_user_image("user1".into(), dummy_jpeg(), "photo.jpg".into())
             .await;
@@ -160,7 +150,10 @@ mod tests {
     #[tokio::test]
     async fn update_user_image_success_with_existing_image() {
         let mut repo = MockUserRepo::new();
+        let mut storage = MockFileStorage::new();
 
+        storage.expect_write().returning(|_, _| Ok(()));
+        storage.expect_delete().returning(|_| Ok(()));
         repo.expect_get_user_image().returning(|_| {
             Ok(Some(File {
                 id: Uuid::new_v4(),
@@ -175,7 +168,7 @@ mod tests {
         repo.expect_update_user_image()
             .returning(|_, _, _, _, _, _| Ok(()));
 
-        let service = make_service(repo);
+        let service = make_service(repo, storage);
         let result = service
             .update_user_image("user1".into(), dummy_jpeg(), "photo.jpg".into())
             .await;
@@ -186,11 +179,14 @@ mod tests {
     #[tokio::test]
     async fn update_user_image_get_repo_error_returns_server_error() {
         let mut repo = MockUserRepo::new();
+        let mut storage = MockFileStorage::new();
 
+        storage.expect_write().returning(|_, _| Ok(()));
+        storage.expect_delete().returning(|_| Ok(()));
         repo.expect_get_user_image()
             .returning(|_| Err(sqlx::Error::RowNotFound));
 
-        let service = make_service(repo);
+        let service = make_service(repo, storage);
         let result = service
             .update_user_image("user1".into(), dummy_jpeg(), "photo.jpg".into())
             .await;
@@ -201,12 +197,15 @@ mod tests {
     #[tokio::test]
     async fn update_user_image_update_repo_error_returns_server_error() {
         let mut repo = MockUserRepo::new();
+        let mut storage = MockFileStorage::new();
 
+        storage.expect_write().returning(|_, _| Ok(()));
+        storage.expect_delete().returning(|_| Ok(()));
         repo.expect_get_user_image().returning(|_| Ok(None));
         repo.expect_update_user_image()
             .returning(|_, _, _, _, _, _| Err(sqlx::Error::RowNotFound));
 
-        let service = make_service(repo);
+        let service = make_service(repo, storage);
         let result = service
             .update_user_image("user1".into(), dummy_jpeg(), "photo.jpg".into())
             .await;

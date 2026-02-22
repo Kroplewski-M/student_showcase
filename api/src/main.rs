@@ -3,6 +3,7 @@ use crate::config::Config;
 use crate::db::DbClient;
 use crate::service::{auth_service::AuthService, user_service::UserService};
 use crate::utils::email::EmailService;
+use crate::utils::file_storage::FileStorageType;
 use actix_web::{App, HttpServer, web};
 use dotenv::dotenv;
 use sqlx::postgres::PgPoolOptions;
@@ -57,7 +58,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             Arc::new(email_service.clone()),
             config.clone(),
         ),
-        user_service: UserService::new(Arc::new(db_client.user.clone()), config.clone()),
+        user_service: UserService::new(
+            Arc::new(db_client.user.clone()),
+            Arc::new(FileStorageType::UserImage),
+        ),
     };
 
     println!("API starting on 0.0.0.0:{}", config.port);

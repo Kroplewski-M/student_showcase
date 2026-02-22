@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use tokio::fs;
 
 use crate::errors::ErrorMessage;
@@ -9,10 +10,17 @@ const BASE_PATH: &str = "/srv/uploads";
 #[cfg(test)]
 const BASE_PATH: &str = "./test_uploads";
 
+#[async_trait]
+pub trait FileStorageTrait: Send + Sync {
+    async fn write(&self, name: &str, data: &[u8]) -> Result<(), ErrorMessage>;
+    async fn delete(&self, name: &str) -> Result<(), ErrorMessage>;
+}
+
 pub enum FileStorageType {
     UserImage,
     ProjectImage,
 }
+
 impl FileStorageType {
     fn directory_path(&self) -> PathBuf {
         let sub = match self {
@@ -21,7 +29,11 @@ impl FileStorageType {
         };
         PathBuf::from(BASE_PATH).join(sub)
     }
-    pub async fn write(&self, name: &str, data: &[u8]) -> Result<(), ErrorMessage> {
+}
+
+#[async_trait]
+impl FileStorageTrait for FileStorageType {
+    async fn write(&self, name: &str, data: &[u8]) -> Result<(), ErrorMessage> {
         if name.contains("..") || name.contains('/') || name.contains('\\') {
             return Err(ErrorMessage::FileInvalidName);
         }
@@ -37,7 +49,8 @@ impl FileStorageType {
             .map_err(|_| ErrorMessage::ServerError)?;
         Ok(())
     }
-    pub async fn delete(&self, name: &str) -> Result<(), ErrorMessage> {
+
+    async fn delete(&self, name: &str) -> Result<(), ErrorMessage> {
         if name.contains("..") || name.contains('/') || name.contains('\\') {
             return Err(ErrorMessage::FileInvalidName);
         }
@@ -46,6 +59,22 @@ impl FileStorageType {
             Ok(()) => Ok(()),
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
             Err(_) => Err(ErrorMessage::ServerError),
+        }
+    }
+}
+
+#[cfg(test)]
+pub mod mocks {
+    use super::*;
+    use mockall::mock;
+
+    mock! {
+        pub FileStorage {}
+
+        #[async_trait]
+        impl FileStorageTrait for FileStorage {
+            async fn write(&self, name: &str, data: &[u8]) -> Result<(), ErrorMessage>;
+            async fn delete(&self, name: &str) -> Result<(), ErrorMessage>;
         }
     }
 }
