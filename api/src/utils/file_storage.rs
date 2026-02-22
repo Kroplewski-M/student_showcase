@@ -34,7 +34,12 @@ impl FileStorageType {
 #[async_trait]
 impl FileStorageTrait for FileStorageType {
     async fn write(&self, name: &str, data: &[u8]) -> Result<(), ErrorMessage> {
-        if name.contains("..") || name.contains('/') || name.contains('\\') || name.contains('\0') {
+        if name.is_empty()
+            || name.contains("..")
+            || name.contains('/')
+            || name.contains('\\')
+            || name.contains('\0')
+        {
             return Err(ErrorMessage::FileInvalidName);
         }
         let dir = self.directory_path();
@@ -51,7 +56,12 @@ impl FileStorageTrait for FileStorageType {
     }
 
     async fn delete(&self, name: &str) -> Result<(), ErrorMessage> {
-        if name.contains("..") || name.contains('/') || name.contains('\\') || name.contains('\0') {
+        if name.is_empty()
+            || name.contains("..")
+            || name.contains('/')
+            || name.contains('\\')
+            || name.contains('\0')
+        {
             return Err(ErrorMessage::FileInvalidName);
         }
         let path = self.directory_path().join(name);
