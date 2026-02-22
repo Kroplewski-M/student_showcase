@@ -1,22 +1,27 @@
+use std::sync::Arc;
 use tracing::error;
 use uuid::Uuid;
 
 use crate::{
     config::Config,
-    db::auth_repo::AuthRepo,
+    db::auth_repo::AuthRepoTrait,
     errors::ErrorMessage,
-    utils::{email::EmailService, password::PasswordHasherService, token},
+    utils::{email::EmailServiceTrait, password::PasswordHasherService, token},
 };
 
 #[derive(Clone)]
 pub struct AuthService {
-    auth_repo: AuthRepo,
-    email_service: EmailService,
+    auth_repo: Arc<dyn AuthRepoTrait>,
+    email_service: Arc<dyn EmailServiceTrait>,
     config: Config,
 }
 
 impl AuthService {
-    pub fn new(auth_repo: AuthRepo, email_service: EmailService, config: Config) -> Self {
+    pub fn new(
+        auth_repo: Arc<dyn AuthRepoTrait>,
+        email_service: Arc<dyn EmailServiceTrait>,
+        config: Config,
+    ) -> Self {
         Self {
             auth_repo,
             email_service,
@@ -157,5 +162,333 @@ impl AuthService {
                 ErrorMessage::EmailSendingFailed("Verification email failed to send".to_string())
             })?;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::PostMarkConfig;
+    use crate::db::auth_repo::mocks::MockAuthRepo;
+    use crate::models::User;
+    use crate::utils::email::mocks::MockEmailService;
+    use chrono::Utc;
+
+    fn test_config() -> Config {
+        Config {
+            database_url: String::new(),
+            jwt_secret: "test_secret_key_for_testing".to_string(),
+            jwt_max_age_mins: 60,
+            port: 8080,
+            post_mark_config: PostMarkConfig {
+                mail_from_email: String::new(),
+                server_token: String::new(),
+            },
+            auth_cookie_name: "token".to_string(),
+            base_url: "http://localhost:3000".to_string(),
+            is_prod: false,
+        }
+    }
+
+    fn verified_user(id: &str, password: &str) -> User {
+        let hasher = PasswordHasherService::new();
+        let hashed = hasher.hash(password).unwrap();
+        User {
+            id: id.to_string(),
+            first_name: None,
+            last_name: None,
+            personal_email: None,
+            verified: true,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+            password: Some(hashed),
+        }
+    }
+
+    fn unverified_user(id: &str, password: &str) -> User {
+        let mut user = verified_user(id, password);
+        user.verified = false;
+        user
+    }
+
+    fn make_service(repo: MockAuthRepo, email: MockEmailService) -> AuthService {
+        AuthService::new(Arc::new(repo), Arc::new(email), test_config())
+    }
+
+    // ── login ──
+
+    #[tokio::test]
+    async fn login_success_returns_token() {
+        let mut repo = MockAuthRepo::new();
+        let email = MockEmailService::new();
+
+        let user = verified_user("1234567", "password123");
+        repo.expect_get_user_by_id()
+            .returning(move |_| Ok(Some(user.clone())));
+
+        let service = make_service(repo, email);
+        let result = service.login("1234567".into(), "password123".into()).await;
+
+        assert!(result.is_ok());
+        assert!(!result.unwrap().is_empty());
+    }
+
+    #[tokio::test]
+    async fn login_user_not_found_returns_wrong_credentials() {
+        let mut repo = MockAuthRepo::new();
+        let email = MockEmailService::new();
+
+        repo.expect_get_user_by_id().returning(|_| Ok(None));
+
+        let service = make_service(repo, email);
+        let result = service.login("1234567".into(), "password".into()).await;
+
+        assert_eq!(result.unwrap_err(), ErrorMessage::WrongCredentials);
+    }
+
+    #[tokio::test]
+    async fn login_wrong_password_returns_wrong_credentials() {
+        let mut repo = MockAuthRepo::new();
+        let email = MockEmailService::new();
+
+        let user = verified_user("1234567", "correctpass");
+        repo.expect_get_user_by_id()
+            .returning(move |_| Ok(Some(user.clone())));
+
+        let service = make_service(repo, email);
+        let result = service.login("1234567".into(), "wrongpass".into()).await;
+
+        assert_eq!(result.unwrap_err(), ErrorMessage::WrongCredentials);
+    }
+
+    #[tokio::test]
+    async fn login_unverified_user_resends_verification_email() {
+        let mut repo = MockAuthRepo::new();
+        let mut email = MockEmailService::new();
+
+        let user = unverified_user("1234567", "password123");
+        let verification_token = Uuid::new_v4();
+
+        repo.expect_get_user_by_id()
+            .returning(move |_| Ok(Some(user.clone())));
+        repo.expect_create_user_verification()
+            .returning(move |_| Ok(verification_token));
+        email
+            .expect_send_verification_email()
+            .returning(|_, _| Ok(()));
+
+        let service = make_service(repo, email);
+        let result = service.login("1234567".into(), "password123".into()).await;
+
+        assert_eq!(result.unwrap_err(), ErrorMessage::UserNotVerified);
+    }
+
+    // ── register ──
+
+    #[tokio::test]
+    async fn register_success() {
+        let mut repo = MockAuthRepo::new();
+        let mut email = MockEmailService::new();
+        let verification_token = Uuid::new_v4();
+
+        repo.expect_create_user()
+            .returning(|id, _| Ok(id.to_string()));
+        repo.expect_create_user_verification()
+            .returning(move |_| Ok(verification_token));
+        email
+            .expect_send_verification_email()
+            .returning(|_, _| Ok(()));
+
+        let service = make_service(repo, email);
+        let result = service
+            .register("1234567".into(), "password123".into())
+            .await;
+
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn register_duplicate_user_returns_user_already_exists() {
+        let mut repo = MockAuthRepo::new();
+        let email = MockEmailService::new();
+
+        repo.expect_create_user()
+            .returning(|_, _| Err(sqlx::Error::Database(Box::new(TestUniqueViolation))));
+
+        let service = make_service(repo, email);
+        let result = service
+            .register("1234567".into(), "password123".into())
+            .await;
+
+        assert_eq!(result.unwrap_err(), ErrorMessage::UserAlreadyExists);
+    }
+
+    // ── validate_user ──
+
+    #[tokio::test]
+    async fn validate_user_success() {
+        let mut repo = MockAuthRepo::new();
+        let email = MockEmailService::new();
+        let token = Uuid::new_v4();
+
+        repo.expect_validate_user().returning(|_| Ok(()));
+
+        let service = make_service(repo, email);
+        assert!(service.validate_user(token).await.is_ok());
+    }
+
+    #[tokio::test]
+    async fn validate_user_token_not_found() {
+        let mut repo = MockAuthRepo::new();
+        let email = MockEmailService::new();
+        let token = Uuid::new_v4();
+
+        repo.expect_validate_user()
+            .returning(|_| Err(sqlx::Error::RowNotFound));
+
+        let service = make_service(repo, email);
+        let result = service.validate_user(token).await;
+
+        assert_eq!(result.unwrap_err(), ErrorMessage::VerifyTokenDoesNotExist);
+    }
+
+    // ── create_user_reset_password ──
+
+    #[tokio::test]
+    async fn create_user_reset_password_success() {
+        let mut repo = MockAuthRepo::new();
+        let mut email = MockEmailService::new();
+        let reset_token = Uuid::new_v4();
+
+        repo.expect_create_user_reset_password()
+            .returning(move |_| Ok(reset_token));
+        email
+            .expect_send_reset_password_email()
+            .returning(|_, _| Ok(()));
+
+        let service = make_service(repo, email);
+        assert!(
+            service
+                .create_user_reset_password("1234567".into())
+                .await
+                .is_ok()
+        );
+    }
+
+    #[tokio::test]
+    async fn create_user_reset_password_user_not_found() {
+        let mut repo = MockAuthRepo::new();
+        let email = MockEmailService::new();
+
+        repo.expect_create_user_reset_password()
+            .returning(|_| Err(sqlx::Error::RowNotFound));
+
+        let service = make_service(repo, email);
+        let result = service.create_user_reset_password("1234567".into()).await;
+
+        assert_eq!(result.unwrap_err(), ErrorMessage::UserNoLongerExists);
+    }
+
+    // ── user_reset_password_exists ──
+
+    #[tokio::test]
+    async fn user_reset_password_exists_returns_true() {
+        let mut repo = MockAuthRepo::new();
+        let email = MockEmailService::new();
+        let token = Uuid::new_v4();
+
+        repo.expect_user_reset_password_exists()
+            .returning(|_| Ok(true));
+
+        let service = make_service(repo, email);
+        assert!(service.user_reset_password_exists(token).await.unwrap());
+    }
+
+    #[tokio::test]
+    async fn user_reset_password_exists_returns_false() {
+        let mut repo = MockAuthRepo::new();
+        let email = MockEmailService::new();
+        let token = Uuid::new_v4();
+
+        repo.expect_user_reset_password_exists()
+            .returning(|_| Ok(false));
+
+        let service = make_service(repo, email);
+        assert!(!service.user_reset_password_exists(token).await.unwrap());
+    }
+
+    // ── reset_user_password ──
+
+    #[tokio::test]
+    async fn reset_user_password_success() {
+        let mut repo = MockAuthRepo::new();
+        let email = MockEmailService::new();
+        let token = Uuid::new_v4();
+
+        repo.expect_update_user_password().returning(|_, _| Ok(()));
+
+        let service = make_service(repo, email);
+        assert!(
+            service
+                .reset_user_password(token, "newpass123".into())
+                .await
+                .is_ok()
+        );
+    }
+
+    #[tokio::test]
+    async fn reset_user_password_token_not_found() {
+        let mut repo = MockAuthRepo::new();
+        let email = MockEmailService::new();
+        let token = Uuid::new_v4();
+
+        repo.expect_update_user_password()
+            .returning(|_, _| Err(sqlx::Error::RowNotFound));
+
+        let service = make_service(repo, email);
+        let result = service
+            .reset_user_password(token, "newpass123".into())
+            .await;
+
+        assert_eq!(result.unwrap_err(), ErrorMessage::UserNoLongerExists);
+    }
+
+    // Helper: fake database error that reports a unique violation
+    struct TestUniqueViolation;
+
+    impl std::fmt::Display for TestUniqueViolation {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "unique violation")
+        }
+    }
+
+    impl std::fmt::Debug for TestUniqueViolation {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "TestUniqueViolation")
+        }
+    }
+
+    impl std::error::Error for TestUniqueViolation {}
+
+    impl sqlx::error::DatabaseError for TestUniqueViolation {
+        fn message(&self) -> &str {
+            "unique violation"
+        }
+
+        fn kind(&self) -> sqlx::error::ErrorKind {
+            sqlx::error::ErrorKind::UniqueViolation
+        }
+
+        fn as_error(&self) -> &(dyn std::error::Error + Send + Sync + 'static) {
+            self
+        }
+
+        fn as_error_mut(&mut self) -> &mut (dyn std::error::Error + Send + Sync + 'static) {
+            self
+        }
+
+        fn into_error(self: Box<Self>) -> Box<dyn std::error::Error + Send + Sync + 'static> {
+            self
+        }
     }
 }

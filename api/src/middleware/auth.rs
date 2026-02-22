@@ -1,3 +1,4 @@
+use crate::db::auth_repo::AuthRepoTrait;
 use crate::errors::{ErrorMessage, ErrorResponse, HttpError};
 use crate::{AppState, utils};
 use actix_web::cookie::Cookie;
