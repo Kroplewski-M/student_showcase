@@ -16,7 +16,7 @@ services:
     depends_on:
       - postgres
     volumes:
-      - uploads:/srv/uploads:ro
+      - uploads:/srv/uploads
     networks:
       - appnet
   frontend:
