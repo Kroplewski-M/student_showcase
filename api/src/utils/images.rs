@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use crate::errors::ErrorMessage;
 
 /// Default max file size: 5 MiB
@@ -91,8 +93,13 @@ impl ValidatedImage {
         let format = ImageFormat::from_bytes(&bytes)
             .ok_or(ErrorMessage::FileInvalidFormat(valid_extensions))?;
 
+        let old_name = Path::new(&file_name)
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("unknown")
+            .to_string();
         Ok(Self {
-            old_name: file_name,
+            old_name,
             bytes,
             format,
         })
@@ -104,9 +111,15 @@ impl ValidatedImage {
     pub fn format(&self) -> ImageFormat {
         self.format
     }
+    pub fn len(&self) -> i64 {
+        self.bytes.len() as i64
+    }
+    pub fn old_name(&self) -> String {
+        self.old_name.clone()
+    }
     /// Generate a safe filename with UUID — no user input in the path
     pub fn generate_new_filename(&self) -> String {
-        format!("{}.{}", uuid::Uuid::new_v4(), self.format.extension())
+        format!("{}", uuid::Uuid::new_v4())
     }
 }
 

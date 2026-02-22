@@ -1,4 +1,8 @@
+use async_trait::async_trait;
 use sqlx::{Pool, Postgres};
+use tracing::info;
+
+use crate::models::File;
 
 #[derive(Debug, Clone)]
 pub struct UserRepo {
@@ -8,5 +12,95 @@ pub struct UserRepo {
 impl UserRepo {
     pub fn new(pool: Pool<Postgres>) -> Self {
         Self { pool }
+    }
+}
+
+#[async_trait]
+pub trait UserRepoTrait: Send + Sync {
+    async fn update_user_image(
+        &self,
+        user_id: &str,
+        file_size: i64,
+        image_type: &str,
+        old_name: &str,
+        new_name: &str,
+        extension: &str,
+    ) -> Result<(), sqlx::Error>;
+    async fn get_user_image(&self, user_id: &str) -> Result<Option<File>, sqlx::Error>;
+}
+
+#[async_trait]
+impl UserRepoTrait for UserRepo {
+    async fn update_user_image(
+        &self,
+        user_id: &str,
+        file_size: i64,
+        image_type: &str,
+        old_name: &str,
+        new_name: &str,
+        extension: &str,
+    ) -> Result<(), sqlx::Error> {
+        let mut tx = self.pool.begin().await?;
+
+        //delete old image if it exists
+        let old_id = sqlx::query_scalar!(
+            r#"
+            WITH old AS (
+                SELECT image_id FROM users WHERE id = $1
+            )
+            UPDATE users
+            SET image_id = NULL
+            WHERE id = $1
+            RETURNING (SELECT image_id FROM old)
+            "#,
+            user_id,
+        )
+        .fetch_optional(tx.as_mut())
+        .await?;
+        if let Some(id) = old_id {
+            info!("old image id: {:?}", id);
+            sqlx::query!("DELETE FROM files WHERE id = $1", id,)
+                .execute(tx.as_mut())
+                .await?;
+        }
+        // add new image to files table
+        let new_id = sqlx::query_scalar!(
+            r#"INSERT INTO files (id, old_file_name, new_file_name, file_type, size_bytes, extension)
+                     VALUES (gen_random_uuid(),$1,$2,$3,$4,$5)
+                     RETURNING id"#,
+            old_name,
+            new_name,
+            image_type,
+            file_size,
+            extension
+        )
+        .fetch_one(tx.as_mut())
+        .await?;
+        // link image to user
+        let result = sqlx::query!(
+            "UPDATE users SET image_id = $1 WHERE id = $2",
+            new_id,
+            user_id
+        )
+        .execute(tx.as_mut())
+        .await?;
+
+        if result.rows_affected() == 0 {
+            return Err(sqlx::Error::RowNotFound);
+        }
+
+        tx.commit().await?;
+        Ok(())
+    }
+    async fn get_user_image(&self, user_id: &str) -> Result<Option<File>, sqlx::Error> {
+        sqlx::query_as!(
+            File,
+            r#"
+            SELECT * from files WHERE Id = (SELECT image_id FROM users WHERE id = $1)
+        "#,
+            user_id
+        )
+        .fetch_optional(&self.pool)
+        .await
     }
 }

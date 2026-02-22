@@ -4,6 +4,17 @@ use uuid::Uuid;
 
 use crate::models::User;
 
+#[derive(Debug, Clone)]
+pub struct AuthRepo {
+    pool: Pool<Postgres>,
+}
+
+impl AuthRepo {
+    pub fn new(pool: Pool<Postgres>) -> Self {
+        Self { pool }
+    }
+}
+
 #[async_trait]
 pub trait AuthRepoTrait: Send + Sync {
     async fn exists_verified(&self, student_id: &str) -> Result<bool, sqlx::Error>;
@@ -14,17 +25,6 @@ pub trait AuthRepoTrait: Send + Sync {
     async fn user_reset_password_exists(&self, token: Uuid) -> Result<bool, sqlx::Error>;
     async fn update_user_password(&self, token: Uuid, password: &str) -> Result<(), sqlx::Error>;
     async fn validate_user(&self, token: Uuid) -> Result<(), sqlx::Error>;
-}
-
-#[derive(Debug, Clone)]
-pub struct AuthRepo {
-    pool: Pool<Postgres>,
-}
-
-impl AuthRepo {
-    pub fn new(pool: Pool<Postgres>) -> Self {
-        Self { pool }
-    }
 }
 
 #[async_trait]
@@ -64,11 +64,7 @@ impl AuthRepoTrait for AuthRepo {
         .fetch_optional(&self.pool)
         .await
     }
-    async fn create_user(
-        &self,
-        student_id: &str,
-        password: &str,
-    ) -> Result<String, sqlx::Error> {
+    async fn create_user(&self, student_id: &str, password: &str) -> Result<String, sqlx::Error> {
         let user_id = sqlx::query_scalar!(
             r#"
             INSERT INTO users (id, password)
@@ -148,11 +144,7 @@ impl AuthRepoTrait for AuthRepo {
         .fetch_one(&self.pool)
         .await
     }
-    async fn update_user_password(
-        &self,
-        token: Uuid,
-        password: &str,
-    ) -> Result<(), sqlx::Error> {
+    async fn update_user_password(&self, token: Uuid, password: &str) -> Result<(), sqlx::Error> {
         let mut tx = self.pool.begin().await?;
         let user_id = sqlx::query_scalar!(
             r#"DELETE FROM user_password_resets

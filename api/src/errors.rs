@@ -32,6 +32,9 @@ pub enum ErrorMessage {
     UserNotVerified,
     FileSizeTooBig(usize),
     FileInvalidFormat(Vec<String>),
+    FileInvalidName,
+    NoFileProvided,
+    InvalidFileData,
 }
 impl fmt::Display for ErrorMessage {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -85,6 +88,9 @@ impl ErrorMessage {
                     file_formats.join(", ")
                 )
             }
+            ErrorMessage::FileInvalidName => "Invalid file name".to_string(),
+            ErrorMessage::NoFileProvided => "No File Provided".to_string(),
+            ErrorMessage::InvalidFileData => "Invalid File Data".to_string(),
         }
     }
 }

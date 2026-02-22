@@ -4,9 +4,9 @@ use crate::db::DbClient;
 use crate::service::{auth_service::AuthService, user_service::UserService};
 use crate::utils::email::EmailService;
 use actix_web::{App, HttpServer, web};
-use std::sync::Arc;
 use dotenv::dotenv;
 use sqlx::postgres::PgPoolOptions;
+use std::sync::Arc;
 use tracing_subscriber::EnvFilter;
 mod db;
 mod dtos;
@@ -16,7 +16,6 @@ mod middleware;
 mod models;
 mod service;
 mod utils;
-
 #[derive(Clone)]
 pub struct AppState {
     pub db_client: DbClient,
@@ -58,7 +57,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             Arc::new(email_service.clone()),
             config.clone(),
         ),
-        user_service: UserService::new(db_client.user.clone(), config.clone()),
+        user_service: UserService::new(Arc::new(db_client.user.clone()), config.clone()),
     };
 
     println!("API starting on 0.0.0.0:{}", config.port);
