@@ -41,11 +41,14 @@ impl UserService {
             .map_err(|_| ErrorMessage::ServerError)?;
 
         //retrieve current image
-        let current_image = &self
-            .user_repo
-            .get_user_image(user_id.as_str())
-            .await
-            .map_err(|_| ErrorMessage::ServerError)?;
+        let current_image = match self.user_repo.get_user_image(user_id.as_str()).await {
+            Ok(img) => img,
+            Err(e) => {
+                error!("Error fetching current image: {}", e);
+                let _ = file_type.delete(&disk_filename).await;
+                return Err(ErrorMessage::ServerError);
+            }
+        };
 
         if let Err(e) = self
             .user_repo
@@ -59,7 +62,7 @@ impl UserService {
             )
             .await
         {
-            error!("Error updaing user image: {}", e);
+            error!("Error updating user image: {}", e);
             // Compensate: remove the file we just wrote
             let _ = file_type.delete(&disk_filename).await;
             return Err(ErrorMessage::ServerError);

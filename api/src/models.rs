@@ -4,7 +4,7 @@ use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::errors::ErrorMessage;
+use crate::{errors::ErrorMessage, utils::images::DEFAULT_MAX_IMAGE_SIZE};
 
 #[derive(Debug, Deserialize, Serialize, sqlx::FromRow, Clone)]
 pub struct User {
@@ -39,7 +39,7 @@ pub struct FormFile {
     pub bytes: Vec<u8>,
 }
 impl FormFile {
-    pub async fn new_from_form_muli_part(mut form_file: Multipart) -> Result<Self, ErrorMessage> {
+    pub async fn new_from_form_multi_part(mut form_file: Multipart) -> Result<Self, ErrorMessage> {
         let mut field = form_file
             .next()
             .await
@@ -61,6 +61,9 @@ impl FormFile {
 
         while let Some(chunk) = field.next().await {
             let data = chunk.map_err(|_| ErrorMessage::InvalidFileData)?;
+            if bytes.len() + data.len() > DEFAULT_MAX_IMAGE_SIZE {
+                return Err(ErrorMessage::FileSizeTooBig(DEFAULT_MAX_IMAGE_SIZE));
+            }
             bytes.extend_from_slice(&data);
         }
 
