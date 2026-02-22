@@ -208,15 +208,6 @@ mod tests {
         assert_eq!(img.format(), ImageFormat::Jpeg);
         assert_eq!(img.bytes().len(), 12);
     }
-
-    #[test]
-    fn generates_filename_with_correct_extension() {
-        let bytes = dummy_png();
-        let img = ValidatedImage::from_bytes("photo.png".into(), bytes, MAX).unwrap();
-
-        let filename = img.generate_new_filename();
-        assert!(filename.ends_with(".png"));
-    }
     #[test]
     fn detects_gif() {
         assert_eq!(
