@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO user_verifications (token, user_id, expired_at)\n            VALUES ($1, $2, now() + interval '15 minutes')\n            RETURNING token\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "token",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "8116da18a127d7fbf33e2d86814584f6e1668813054d3d220440fd87d7f7969b"
+}

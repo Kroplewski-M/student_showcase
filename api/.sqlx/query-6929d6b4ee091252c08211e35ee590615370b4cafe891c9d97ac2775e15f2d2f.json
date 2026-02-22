@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO user_password_resets (token, user_id, expired_at)\n        VALUES ($1, $2, now() + interval '15 minutes')\n        RETURNING token\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "token",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "6929d6b4ee091252c08211e35ee590615370b4cafe891c9d97ac2775e15f2d2f"
+}

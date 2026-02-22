@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            WITH old AS (\n                SELECT image_id FROM users WHERE id = $1\n            )\n            UPDATE users\n            SET image_id = NULL\n            WHERE id = $1\n            RETURNING (SELECT image_id FROM old)\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "image_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "dbb3f96449b99de372f07f953750762d1c3c527534333acd25bb15e3b351fb50"
+}

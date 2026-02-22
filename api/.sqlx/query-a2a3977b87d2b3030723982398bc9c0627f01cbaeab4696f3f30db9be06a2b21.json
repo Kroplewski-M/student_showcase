@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT EXISTS (\n            SELECT 1\n            FROM users\n            WHERE id = $1\n            AND verified = true\n        )\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "exists",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "a2a3977b87d2b3030723982398bc9c0627f01cbaeab4696f3f30db9be06a2b21"
+}

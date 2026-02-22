@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT\n            id,\n            first_name,\n            last_name,\n            personal_email,\n            verified,\n            created_at,\n            updated_at,\n            password\n            FROM users WHERE id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "first_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "last_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "personal_email",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "verified",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 7,
+        "name": "password",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "85155e58ffe62ab4c63b51ccdd77bc15136d07227ce5acb087314bd3a70cda95"
+}
