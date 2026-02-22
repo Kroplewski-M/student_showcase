@@ -3,7 +3,11 @@ use tokio::fs;
 use crate::errors::ErrorMessage;
 use std::path::PathBuf;
 
+#[cfg(not(test))]
 const BASE_PATH: &str = "/srv/uploads";
+
+#[cfg(test)]
+const BASE_PATH: &str = "./test_uploads";
 
 pub enum FileStorageType {
     UserImage,
