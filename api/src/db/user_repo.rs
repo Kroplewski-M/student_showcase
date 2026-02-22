@@ -104,3 +104,27 @@ impl UserRepoTrait for UserRepo {
         .await
     }
 }
+
+#[cfg(test)]
+pub mod mocks {
+    use super::*;
+    use mockall::mock;
+
+    mock! {
+        pub UserRepo {}
+
+        #[async_trait]
+        impl UserRepoTrait for UserRepo {
+            async fn update_user_image(
+                &self,
+                user_id: &str,
+                file_size: i64,
+                image_type: &str,
+                old_name: &str,
+                new_name: &str,
+                extension: &str,
+            ) -> Result<(), sqlx::Error>;
+            async fn get_user_image(&self, user_id: &str) -> Result<Option<File>, sqlx::Error>;
+        }
+    }
+}
