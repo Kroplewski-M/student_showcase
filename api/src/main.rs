@@ -55,6 +55,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         db_client: db_client.clone(),
         auth_service: AuthService::new(
             Arc::new(db_client.auth.clone()),
+            Arc::new(db_client.user.clone()),
             Arc::new(email_service.clone()),
             config.clone(),
         ),

@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use sqlx::{Pool, Postgres};
 use tracing::info;
 
-use crate::models::File;
+use crate::models::{File, User};
 
 #[derive(Debug, Clone)]
 pub struct UserRepo {
@@ -17,6 +17,8 @@ impl UserRepo {
 
 #[async_trait]
 pub trait UserRepoTrait: Send + Sync {
+    async fn exists_verified(&self, student_id: &str) -> Result<bool, sqlx::Error>;
+    async fn get_user_by_id(&self, student_id: &str) -> Result<Option<User>, sqlx::Error>;
     async fn update_user_image(
         &self,
         user_id: &str,
@@ -31,6 +33,41 @@ pub trait UserRepoTrait: Send + Sync {
 
 #[async_trait]
 impl UserRepoTrait for UserRepo {
+    async fn exists_verified(&self, student_id: &str) -> Result<bool, sqlx::Error> {
+        let exists = sqlx::query_scalar!(
+            r#"
+            SELECT EXISTS (
+            SELECT 1
+            FROM users
+            WHERE id = $1
+            AND verified = true
+        )
+        "#,
+            student_id
+        )
+        .fetch_one(&self.pool)
+        .await?;
+
+        Ok(exists.unwrap_or(false))
+    }
+    async fn get_user_by_id(&self, student_id: &str) -> Result<Option<User>, sqlx::Error> {
+        sqlx::query_as!(
+            User,
+            r#"SELECT
+            id,
+            first_name,
+            last_name,
+            personal_email,
+            verified,
+            created_at,
+            updated_at,
+            password
+            FROM users WHERE id = $1"#,
+            student_id
+        )
+        .fetch_optional(&self.pool)
+        .await
+    }
     async fn update_user_image(
         &self,
         user_id: &str,
@@ -115,6 +152,8 @@ pub mod mocks {
 
         #[async_trait]
         impl UserRepoTrait for UserRepo {
+            async fn exists_verified(&self, student_id: &str) -> Result<bool, sqlx::Error>;
+            async fn get_user_by_id(&self, student_id: &str) -> Result<Option<User>, sqlx::Error>;
             async fn update_user_image(
                 &self,
                 user_id: &str,

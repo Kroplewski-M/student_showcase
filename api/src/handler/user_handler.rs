@@ -11,8 +11,29 @@ use crate::{
 
 pub fn user_handler() -> impl HttpServiceFactory {
     web::scope("/user")
-        .wrap(RequireAuth)
-        .route("/update_image", web::post().to(update_user_image))
+        // Public routes (no auth)
+        .route("/info/{id}", web::get().to(get_user_profile))
+        // Protected routes wrapped in their own scope
+        .service(
+            web::scope("")
+                .wrap(RequireAuth)
+                .route("/update_image", web::post().to(update_user_image)),
+        )
+}
+
+pub async fn get_user_profile(
+    app_state: web::Data<AppState>,
+    id: web::Path<String>,
+) -> Result<HttpResponse, HttpError> {
+    //chech user exists
+    let user_exists = app_state
+        .user_service
+        .verified_user_exists(id.to_string())
+        .await
+        .map_err(HttpError::server_error)?;
+
+    let test = format!("student id: {}, exists: {}", id, user_exists);
+    Ok(HttpResponse::Ok().body(test))
 }
 
 pub async fn update_user_image(
