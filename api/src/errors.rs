@@ -61,7 +61,7 @@ impl ErrorMessage {
             ErrorMessage::UserAlreadyExists => {
                 "A user with this student id already exists".to_string()
             }
-            ErrorMessage::UserNoLongerExists => "User does not exists".to_string(),
+            ErrorMessage::UserNoLongerExists => "User does not exist".to_string(),
             ErrorMessage::TokenNotProvided => {
                 "You are not logged in, please provide a token".to_string()
             }
@@ -248,7 +248,7 @@ mod tests {
     fn error_message_user_no_longer_exists_display() {
         assert_eq!(
             ErrorMessage::UserNoLongerExists.to_string(),
-            "User belonging to this token no longer exists"
+            "User does not exist"
         );
     }
 

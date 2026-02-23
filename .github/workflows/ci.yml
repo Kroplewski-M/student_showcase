@@ -38,7 +38,7 @@ jobs:
            sleep 2
            done
            echo "Postgres did not become ready in time" >&2
-           exit 1     - name: Run database migrations
+           exit 1
       - name: Run Migrations
         run: |
           docker compose -f docker-compose.dev.yml run --rm api sqlx migrate run
