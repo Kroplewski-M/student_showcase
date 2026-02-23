@@ -1,24 +1,25 @@
+use std::sync::Arc;
+
 use async_trait::async_trait;
 use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 
-use crate::models::User;
+use crate::db::user_repo::UserRepoTrait;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct AuthRepo {
     pool: Pool<Postgres>,
+    user_repo: Arc<dyn UserRepoTrait>,
 }
 
 impl AuthRepo {
-    pub fn new(pool: Pool<Postgres>) -> Self {
-        Self { pool }
+    pub fn new(pool: Pool<Postgres>, user_repo: Arc<dyn UserRepoTrait>) -> Self {
+        Self { pool, user_repo }
     }
 }
 
 #[async_trait]
 pub trait AuthRepoTrait: Send + Sync {
-    async fn exists_verified(&self, student_id: &str) -> Result<bool, sqlx::Error>;
-    async fn get_user_by_id(&self, student_id: &str) -> Result<Option<User>, sqlx::Error>;
     async fn create_user(&self, student_id: &str, password: &str) -> Result<String, sqlx::Error>;
     async fn create_user_verification(&self, student_id: &str) -> Result<Uuid, sqlx::Error>;
     async fn create_user_reset_password(&self, student_id: &str) -> Result<Uuid, sqlx::Error>;
@@ -29,41 +30,6 @@ pub trait AuthRepoTrait: Send + Sync {
 
 #[async_trait]
 impl AuthRepoTrait for AuthRepo {
-    async fn exists_verified(&self, student_id: &str) -> Result<bool, sqlx::Error> {
-        let exists = sqlx::query_scalar!(
-            r#"
-            SELECT EXISTS (
-            SELECT 1
-            FROM users
-            WHERE id = $1
-            AND verified = true
-        )
-        "#,
-            student_id
-        )
-        .fetch_one(&self.pool)
-        .await?;
-
-        Ok(exists.unwrap_or(false))
-    }
-    async fn get_user_by_id(&self, student_id: &str) -> Result<Option<User>, sqlx::Error> {
-        sqlx::query_as!(
-            User,
-            r#"SELECT
-            id,
-            first_name,
-            last_name,
-            personal_email,
-            verified,
-            created_at,
-            updated_at,
-            password
-            FROM users WHERE id = $1"#,
-            student_id
-        )
-        .fetch_optional(&self.pool)
-        .await
-    }
     async fn create_user(&self, student_id: &str, password: &str) -> Result<String, sqlx::Error> {
         let user_id = sqlx::query_scalar!(
             r#"
@@ -104,7 +70,7 @@ impl AuthRepoTrait for AuthRepo {
     }
     async fn create_user_reset_password(&self, student_id: &str) -> Result<Uuid, sqlx::Error> {
         let mut tx = self.pool.begin().await?;
-        let user_exists = self.exists_verified(student_id).await?;
+        let user_exists = self.user_repo.exists_verified(student_id).await?;
         if !user_exists {
             return Err(sqlx::Error::RowNotFound);
         }
@@ -216,8 +182,6 @@ pub mod mocks {
 
         #[async_trait]
         impl AuthRepoTrait for AuthRepo {
-            async fn exists_verified(&self, student_id: &str) -> Result<bool, sqlx::Error>;
-            async fn get_user_by_id(&self, student_id: &str) -> Result<Option<User>, sqlx::Error>;
             async fn create_user(&self, student_id: &str, password: &str) -> Result<String, sqlx::Error>;
             async fn create_user_verification(&self, student_id: &str) -> Result<Uuid, sqlx::Error>;
             async fn create_user_reset_password(&self, student_id: &str) -> Result<Uuid, sqlx::Error>;

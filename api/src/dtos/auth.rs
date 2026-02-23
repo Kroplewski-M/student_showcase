@@ -15,7 +15,7 @@ impl Deref for StudentId {
     }
 }
 
-fn validate_student_id(id: &str) -> Result<(), validator::ValidationError> {
+pub fn validate_student_id(id: &str) -> Result<(), validator::ValidationError> {
     let trimmed = id.trim();
     if (trimmed.len() != 7 || trimmed != id) || !trimmed.chars().all(|c| c.is_ascii_digit()) {
         let mut err = validator::ValidationError::new("invalid_student_id");

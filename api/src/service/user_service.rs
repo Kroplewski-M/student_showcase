@@ -4,6 +4,7 @@ use tracing::error;
 
 use crate::{
     db::user_repo::UserRepoTrait,
+    dtos::auth::validate_student_id,
     errors::ErrorMessage,
     utils::{
         file_storage::FileStorageTrait,
@@ -24,7 +25,16 @@ impl UserService {
             file_storage,
         }
     }
-
+    pub async fn verified_user_exists(&self, user_id: String) -> Result<bool, ErrorMessage> {
+        let valid = validate_student_id(&user_id).map_err(|_| false);
+        if valid.is_err() {
+            return Ok(false);
+        }
+        self.user_repo
+            .exists_verified(&user_id)
+            .await
+            .map_err(|_| ErrorMessage::ServerError)
+    }
     pub async fn update_user_image(
         &self,
         user_id: String,

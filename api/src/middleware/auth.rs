@@ -1,4 +1,4 @@
-use crate::db::auth_repo::AuthRepoTrait;
+use crate::db::user_repo::UserRepoTrait;
 use crate::errors::{ErrorMessage, ErrorResponse, HttpError};
 use crate::{AppState, utils};
 use actix_web::cookie::Cookie;
@@ -112,7 +112,7 @@ where
             let user_id = token_info.sub.to_string();
             let exists = cloned_app_state
                 .db_client
-                .auth
+                .user
                 .exists_verified(&user_id)
                 .await
                 .map_err(|e| ErrorInternalServerError(HttpError::server_error(e.to_string())))?;
