@@ -91,6 +91,10 @@ impl UserService {
         Ok(())
     }
     pub async fn get_user_profile(&self, user_id: String) -> Result<UserProfile, ErrorMessage> {
+        let valid = validate_student_id(&user_id).map_err(|_| false);
+        if valid.is_err() {
+            return Err(ErrorMessage::UserNoLongerExists);
+        }
         self.user_repo
             .get_user_profile(&user_id)
             .map_err(|e| match e {
