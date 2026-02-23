@@ -31,9 +31,19 @@ pub async fn get_user_profile(
         .verified_user_exists(id.to_string())
         .await
         .map_err(HttpError::server_error)?;
+    if !user_exists {
+        return Err(HttpError::not_found("Student does not exist"));
+    }
 
-    let test = format!("student id: {}, exists: {}", id, user_exists);
-    Ok(HttpResponse::Ok().body(test))
+    let user = app_state
+        .user_service
+        .get_user_profile(id.to_string())
+        .await
+        .map_err(|e| match e {
+            ErrorMessage::UserNoLongerExists => HttpError::not_found(e),
+            _ => HttpError::server_error(e),
+        })?;
+    Ok(HttpResponse::Ok().json(user))
 }
 
 pub async fn update_user_image(

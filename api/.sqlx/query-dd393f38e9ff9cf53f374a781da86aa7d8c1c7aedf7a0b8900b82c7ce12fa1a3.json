@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT u.id,f.new_file_name || '.' || f.extension AS profile_image_name\n                FROM users u\n                LEFT JOIN files f ON f.id = u.image_id\n                WHERE u.id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "profile_image_name",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "dd393f38e9ff9cf53f374a781da86aa7d8c1c7aedf7a0b8900b82c7ce12fa1a3"
+}

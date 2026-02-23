@@ -1,11 +1,13 @@
 use std::sync::Arc;
 
+use futures_util::TryFutureExt;
 use tracing::error;
 
 use crate::{
     db::user_repo::UserRepoTrait,
     dtos::auth::validate_student_id,
     errors::ErrorMessage,
+    models::user::UserProfile,
     utils::{
         file_storage::FileStorageTrait,
         images::{DEFAULT_MAX_IMAGE_SIZE, ValidatedImage},
@@ -87,6 +89,15 @@ impl UserService {
         }
 
         Ok(())
+    }
+    pub async fn get_user_profile(&self, user_id: String) -> Result<UserProfile, ErrorMessage> {
+        self.user_repo
+            .get_user_profile(&user_id)
+            .map_err(|e| match e {
+                sqlx::Error::RowNotFound => ErrorMessage::UserNoLongerExists,
+                _ => ErrorMessage::ServerError,
+            })
+            .await
     }
 }
 

@@ -120,6 +120,9 @@ impl HttpError {
     pub fn unauthorized(message: impl Into<String>) -> Self {
         Self::new(message, 401)
     }
+    pub fn not_found(message: impl Into<String>) -> Self {
+        Self::new(message, 404)
+    }
     pub fn into_http_response(self) -> HttpResponse {
         match self.status {
             400 => HttpResponse::BadRequest().json(Response {
@@ -131,6 +134,10 @@ impl HttpError {
                 message: self.message,
             }),
             409 => HttpResponse::Conflict().json(Response {
+                status: "fail",
+                message: self.message,
+            }),
+            404 => HttpResponse::NotFound().json(Response {
                 status: "fail",
                 message: self.message,
             }),
