@@ -12,7 +12,7 @@ use crate::{
 pub fn user_handler() -> impl HttpServiceFactory {
     web::scope("/user")
         // Public routes (no auth)
-        .route("/{id}", web::get().to(get_user_profile))
+        .route("/info/{id}", web::get().to(get_user_profile))
         // Protected routes wrapped in their own scope
         .service(
             web::scope("")
