@@ -6,7 +6,7 @@ use crate::{
     dtos::Response,
     errors::{ErrorMessage, HttpError},
     middleware::auth::{AuthenticatedUserId, RequireAuth},
-    models::FormFile,
+    models::file::FormFile,
 };
 
 pub fn user_handler() -> impl HttpServiceFactory {

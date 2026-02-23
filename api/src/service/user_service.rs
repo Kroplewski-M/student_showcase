@@ -94,7 +94,7 @@ impl UserService {
 mod tests {
     use super::*;
     use crate::db::user_repo::mocks::MockUserRepo;
-    use crate::models::File;
+    use crate::models::file::File;
     use crate::utils::file_storage::mocks::MockFileStorage;
     use crate::utils::images::DEFAULT_MAX_IMAGE_SIZE;
     use chrono::Utc;

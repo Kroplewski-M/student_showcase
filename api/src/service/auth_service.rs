@@ -174,7 +174,7 @@ mod tests {
     use crate::config::PostMarkConfig;
     use crate::db::auth_repo::mocks::MockAuthRepo;
     use crate::db::user_repo::mocks::MockUserRepo;
-    use crate::models::User;
+    use crate::models::user::User;
     use crate::utils::email::mocks::MockEmailService;
     use chrono::Utc;
 
