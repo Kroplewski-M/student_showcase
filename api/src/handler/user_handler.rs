@@ -25,16 +25,6 @@ pub async fn get_user_profile(
     app_state: web::Data<AppState>,
     id: web::Path<String>,
 ) -> Result<HttpResponse, HttpError> {
-    //chech user exists
-    let user_exists = app_state
-        .user_service
-        .verified_user_exists(id.to_string())
-        .await
-        .map_err(HttpError::server_error)?;
-    if !user_exists {
-        return Err(HttpError::not_found("Student does not exist"));
-    }
-
     let user = app_state
         .user_service
         .get_user_profile(id.to_string())

@@ -146,23 +146,19 @@ impl UserRepoTrait for UserRepo {
     }
 
     async fn get_user_profile(&self, user_id: &str) -> Result<UserProfile, sqlx::Error> {
-        let user = sqlx::query_as!(
+        sqlx::query_as!(
             UserProfile,
             r#"
                 SELECT u.id,f.new_file_name || '.' || f.extension AS profile_image_name
                 FROM users u
                 LEFT JOIN files f ON f.id = u.image_id
                 WHERE u.id = $1
+                AND u.verified = true
             "#,
             user_id
         )
-        .fetch_optional(&self.pool)
-        .await?;
-
-        if user.is_none() {
-            return Err(sqlx::Error::RowNotFound);
-        }
-        Ok(user.unwrap())
+        .fetch_one(&self.pool)
+        .await
     }
 }
 

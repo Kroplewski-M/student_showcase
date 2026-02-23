@@ -233,4 +233,40 @@ mod tests {
 
         assert_eq!(result.unwrap_err(), ErrorMessage::ServerError);
     }
+    #[tokio::test]
+    async fn get_user_profile_success() {
+        let mut repo = MockUserRepo::new();
+        let storage = MockFileStorage::new();
+        repo.expect_get_user_profile().returning(|_| {
+            Ok(UserProfile {
+                id: "student1".to_string(),
+                profile_image_name: Some("avatar.png".to_string()),
+            })
+        });
+        let service = make_service(repo, storage);
+        let result = service.get_user_profile("student1".to_string()).await;
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn get_user_profile_not_found_maps_to_user_no_longer_exists() {
+        let mut repo = MockUserRepo::new();
+        let storage = MockFileStorage::new();
+        repo.expect_get_user_profile()
+            .returning(|_| Err(sqlx::Error::RowNotFound));
+        let service = make_service(repo, storage);
+        let result = service.get_user_profile("ghost".to_string()).await;
+        assert_eq!(result.unwrap_err(), ErrorMessage::UserNoLongerExists);
+    }
+
+    #[tokio::test]
+    async fn get_user_profile_other_error_maps_to_server_error() {
+        let mut repo = MockUserRepo::new();
+        let storage = MockFileStorage::new();
+        repo.expect_get_user_profile()
+            .returning(|_| Err(sqlx::Error::PoolTimedOut));
+        let service = make_service(repo, storage);
+        let result = service.get_user_profile("student1".to_string()).await;
+        assert_eq!(result.unwrap_err(), ErrorMessage::ServerError);
+    }
 }

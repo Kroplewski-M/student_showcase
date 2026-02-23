@@ -571,4 +571,16 @@ mod tests {
         let msg = ErrorMessage::ExceededMaxPasswordLength(0);
         assert_eq!(msg.to_string(), "Exceeded max password length of 0");
     }
+    #[test]
+    fn http_error_not_found() {
+        let err = HttpError::not_found("resource missing");
+        assert_eq!(err.status, 404);
+        assert_eq!(err.message, "resource missing");
+    }
+
+    #[test]
+    fn http_error_response_404() {
+        let resp = HttpError::not_found("missing").into_http_response();
+        assert_eq!(resp.status(), 404);
+    }
 }
