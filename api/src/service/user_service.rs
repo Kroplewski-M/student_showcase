@@ -248,7 +248,7 @@ mod tests {
             })
         });
         let service = make_service(repo, storage);
-        let result = service.get_user_profile("student1".to_string()).await;
+        let result = service.get_user_profile("2272097".to_string()).await;
         assert!(result.is_ok());
     }
 
@@ -259,7 +259,7 @@ mod tests {
         repo.expect_get_user_profile()
             .returning(|_| Err(sqlx::Error::RowNotFound));
         let service = make_service(repo, storage);
-        let result = service.get_user_profile("ghost".to_string()).await;
+        let result = service.get_user_profile("2272097".to_string()).await;
         assert_eq!(result.unwrap_err(), ErrorMessage::UserNoLongerExists);
     }
 
@@ -270,7 +270,7 @@ mod tests {
         repo.expect_get_user_profile()
             .returning(|_| Err(sqlx::Error::PoolTimedOut));
         let service = make_service(repo, storage);
-        let result = service.get_user_profile("student1".to_string()).await;
+        let result = service.get_user_profile("2272097".to_string()).await;
         assert_eq!(result.unwrap_err(), ErrorMessage::ServerError);
     }
 }
