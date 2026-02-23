@@ -2,7 +2,10 @@ use async_trait::async_trait;
 use sqlx::{Pool, Postgres};
 use tracing::info;
 
-use crate::models::{file::File, user::User};
+use crate::models::{
+    file::File,
+    user::{User, UserProfile},
+};
 
 #[derive(Debug, Clone)]
 pub struct UserRepo {
@@ -29,6 +32,7 @@ pub trait UserRepoTrait: Send + Sync {
         extension: &str,
     ) -> Result<(), sqlx::Error>;
     async fn get_user_image(&self, user_id: &str) -> Result<Option<File>, sqlx::Error>;
+    async fn get_user_profile(&self, user_id: &str) -> Result<UserProfile, sqlx::Error>;
 }
 
 #[async_trait]
@@ -140,6 +144,22 @@ impl UserRepoTrait for UserRepo {
         .fetch_optional(&self.pool)
         .await
     }
+
+    async fn get_user_profile(&self, user_id: &str) -> Result<UserProfile, sqlx::Error> {
+        sqlx::query_as!(
+            UserProfile,
+            r#"
+                SELECT u.id,f.new_file_name || '.' || f.extension AS profile_image_name
+                FROM users u
+                LEFT JOIN files f ON f.id = u.image_id
+                WHERE u.id = $1
+                AND u.verified = true
+            "#,
+            user_id
+        )
+        .fetch_one(&self.pool)
+        .await
+    }
 }
 
 #[cfg(test)]
@@ -164,6 +184,7 @@ pub mod mocks {
                 extension: &str,
             ) -> Result<(), sqlx::Error>;
             async fn get_user_image(&self, user_id: &str) -> Result<Option<File>, sqlx::Error>;
+            async fn get_user_profile(&self, user_id: &str) -> Result<UserProfile, sqlx::Error>;
         }
     }
 }

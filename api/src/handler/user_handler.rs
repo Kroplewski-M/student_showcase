@@ -25,15 +25,15 @@ pub async fn get_user_profile(
     app_state: web::Data<AppState>,
     id: web::Path<String>,
 ) -> Result<HttpResponse, HttpError> {
-    //chech user exists
-    let user_exists = app_state
+    let user = app_state
         .user_service
-        .verified_user_exists(id.to_string())
+        .get_user_profile(id.to_string())
         .await
-        .map_err(HttpError::server_error)?;
-
-    let test = format!("student id: {}, exists: {}", id, user_exists);
-    Ok(HttpResponse::Ok().body(test))
+        .map_err(|e| match e {
+            ErrorMessage::UserNoLongerExists => HttpError::not_found(e),
+            _ => HttpError::server_error(e),
+        })?;
+    Ok(HttpResponse::Ok().json(user))
 }
 
 pub async fn update_user_image(

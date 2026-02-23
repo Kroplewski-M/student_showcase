@@ -61,9 +61,7 @@ impl ErrorMessage {
             ErrorMessage::UserAlreadyExists => {
                 "A user with this student id already exists".to_string()
             }
-            ErrorMessage::UserNoLongerExists => {
-                "User belonging to this token no longer exists".to_string()
-            }
+            ErrorMessage::UserNoLongerExists => "User does not exist".to_string(),
             ErrorMessage::TokenNotProvided => {
                 "You are not logged in, please provide a token".to_string()
             }
@@ -120,6 +118,9 @@ impl HttpError {
     pub fn unauthorized(message: impl Into<String>) -> Self {
         Self::new(message, 401)
     }
+    pub fn not_found(message: impl Into<String>) -> Self {
+        Self::new(message, 404)
+    }
     pub fn into_http_response(self) -> HttpResponse {
         match self.status {
             400 => HttpResponse::BadRequest().json(Response {
@@ -131,6 +132,10 @@ impl HttpError {
                 message: self.message,
             }),
             409 => HttpResponse::Conflict().json(Response {
+                status: "fail",
+                message: self.message,
+            }),
+            404 => HttpResponse::NotFound().json(Response {
                 status: "fail",
                 message: self.message,
             }),
@@ -243,7 +248,7 @@ mod tests {
     fn error_message_user_no_longer_exists_display() {
         assert_eq!(
             ErrorMessage::UserNoLongerExists.to_string(),
-            "User belonging to this token no longer exists"
+            "User does not exist"
         );
     }
 
@@ -563,5 +568,17 @@ mod tests {
     fn error_message_exceeded_password_length_zero() {
         let msg = ErrorMessage::ExceededMaxPasswordLength(0);
         assert_eq!(msg.to_string(), "Exceeded max password length of 0");
+    }
+    #[test]
+    fn http_error_not_found() {
+        let err = HttpError::not_found("resource missing");
+        assert_eq!(err.status, 404);
+        assert_eq!(err.message, "resource missing");
+    }
+
+    #[test]
+    fn http_error_response_404() {
+        let resp = HttpError::not_found("missing").into_http_response();
+        assert_eq!(resp.status(), 404);
     }
 }

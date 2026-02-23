@@ -13,3 +13,9 @@ pub struct User {
     #[serde(skip)]
     pub password: Option<String>,
 }
+
+#[derive(Debug, Serialize, sqlx::FromRow, Clone)]
+pub struct UserProfile {
+    pub id: String,
+    pub profile_image_name: Option<String>,
+}
