@@ -61,9 +61,7 @@ impl ErrorMessage {
             ErrorMessage::UserAlreadyExists => {
                 "A user with this student id already exists".to_string()
             }
-            ErrorMessage::UserNoLongerExists => {
-                "User belonging to this token no longer exists".to_string()
-            }
+            ErrorMessage::UserNoLongerExists => "User does not exists".to_string(),
             ErrorMessage::TokenNotProvided => {
                 "You are not logged in, please provide a token".to_string()
             }
