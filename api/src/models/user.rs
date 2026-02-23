@@ -1,7 +1,7 @@
 use chrono::prelude::*;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
-#[derive(Debug, Deserialize, Serialize, sqlx::FromRow, Clone)]
+#[derive(Debug, Serialize, sqlx::FromRow, Clone)]
 pub struct User {
     pub id: String,
     pub first_name: Option<String>,
@@ -10,6 +10,6 @@ pub struct User {
     pub verified: bool,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
-    #[serde(skip_serializing)]
+    #[serde(skip)]
     pub password: Option<String>,
 }
