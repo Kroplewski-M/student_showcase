@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use sqlx::{Pool, Postgres};
 use tracing::info;
 
-use crate::models::{File, User};
+use crate::models::{file::File, user::User};
 
 #[derive(Debug, Clone)]
 pub struct UserRepo {

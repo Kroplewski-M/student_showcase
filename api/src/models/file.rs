@@ -1,23 +1,9 @@
 use actix_multipart::Multipart;
 use chrono::prelude::*;
 use futures_util::StreamExt;
-use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{errors::ErrorMessage, utils::images::DEFAULT_MAX_IMAGE_SIZE};
-
-#[derive(Debug, Deserialize, Serialize, sqlx::FromRow, Clone)]
-pub struct User {
-    pub id: String,
-    pub first_name: Option<String>,
-    pub last_name: Option<String>,
-    pub personal_email: Option<String>,
-    pub verified: bool,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
-    #[serde(skip_serializing)]
-    pub password: Option<String>,
-}
 
 #[derive(Debug, sqlx::FromRow)]
 pub struct File {
