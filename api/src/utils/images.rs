@@ -15,6 +15,7 @@ pub enum ImageFormat {
 }
 
 impl ImageFormat {
+    pub const ALL: &'static [Self] = &[Self::Jpeg, Self::Png, Self::Webp, Self::Gif];
     /// File extension for storage (no dot prefix)
     pub fn extension(&self) -> &'static str {
         match self {
@@ -74,15 +75,10 @@ impl ValidatedImage {
         if bytes.len() > max_size {
             return Err(ErrorMessage::FileSizeTooBig(max_size));
         }
-        let valid_extensions: Vec<String> = [
-            ImageFormat::Jpeg,
-            ImageFormat::Png,
-            ImageFormat::Webp,
-            ImageFormat::Gif,
-        ]
-        .iter()
-        .map(|f| f.extension().to_string())
-        .collect();
+        let valid_extensions: Vec<String> = ImageFormat::ALL
+            .iter()
+            .map(|f| f.extension().to_string())
+            .collect();
 
         let format = ImageFormat::from_bytes(&bytes)
             .ok_or(ErrorMessage::FileInvalidFormat(Some(valid_extensions)))?;
