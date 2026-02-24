@@ -91,7 +91,7 @@ impl ValidatedImage {
         .collect();
 
         let format = ImageFormat::from_bytes(&bytes)
-            .ok_or(ErrorMessage::FileInvalidFormat(valid_extensions))?;
+            .ok_or(ErrorMessage::FileInvalidFormat(Some(valid_extensions)))?;
 
         let old_name = Path::new(&file_name)
             .file_stem()
