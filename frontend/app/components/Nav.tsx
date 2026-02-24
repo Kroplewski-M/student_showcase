@@ -139,7 +139,7 @@ export default function Nav() {
                 ) : (
                   <>
                     {pathname === "/profile" ? (
-                      <Logout onFinally={() => setMenuOpen(false)} />
+                      <Logout onFinallyAction={() => setMenuOpen(false)} />
                     ) : (
                       <Link
                         href="/profile"

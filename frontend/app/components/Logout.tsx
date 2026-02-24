@@ -1,6 +1,10 @@
 "use client";
 import { useState } from "react";
-export default function Logout({ onFinally }: { onFinally?: () => void }) {
+export default function Logout({
+  onFinallyAction,
+}: {
+  onFinallyAction?: () => void;
+}) {
   const [loading, setLoading] = useState(false);
   async function logoutUser() {
     setLoading(true);
@@ -19,12 +23,12 @@ export default function Logout({ onFinally }: { onFinally?: () => void }) {
       console.error("Logout request failed:", err);
     } finally {
       setLoading(false);
-      onFinally?.();
+      onFinallyAction?.();
     }
   }
   return (
     <button
-      className="text-white bg-danger rounded-xl p-3 cursor-pointer hover:bg-danger/90"
+      className="rounded-xl bg-danger px-5 py-2 text-sm font-bold text-white transition-all hover:bg-danger/85 hover:shadow-secondary/20 active:scale-[0.985] cursor-pointer"
       onClick={logoutUser}
       disabled={loading}
     >
