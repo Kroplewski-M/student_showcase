@@ -99,7 +99,6 @@ impl UserRepoTrait for UserRepo {
         .fetch_optional(tx.as_mut())
         .await?;
         if let Some(id) = old_id {
-            info!("old image id: {:?}", id);
             sqlx::query!("DELETE FROM files WHERE id = $1", id,)
                 .execute(tx.as_mut())
                 .await?;

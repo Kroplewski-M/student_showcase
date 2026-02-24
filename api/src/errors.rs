@@ -31,7 +31,7 @@ pub enum ErrorMessage {
     VerifyTokenDoesNotExist,
     UserNotVerified,
     FileSizeTooBig(usize),
-    FileInvalidFormat(Vec<String>),
+    FileInvalidFormat(Option<Vec<String>>),
     FileInvalidName,
     NoFileProvided,
     InvalidFileData,
@@ -81,10 +81,10 @@ impl ErrorMessage {
                 format!("File size exceeds max: {} MiB", size / (1024 * 1024))
             }
             ErrorMessage::FileInvalidFormat(file_formats) => {
-                format!(
-                    "Invalid file format. Valid formats: {}",
-                    file_formats.join(", ")
-                )
+                if let Some(formats) = file_formats {
+                    return format!("Invalid file format. Valid formats: {}", formats.join(", "));
+                }
+                "Invalid file format".to_string()
             }
             ErrorMessage::FileInvalidName => "Invalid file name".to_string(),
             ErrorMessage::NoFileProvided => "No File Provided".to_string(),
@@ -312,7 +312,7 @@ mod tests {
     #[test]
     fn error_message_file_invalid_format_display() {
         let formats = vec!["png".to_string(), "jpg".to_string(), "webp".to_string()];
-        let msg = ErrorMessage::FileInvalidFormat(formats);
+        let msg = ErrorMessage::FileInvalidFormat(Some(formats));
         assert_eq!(
             msg.to_string(),
             "Invalid file format. Valid formats: png, jpg, webp"
@@ -322,7 +322,7 @@ mod tests {
     #[test]
     fn error_message_file_invalid_format_single() {
         let formats = vec!["pdf".to_string()];
-        let msg = ErrorMessage::FileInvalidFormat(formats);
+        let msg = ErrorMessage::FileInvalidFormat(Some(formats));
         assert_eq!(msg.to_string(), "Invalid file format. Valid formats: pdf");
     }
 
@@ -554,7 +554,7 @@ mod tests {
 
     #[test]
     fn error_message_file_invalid_format_empty_vec() {
-        let msg = ErrorMessage::FileInvalidFormat(vec![]);
+        let msg = ErrorMessage::FileInvalidFormat(Some(vec![]));
         assert_eq!(msg.to_string(), "Invalid file format. Valid formats: ");
     }
 

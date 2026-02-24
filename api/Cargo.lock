@@ -369,6 +369,7 @@ dependencies = [
  "env_logger",
  "fastembed",
  "futures-util",
+ "image",
  "jsonwebtoken",
  "mockall",
  "openssl-probe 0.2.1",
