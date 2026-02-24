@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  ReactNode,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import { createContext, ReactNode, useContext, useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { User } from "../lib/auth";
 
@@ -24,18 +18,18 @@ export function AuthProvider({
   initialUser: User | null;
   children: ReactNode;
 }) {
-  const [user, setUser] = useState<User | null>(initialUser);
+  const user: User | null = initialUser;
   const pathname = usePathname();
   const router = useRouter();
 
+  const didMountRef = useRef(false);
   useEffect(() => {
-    setUser(initialUser);
-  }, [initialUser]);
-
-  useEffect(() => {
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      return;
+    }
     router.refresh();
   }, [pathname, router]);
-
   return (
     <AuthContext.Provider value={{ user, isAuthenticated: user != null }}>
       {children}
