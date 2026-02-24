@@ -11,10 +11,14 @@ export default async function ProfilePage() {
   const user = await getUser();
   if (!user) redirect("/login");
 
-  const res = await fetch(
-    `${process.env.API_INTERNAL_URL}/user/info/${user.id}`,
-    { cache: "no-store" },
-  );
+  let res: Response;
+  try {
+    res = await fetch(`${process.env.API_INTERNAL_URL}/user/info/${user.id}`, {
+      cache: "no-store",
+    });
+  } catch {
+    redirect("/");
+  }
 
   if (!res.ok) redirect("/");
 

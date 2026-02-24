@@ -3,7 +3,13 @@
 import { useState, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { getProfileImgUrl, MAX_IMAGE_SIZE_BYTES } from "../lib/helpers";
+import {
+  ALLOWED_IMAGE_EXTENSIONS,
+  ALLOWED_IMAGE_TYPES,
+  getProfileImgUrl,
+  MAX_IMAGE_SIZE_BYTES,
+  MAX_IMAGE_SIZE_MB,
+} from "../lib/helpers";
 import Camera from "../SVGS/Camera";
 import Loading from "../SVGS/Loading";
 import ImageIcon from "../SVGS/ImageIcon";
@@ -23,8 +29,18 @@ export default function UpdateImageForm({ onClose, currentImageName }: Props) {
   const router = useRouter();
 
   const handleFile = (f: File) => {
+    if (!ALLOWED_IMAGE_TYPES.includes(f.type)) {
+      setError(
+        `Only supported extensions: ${ALLOWED_IMAGE_EXTENSIONS.join(", ")}`,
+      );
+      setFile(null);
+      setPreview(null);
+      return;
+    }
     if (f.size > MAX_IMAGE_SIZE_BYTES) {
       setError("Image must be 5 MiB or smaller.");
+      setFile(null);
+      setPreview(null);
       return;
     }
     setFile(f);
@@ -88,7 +104,7 @@ export default function UpdateImageForm({ onClose, currentImageName }: Props) {
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div className="w-full max-w-[480px] rounded-2xl border border-secondary/12 bg-primary/35 p-8 backdrop-blur-[20px]">
-        <h2 className="pb-5 text-[22px] font-bold text-secondary">
+        <h2 className="pb-5 text-[22px] font-bold text-white">
           Update Profile Picture
         </h2>
 
@@ -132,14 +148,17 @@ export default function UpdateImageForm({ onClose, currentImageName }: Props) {
             {file ? file.name : "Drop an image here or click to browse"}
           </span>
           <span className="text-xs text-secondary/35">
-            JPEG or PNG · max 5 MB
+            extensions supported: {ALLOWED_IMAGE_EXTENSIONS.join(", ")}
+          </span>
+          <span className="text-xs text-secondary/35 block">
+            max {MAX_IMAGE_SIZE_MB} MB
           </span>
         </div>
 
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/jpeg,image/png"
+          accept={`${ALLOWED_IMAGE_TYPES.join(",")}`}
           onChange={handleFileChange}
           className="hidden"
         />

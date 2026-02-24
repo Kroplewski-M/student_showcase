@@ -1,5 +1,12 @@
 export const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MiB
-
+export const MAX_IMAGE_SIZE_MB = MAX_IMAGE_SIZE_BYTES / (1024 * 1024);
+export const ALLOWED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+];
+export const ALLOWED_IMAGE_EXTENSIONS = ["jpeg", "jpg", "png", "webp", "gif"];
 export default function validateStudentId(id: string): string | null {
   const trimmed = id.trim();
   if (!trimmed) return "Student ID is required";
@@ -52,5 +59,5 @@ export function validatePassword(password: string): string | null {
 }
 
 export function getProfileImgUrl(img_name: string) {
-  return `/uploads/user_images/${img_name}`;
+  return `/uploads/user_images/${encodeURIComponent(img_name)}`;
 }

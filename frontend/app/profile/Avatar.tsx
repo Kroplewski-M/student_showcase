@@ -26,6 +26,8 @@ export default function Avatar({ image }: AvatarProps) {
         </div>
 
         <button
+          type="button"
+          aria-label="Update profile picture"
           onClick={() => setShowImageForm(true)}
           title="Update profile picture"
           className="absolute -bottom-1 -right-1 flex h-[34px] w-[34px] cursor-pointer items-center justify-center rounded-full border-3 border-primary bg-[linear-gradient(135deg,var(--color-secondary),var(--color-support))] text-primary transition-transform duration-200 ease-in-out hover:scale-110"

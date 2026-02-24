@@ -4,7 +4,6 @@ export default function GlassCard({
 }: {
   children: React.ReactNode;
   className?: string;
-  style?: React.CSSProperties;
 }) {
   return (
     <div
