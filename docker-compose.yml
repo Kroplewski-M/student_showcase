@@ -17,6 +17,7 @@ services:
       - postgres
     volumes:
       - uploads:/srv/uploads
+      - hf_cache:/root/.cache/huggingface
     networks:
       - appnet
   frontend:
@@ -48,6 +49,7 @@ services:
 volumes:
   pgdata:
   uploads:
+  hf_cache:
 
 networks:
   appnet:

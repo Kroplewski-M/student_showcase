@@ -6,6 +6,7 @@ use crate::utils::email::EmailService;
 use crate::utils::file_storage::FileStorageType;
 use actix_web::{App, HttpServer, web};
 use dotenv::dotenv;
+use fastembed::{EmbeddingModel, InitOptions, TextEmbedding};
 use sqlx::postgres::PgPoolOptions;
 use std::sync::Arc;
 use tracing_subscriber::EnvFilter;
@@ -17,12 +18,14 @@ mod middleware;
 mod models;
 mod service;
 mod utils;
+
 #[derive(Clone)]
 pub struct AppState {
     pub db_client: DbClient,
     pub config: Config,
     pub auth_service: AuthService,
     pub user_service: UserService,
+    pub embedding_model: Arc<TextEmbedding>,
 }
 
 #[actix_web::main]
@@ -50,6 +53,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let db_client = DbClient::new(pool);
     let email_service = EmailService::new(config.clone()).await;
+    let embedding_model = Arc::new(
+        TextEmbedding::try_new(
+            InitOptions::new(EmbeddingModel::AllMiniLML6V2).with_show_download_progress(true),
+        )
+        .expect("Failed to initialize embedding model"),
+    );
     let app_state = AppState {
         config: config.clone(),
         db_client: db_client.clone(),
@@ -63,6 +72,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             Arc::new(db_client.user.clone()),
             Arc::new(FileStorageType::UserImage),
         ),
+        embedding_model,
     };
 
     println!("API starting on 0.0.0.0:{}", config.port);
