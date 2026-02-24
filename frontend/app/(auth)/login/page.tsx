@@ -6,6 +6,7 @@ import Link from "next/link";
 import EyeIcon from "@/app/SVGS/EyeIcon";
 import Loading from "@/app/SVGS/Loading";
 import LogoWritten from "@/app/components/LogoWritten";
+import ErrorDisplay from "@/app/components/ErrorDisplay";
 
 function validateStudentId(id: string): string | null {
   const trimmed = id.trim();
@@ -252,12 +253,7 @@ export default function LoginPage() {
                 exit={{ opacity: 0, height: 0 }}
                 className="mb-5 overflow-hidden"
               >
-                <div
-                  className="px-4 py-3 text-sm leading-relaxed text-danger font-bold"
-                  role="alert"
-                >
-                  {serverError}
-                </div>
+                <ErrorDisplay text={serverError} />
               </motion.div>
             )}
           </AnimatePresence>
