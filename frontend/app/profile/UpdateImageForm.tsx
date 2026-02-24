@@ -101,7 +101,7 @@ export default function UpdateImageForm({ onClose, currentImageName }: Props) {
   return createPortal(
     <div
       className="fixed z-[1000] h-screen w-screen left-0 top-0 bg-primary/85 backdrop-blur-[8px] p-5 animate-[fadeIn_0.3s_ease] flex items-center justify-center"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
+      onClick={(e) => e.target === e.currentTarget && !loading && onClose()}
     >
       <div className="w-full max-w-[480px] rounded-2xl border border-secondary/12 bg-primary/35 p-8 backdrop-blur-[20px]">
         <h2 className="pb-5 text-[22px] font-bold text-white">
@@ -172,6 +172,7 @@ export default function UpdateImageForm({ onClose, currentImageName }: Props) {
         <div className="flex justify-end gap-3">
           <button
             onClick={onClose}
+            disabled={loading}
             className="inline-flex cursor-pointer items-center gap-2 rounded-[10px] border border-secondary/20 bg-secondary/8 px-5 py-2.5 font-[Poppins] text-sm font-semibold text-secondary transition-all duration-250 ease-in-out hover:bg-secondary/15"
           >
             Cancel
