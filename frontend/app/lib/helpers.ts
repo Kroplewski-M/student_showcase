@@ -1,3 +1,5 @@
+export const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MiB
+
 export default function validateStudentId(id: string): string | null {
   const trimmed = id.trim();
   if (!trimmed) return "Student ID is required";
@@ -47,4 +49,8 @@ export function validatePassword(password: string): string | null {
   if (password.length < 5) return "Password must be at least 5 characters";
   if (password.length > 20) return "Password must be at most 20 characters";
   return null;
+}
+
+export function getProfileImgUrl(img_name: string) {
+  return `/uploads/user_images/${img_name}`;
 }
