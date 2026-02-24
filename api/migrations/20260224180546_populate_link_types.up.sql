@@ -4,7 +4,7 @@ INSERT INTO link_types
 VALUES
 (uuid_generate_v4(), 'GitHub'),
 (uuid_generate_v4(), 'YouTube'),
-(uuid_generate_v4(), 'Linkedin'),
+(uuid_generate_v4(), 'LinkedIn'),
 (uuid_generate_v4(), 'GitLab'),
 (uuid_generate_v4(), 'Bitbucket'),
 (uuid_generate_v4(), 'Stack Overflow'),

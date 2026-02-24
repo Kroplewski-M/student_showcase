@@ -12,7 +12,6 @@ pub enum ImageFormat {
     Png,
     Webp,
     Gif,
-    Avif,
 }
 
 impl ImageFormat {
@@ -23,7 +22,6 @@ impl ImageFormat {
             Self::Png => "png",
             Self::Webp => "webp",
             Self::Gif => "gif",
-            Self::Avif => "avif",
         }
     }
     /// MIME type string
@@ -33,7 +31,6 @@ impl ImageFormat {
             Self::Png => "image/png",
             Self::Webp => "image/webp",
             Self::Gif => "image/gif",
-            Self::Avif => "image/avif",
         }
     }
     /// Detect format from magic bytes. Returns None if unrecognised.
@@ -50,8 +47,6 @@ impl ImageFormat {
             Some(Self::Webp)
         } else if bytes.starts_with(b"GIF87a") || bytes.starts_with(b"GIF89a") {
             Some(Self::Gif)
-        } else if &bytes[4..12] == b"ftypavif" {
-            Some(Self::Avif)
         } else {
             None
         }
@@ -84,7 +79,6 @@ impl ValidatedImage {
             ImageFormat::Png,
             ImageFormat::Webp,
             ImageFormat::Gif,
-            ImageFormat::Avif,
         ]
         .iter()
         .map(|f| f.extension().to_string())
@@ -151,13 +145,6 @@ mod tests {
         v
     }
 
-    fn dummy_avif() -> Vec<u8> {
-        let mut v = vec![0u8; 12];
-        // box-size at [0..4] can be anything; ftyp at [4..8]; avif at [8..12]
-        v[4..8].copy_from_slice(b"ftyp");
-        v[8..12].copy_from_slice(b"avif");
-        v
-    }
     #[test]
     fn detects_jpeg() {
         let format = ImageFormat::from_bytes(&dummy_jpeg());
@@ -213,14 +200,6 @@ mod tests {
         assert_eq!(
             ImageFormat::from_bytes(&dummy_gif()),
             Some(ImageFormat::Gif)
-        );
-    }
-
-    #[test]
-    fn detects_avif() {
-        assert_eq!(
-            ImageFormat::from_bytes(&dummy_avif()),
-            Some(ImageFormat::Avif)
         );
     }
 }
