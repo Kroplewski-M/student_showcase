@@ -5,11 +5,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import LogoWritten from "./LogoWritten";
 import { useAuth } from "../context/auth-context";
+import { usePathname } from "next/navigation";
+import Logout from "./Logout";
 
 export default function Nav() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { isAuthenticated } = useAuth();
-
+  const pathname = usePathname();
   return (
     <nav className="fixed top-0 z-50 w-screen backdrop-blur">
       <div className="mx-auto flex items-center justify-between px-4 py-4 sm:px-8">
@@ -51,12 +53,16 @@ export default function Nav() {
             </>
           ) : (
             <>
-              <Link
-                href="/profile"
-                className="rounded-xl bg-secondary px-5 py-2 text-sm font-bold text-primary transition-all hover:bg-secondary/85 hover:shadow-lg hover:shadow-secondary/20 active:scale-[0.985]"
-              >
-                Profile
-              </Link>
+              {pathname === "/profile" ? (
+                <Logout />
+              ) : (
+                <Link
+                  href="/profile"
+                  className="rounded-xl bg-secondary px-5 py-2 text-sm font-bold text-primary transition-all hover:bg-secondary/85 hover:shadow-lg hover:shadow-secondary/20 active:scale-[0.985]"
+                >
+                  Profile
+                </Link>
+              )}
             </>
           )}
         </motion.div>
@@ -132,13 +138,17 @@ export default function Nav() {
                   </>
                 ) : (
                   <>
-                    <Link
-                      href="/profile"
-                      onClick={() => setMenuOpen(false)}
-                      className="rounded-xl bg-secondary px-5 py-3.5 text-center text-sm font-bold text-primary transition-all hover:bg-secondary/85 active:scale-[0.985]"
-                    >
-                      Profile
-                    </Link>
+                    {pathname === "/profile" ? (
+                      <Logout onFinally={() => setMenuOpen(false)} />
+                    ) : (
+                      <Link
+                        href="/profile"
+                        onClick={() => setMenuOpen(false)}
+                        className="rounded-xl bg-secondary px-5 py-3.5 text-center text-sm font-bold text-primary transition-all hover:bg-secondary/85 active:scale-[0.985]"
+                      >
+                        Profile
+                      </Link>
+                    )}
                   </>
                 )}
               </div>
