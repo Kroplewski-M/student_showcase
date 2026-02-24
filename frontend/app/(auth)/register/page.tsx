@@ -193,25 +193,32 @@ export default function RegisterPage() {
                 >
                   Student ID
                 </label>
-                <input
-                  id="studentId"
-                  type="text"
-                  inputMode="numeric"
-                  pattern="\d*"
-                  maxLength={7}
-                  className={`w-full rounded-xl border bg-primary/50 px-4 py-3 text-sm text-light placeholder-support/40 outline-none transition-all focus:bg-primary/70 focus:ring-2 ${
+                <div
+                  className={`flex items-center rounded-xl border bg-primary/50 transition-all focus-within:bg-primary/70 focus-within:ring-2 ${
                     touched.id && errors.id
-                      ? "border-danger focus:ring-danger/30"
-                      : "border-third/50 focus:border-secondary focus:ring-secondary/20"
+                      ? "border-danger focus-within:ring-danger/30"
+                      : "border-third/50 focus-within:border-secondary focus-within:ring-secondary/20"
                   }`}
-                  placeholder="e.g. 2272098"
-                  value={form.id}
-                  onChange={(e) =>
-                    handleChange("id", e.target.value.replace(/\D/g, ""))
-                  }
-                  onBlur={() => handleBlur("id")}
-                  disabled={loading}
-                />
+                >
+                  <span className="pl-4 text-sm font-medium text-support/50 select-none">
+                    U
+                  </span>
+                  <input
+                    id="studentId"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="\d*"
+                    maxLength={7}
+                    className="w-full bg-transparent px-2 py-3 text-sm text-light placeholder-support/40 outline-none"
+                    placeholder="e.g. 2272098"
+                    value={form.id}
+                    onChange={(e) =>
+                      handleChange("id", e.target.value.replace(/\D/g, ""))
+                    }
+                    onBlur={() => handleBlur("id")}
+                    disabled={loading}
+                  />
+                </div>
                 {touched.id && errors.id && (
                   <motion.p
                     initial={{ opacity: 0, y: -4 }}
