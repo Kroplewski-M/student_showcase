@@ -14,6 +14,7 @@ import Loading from "@/app/SVGS/Loading";
 import ErrorSVG from "@/app/SVGS/ErrorSVG";
 import SuccessfulReset from "../SuccessfulReset";
 import PasswordStrengthMeter from "@/app/components/PasswordStrengthMeter";
+import ErrorDisplay from "@/app/components/ErrorDisplay";
 
 function validateConfirmation(
   password: string,
@@ -318,12 +319,7 @@ export default function ResetPasswordPage() {
                   exit={{ opacity: 0, height: 0 }}
                   className="mb-5 overflow-hidden"
                 >
-                  <div
-                    className="px-4 py-3 text-sm leading-relaxed font-bold text-danger"
-                    role="alert"
-                  >
-                    {serverError}
-                  </div>
+                  <ErrorDisplay text={serverError} />
                 </motion.div>
               )}
             </AnimatePresence>

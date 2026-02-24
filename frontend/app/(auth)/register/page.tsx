@@ -12,6 +12,7 @@ import validateStudentId, {
 } from "@/app/lib/helpers";
 import PasswordStrengthMeter from "@/app/components/PasswordStrengthMeter";
 import LogoWritten from "@/app/components/LogoWritten";
+import ErrorDisplay from "@/app/components/ErrorDisplay";
 
 function validateConfirmation(
   password: string,
@@ -328,12 +329,7 @@ export default function RegisterPage() {
                     exit={{ opacity: 0, height: 0 }}
                     className="mb-5 overflow-hidden"
                   >
-                    <div
-                      className=" px-4 py-3 text-sm leading-relaxed text-danger font-bold"
-                      role="alert"
-                    >
-                      {serverError}
-                    </div>
+                    <ErrorDisplay text={serverError} />
                   </motion.div>
                 )}
               </AnimatePresence>

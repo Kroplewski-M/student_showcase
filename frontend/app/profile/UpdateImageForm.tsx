@@ -13,6 +13,7 @@ import {
 import Camera from "../SVGS/Camera";
 import Loading from "../SVGS/Loading";
 import ImageIcon from "../SVGS/ImageIcon";
+import ErrorDisplay from "../components/ErrorDisplay";
 
 interface Props {
   onClose: () => void;
@@ -164,9 +165,7 @@ export default function UpdateImageForm({ onClose, currentImageName }: Props) {
         />
 
         {/* Error */}
-        {error && (
-          <p className="mb-4 rounded-lg text-[13px] text-danger">{error}</p>
-        )}
+        {error && <ErrorDisplay text={error} />}
 
         {/* Actions */}
         <div className="flex justify-end gap-3">
