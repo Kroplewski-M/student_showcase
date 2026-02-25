@@ -6,7 +6,7 @@ import ErrorSVG from "../SVGS/ErrorSVG";
 
 export interface UserProfile {
   id: string;
-  profile_image_name: string | null;
+  profileImageName: string | null;
 }
 
 export default async function ProfilePage() {

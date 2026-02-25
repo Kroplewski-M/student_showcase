@@ -99,7 +99,10 @@ impl UserService {
             .get_user_profile(&user_id)
             .map_err(|e| match e {
                 sqlx::Error::RowNotFound => ErrorMessage::UserNoLongerExists,
-                _ => ErrorMessage::ServerError,
+                e => {
+                    error!("error fetching user profile: {}", e);
+                    ErrorMessage::ServerError
+                }
             })
             .await
     }
@@ -110,6 +113,7 @@ mod tests {
     use super::*;
     use crate::db::user_repo::mocks::MockUserRepo;
     use crate::models::file::File;
+    use crate::models::user::UserProfileRow;
     use crate::utils::file_storage::mocks::MockFileStorage;
     use crate::utils::images::DEFAULT_MAX_IMAGE_SIZE;
     use chrono::Utc;
@@ -243,8 +247,18 @@ mod tests {
         let storage = MockFileStorage::new();
         repo.expect_get_user_profile().returning(|_| {
             Ok(UserProfile {
-                id: "student1".to_string(),
-                profile_image_name: Some("avatar.png".to_string()),
+                base: UserProfileRow {
+                    id: "test-id".to_string(),
+                    profile_image_name: None,
+                    first_name: None,
+                    last_name: None,
+                    personal_email: None,
+                    course_name: None,
+                    description: None,
+                },
+                certificates: vec![],
+                tools: vec![],
+                links: vec![],
             })
         });
         let service = make_service(repo, storage);

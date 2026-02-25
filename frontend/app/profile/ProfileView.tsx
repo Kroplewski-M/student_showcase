@@ -45,7 +45,7 @@ export default function ProfileView({ profile }: Props) {
           {/* Profile Card */}
           <GlassCard className="mb-8 animate-[slideUp_0.6s_ease_0.1s_both] p-8">
             <div className="flex flex-wrap items-start gap-7">
-              <Avatar image={profile.profile_image_name} />
+              <Avatar image={profile.profileImageName} />
               {/* Info */}
               <div className="min-w-[200px] flex-1">
                 <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
