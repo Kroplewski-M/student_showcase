@@ -4,9 +4,21 @@ import ProfileView from "./ProfileView";
 import Link from "next/link";
 import ErrorSVG from "../SVGS/ErrorSVG";
 
+export interface Links {
+  linkType: string;
+  linkUrl: string;
+}
 export interface UserProfile {
   id: string;
-  profile_image_name: string | null;
+  profileImageName: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  description: string | null;
+  personalEmail: string | null;
+  courseName: string | null;
+  certificates: string[] | null;
+  links: Links[] | null;
+  tools: string[] | null;
 }
 
 export default async function ProfilePage() {

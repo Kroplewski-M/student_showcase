@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT \n                    u.id, \n                    f.new_file_name || '.' || f.extension AS \"profile_image_name?\",\n                    u.first_name AS \"first_name?\", \n                    u.last_name AS \"last_name?\",\n                    u.personal_email AS \"personal_email?\", \n                    c.name AS \"course_name?\",\n                    u.description AS \"description?\"\n                FROM users u\n                LEFT JOIN courses c ON u.course_id = c.id\n                LEFT JOIN files f ON u.image_id = f.id\n                WHERE u.id = $1 \n                AND u.verified = true\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "profile_image_name?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "first_name?",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "last_name?",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "personal_email?",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "course_name?",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "description?",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      true,
+      true,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "ec9301792c3ca5cf73803fcd41953dd1e2da9130db0c9b7877d4d048dbae08a1"
+}
