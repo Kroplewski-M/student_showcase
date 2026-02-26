@@ -75,8 +75,6 @@ export function isSafeLink(link: string) {
     ) {
       return false;
     }
-    if (/javascript:|data:|vbscript:|blob:/i.test(link)) return false;
-
     return true;
   } catch {
     return false;
