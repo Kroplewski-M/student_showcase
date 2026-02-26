@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT certificate AS \"certificate!\" FROM user_certificates WHERE user_id = $1 ORDER BY certificate",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "certificate!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "4c4d0dec442dd157b02567f815c7d60b07d749832592848c59234a1299d9e714"
+}

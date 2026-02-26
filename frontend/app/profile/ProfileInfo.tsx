@@ -47,7 +47,7 @@ export default function ProfileInfo({ user }: Props) {
           {/* tech interests */}
           <div className="mt-6 ">
             <p className="text-xs font-semibold uppercase tracking-wider text-secondary/50">
-              Tech Interests ({user.tools?.length})
+              Tech Interests ({user.tools?.length ?? 0})
             </p>
             {user.tools != undefined && user.tools.length > 0 ? (
               <div className="mt-3 flex flex-wrap gap-2">
@@ -69,7 +69,7 @@ export default function ProfileInfo({ user }: Props) {
           {/* certificates */}
           <div className="mt-6 block">
             <p className="text-xs font-semibold uppercase tracking-wider text-secondary/50">
-              Certificates ({user.certificates?.length})
+              Certificates ({user.certificates?.length ?? 0})
             </p>
             {user.certificates != undefined && user.certificates.length > 0 ? (
               <div className="mt-3 flex flex-wrap gap-2">
@@ -93,7 +93,7 @@ export default function ProfileInfo({ user }: Props) {
         {/* Links */}
         <div className="mt-8">
           <p className="text-xs font-semibold uppercase tracking-wider text-secondary/50">
-            Links ({user.links?.length})
+            Links ({user.links?.length ?? 0})
           </p>
           {user.links != undefined && user.links.length > 0 ? (
             <div className="mt-3 flex flex-wrap gap-3">

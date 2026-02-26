@@ -168,7 +168,7 @@ impl UserRepoTrait for UserRepo {
         .ok_or(sqlx::Error::RowNotFound)?;
 
         let certificates = sqlx::query_scalar!(
-            r#"SELECT certificate AS "certificate!" FROM user_certificates WHERE user_id = $1"#,
+            r#"SELECT certificate AS "certificate!" FROM user_certificates WHERE user_id = $1 ORDER BY certificate"#,
             user_id
         )
         .fetch_all(&self.pool)
@@ -180,6 +180,7 @@ impl UserRepoTrait for UserRepo {
             FROM user_tools ut
             JOIN software_tools st ON st.id = ut.software_tool_id
             WHERE ut.user_id = $1
+            ORDER BY st.name
             "#,
             user_id
         )
@@ -194,6 +195,7 @@ impl UserRepoTrait for UserRepo {
             FROM user_links ul
             JOIN link_types lt ON lt.id = ul.link_type_id
             WHERE ul.user_id = $1
+            ORDER BY lt.name, ul.url
             "#,
             user_id
         )
