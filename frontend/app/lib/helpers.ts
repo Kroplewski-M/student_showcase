@@ -61,3 +61,24 @@ export function validatePassword(password: string): string | null {
 export function getProfileImgUrl(img_name: string) {
   return `/uploads/user_images/${encodeURIComponent(img_name)}`;
 }
+
+export function isSafeLink(link: string) {
+  try {
+    const url = new URL(link);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return false;
+    if (
+      url.hostname === "localhost" ||
+      /^(127\.|0\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.)/.test(
+        url.hostname,
+      ) ||
+      url.hostname === "[::1]"
+    ) {
+      return false;
+    }
+    if (/javascript:|data:|vbscript:|blob:/i.test(link)) return false;
+
+    return true;
+  } catch {
+    return false;
+  }
+}

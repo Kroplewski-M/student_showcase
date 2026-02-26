@@ -2,6 +2,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Award from "../SVGS/Award";
 import { UserProfile } from "./page";
 import { getLinkIcon } from "../components/LinkIcon";
+import { isSafeLink } from "../lib/helpers";
 
 interface Props {
   user: UserProfile;
@@ -97,18 +98,21 @@ export default function ProfileInfo({ user }: Props) {
           </p>
           {user.links != undefined && user.links.length > 0 ? (
             <div className="mt-3 flex flex-wrap gap-3">
-              {user.links.map((link, key) => (
-                <a
-                  key={key}
-                  href={link.linkUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title={link.linkType}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-secondary/15 bg-secondary/5 text-secondary/60 transition-all hover:border-secondary/30 hover:bg-secondary/10 hover:text-secondary"
-                >
-                  <FontAwesomeIcon icon={getLinkIcon(link.linkType)} />
-                </a>
-              ))}
+              {user.links
+                .filter((x) => isSafeLink(x.linkUrl))
+                .map((link, key) => (
+                  <a
+                    key={key}
+                    href={link.linkUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={link.linkType}
+                    aria-label={`Open ${link.linkType} link`}
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-secondary/15 bg-secondary/5 text-secondary/60 transition-all hover:border-secondary/30 hover:bg-secondary/10 hover:text-secondary"
+                  >
+                    <FontAwesomeIcon icon={getLinkIcon(link.linkType)} />
+                  </a>
+                ))}
             </div>
           ) : (
             <p className="mt-3 text-sm italic text-secondary/40">
