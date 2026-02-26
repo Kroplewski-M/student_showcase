@@ -36,7 +36,7 @@ export default async function RootLayout({
       <head>
         <link rel="icon" href="/favicon.svg" sizes="any" />
       </head>
-      <body className={`${poppins.variable} antialiased`}>
+      <body className={`${poppins.variable} antialiased overflow-x-hidden`}>
         <AuthProvider initialUser={user}>
           <Nav />
           {children}

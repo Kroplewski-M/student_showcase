@@ -4,6 +4,8 @@ import type { UserProfile } from "./page";
 import { motion } from "framer-motion";
 import GlassCard from "../components/GlassCard";
 import Avatar from "./Avatar";
+import ProfileInfo from "./ProfileInfo";
+import Edit from "../SVGS/Edit";
 
 interface Props {
   profile: UserProfile;
@@ -12,7 +14,7 @@ interface Props {
 export default function ProfileView({ profile }: Props) {
   return (
     <>
-      <div className=" min-h-screen overflow-hidden pt-16 font-[Poppins] text-secondary bg-[radial-gradient(ellipse_at_20%_0%,#1a4a4e_0%,#0d2426_40%,#081618_100%)]">
+      <div className="min-h-screen overflow-hidden pt-16 font-[Poppins] text-secondary bg-[radial-gradient(ellipse_at_20%_0%,#1a4a4e_0%,#0d2426_40%,#081618_100%)]">
         {/* Glow orbs */}
         <motion.div
           className="pointer-events-none absolute -bottom-[10%] right-[-10%] h-[35vw] w-[35vw] rounded-full blur-3xl"
@@ -32,7 +34,7 @@ export default function ProfileView({ profile }: Props) {
         </motion.div>
         {/* Content */}
         <motion.div
-          className="z-10 mx-auto max-w-[960px] px-6 pt-10 pb-20"
+          className="z-10 mx-auto max-w-[1000px] px-6 pt-10 pb-20"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{
@@ -41,21 +43,22 @@ export default function ProfileView({ profile }: Props) {
             ease: [0.16, 1, 0.3, 1],
           }}
         >
-          <h1 className="mb-5 text-2xl font-bold text-white">Profile</h1>
+          <div className="flex flex-wrap items-start justify-between ">
+            <h1 className="mb-5 text-2xl font-bold text-white">Profile</h1>
+            <button
+              type="button"
+              onClick={() => {}}
+              className="flex cursor-pointer items-center gap-2 rounded-lg border border-secondary/20 bg-secondary/6 px-4 py-2 text-sm font-medium text-secondary/70 transition-all hover:border-secondary/35 hover:bg-secondary/10 hover:text-secondary"
+            >
+              <Edit />
+              Edit Profile
+            </button>
+          </div>
           {/* Profile Card */}
           <GlassCard className="mb-8 animate-[slideUp_0.6s_ease_0.1s_both] p-8">
-            <div className="flex flex-wrap items-start gap-7">
+            <div className="flex flex-col md:flex-row flex-wrap items-start gap-7">
               <Avatar image={profile.profileImageName} />
-              {/* Info */}
-              <div className="min-w-[200px] flex-1">
-                <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <h2 className="mb-0.5 text-2xl font-bold text-white">
-                      U{profile.id}
-                    </h2>
-                  </div>
-                </div>
-              </div>
+              <ProfileInfo user={profile} />
             </div>
           </GlassCard>
         </motion.div>

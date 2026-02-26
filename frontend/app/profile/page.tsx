@@ -12,11 +12,13 @@ export interface UserProfile {
   id: string;
   profileImageName: string | null;
   firstName: string | null;
-  lastname: string | null;
+  lastName: string | null;
+  description: string | null;
   personalEmail: string | null;
   courseName: string | null;
   certificates: string[] | null;
   links: Links[] | null;
+  tools: string[] | null;
 }
 
 export default async function ProfilePage() {
@@ -40,7 +42,6 @@ export default async function ProfilePage() {
           : "Something went wrong loading your profile.";
     } else {
       profile = await res.json();
-      console.log(profile);
     }
   } catch {
     error = "Unable to connect to the server. Please try again later.";

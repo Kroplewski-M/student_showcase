@@ -149,7 +149,7 @@ impl UserRepoTrait for UserRepo {
             r#"
                 SELECT 
                     u.id, 
-                    f.new_file_name AS "profile_image_name?",
+                    f.new_file_name || '.' || f.extension AS "profile_image_name?",
                     u.first_name AS "first_name?", 
                     u.last_name AS "last_name?",
                     u.personal_email AS "personal_email?", 
