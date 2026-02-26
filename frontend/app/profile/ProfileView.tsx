@@ -55,11 +55,6 @@ export default function ProfileView({ profile }: Props) {
                     </h2>
                   </div>
                 </div>
-                {/* Placeholder */}
-                <div className="rounded-[10px] border border-dashed border-secondary/10 bg-primary/40 px-5 py-4 text-[13px] text-secondary/35">
-                  Profile details (name, interests, links) will appear here once
-                  available.
-                </div>
               </div>
             </div>
           </GlassCard>

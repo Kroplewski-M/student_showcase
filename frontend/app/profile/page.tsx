@@ -4,9 +4,19 @@ import ProfileView from "./ProfileView";
 import Link from "next/link";
 import ErrorSVG from "../SVGS/ErrorSVG";
 
+export interface Links {
+  linkType: string;
+  linkUrl: string;
+}
 export interface UserProfile {
   id: string;
   profileImageName: string | null;
+  firstName: string | null;
+  lastname: string | null;
+  personalEmail: string | null;
+  courseName: string | null;
+  certificates: string[] | null;
+  links: Links[] | null;
 }
 
 export default async function ProfilePage() {
@@ -30,6 +40,7 @@ export default async function ProfilePage() {
           : "Something went wrong loading your profile.";
     } else {
       profile = await res.json();
+      console.log(profile);
     }
   } catch {
     error = "Unable to connect to the server. Please try again later.";
