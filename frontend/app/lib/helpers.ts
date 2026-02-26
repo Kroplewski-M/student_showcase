@@ -71,7 +71,10 @@ export function isSafeLink(link: string) {
       /^(127\.|0\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.)/.test(
         url.hostname,
       ) ||
-      url.hostname === "[::1]"
+      url.hostname === "[::1]" ||
+      /^\[::ffff:/i.test(url.hostname) ||
+      /^\[f[cd][0-9a-f]{2}:/i.test(url.hostname) ||
+      /^\[fe[89ab][0-9a-f]:/i.test(url.hostname)
     ) {
       return false;
     }
