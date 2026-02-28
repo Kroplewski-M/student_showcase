@@ -196,7 +196,7 @@ impl UserRepoTrait for UserRepo {
             FROM user_links ul
             JOIN link_types lt ON lt.id = ul.link_type_id
             WHERE ul.user_id = $1
-            ORDER BY lt.name, ul.name
+            ORDER BY lt.name, ul.name, ul.url
             "#,
             user_id
         )
