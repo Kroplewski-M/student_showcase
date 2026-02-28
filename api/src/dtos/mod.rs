@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 pub mod auth;
+pub mod reference;
 pub mod user;
 
 #[derive(Serialize, Deserialize)]

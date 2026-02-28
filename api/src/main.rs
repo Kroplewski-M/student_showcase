@@ -1,14 +1,17 @@
 mod config;
 use crate::config::Config;
 use crate::db::DbClient;
+use crate::service::reference_service::ReferenceService;
 use crate::service::{auth_service::AuthService, user_service::UserService};
 use crate::utils::email::EmailService;
 use crate::utils::file_storage::FileStorageType;
 use actix_web::{App, HttpServer, web};
 use dotenv::dotenv;
 use fastembed::{EmbeddingModel, InitOptions, TextEmbedding};
+use moka::future::Cache;
 use sqlx::postgres::PgPoolOptions;
 use std::sync::Arc;
+use std::time::Duration;
 use tracing_subscriber::EnvFilter;
 mod db;
 mod dtos;
@@ -25,7 +28,9 @@ pub struct AppState {
     pub config: Config,
     pub auth_service: AuthService,
     pub user_service: UserService,
+    pub reference_service: ReferenceService,
     pub embedding_model: Arc<TextEmbedding>,
+    pub cache: Cache<String, serde_json::Value>,
 }
 
 #[actix_web::main]
@@ -59,6 +64,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .expect("Failed to initialize embedding model"),
     );
+    let cache = Cache::builder()
+        .max_capacity(10_000)
+        .time_to_live(Duration::from_secs((60 * 60) * 24)) //one day
+        .build();
+
     let app_state = AppState {
         config: config.clone(),
         db_client: db_client.clone(),
@@ -72,7 +82,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             Arc::new(db_client.user.clone()),
             Arc::new(FileStorageType::UserImage),
         ),
+        reference_service: ReferenceService::new(Arc::new(db_client.reference.clone())),
         embedding_model,
+        cache,
     };
 
     println!("API starting on 0.0.0.0:{}", config.port);
@@ -82,6 +94,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .app_data(web::Data::new(app_state.clone()))
             .service(handler::auth_handler::auth_handler())
             .service(handler::user_handler::user_handler())
+            .service(handler::reference_handler::reference_handler())
     })
     .bind(("0.0.0.0", config.port))?
     .run()
