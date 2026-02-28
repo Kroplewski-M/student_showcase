@@ -9,7 +9,6 @@ interface Props {
 }
 
 export default function ProfileInfo({ user }: Props) {
-  console.log(user);
   return (
     <>
       <div className="min-w-[200px] flex-1">
@@ -112,7 +111,7 @@ export default function ProfileInfo({ user }: Props) {
                     className="inline-flex h-10 px-5  items-center justify-center rounded-lg border border-secondary/15 bg-secondary/5 text-secondary/60 transition-all hover:border-secondary/30 hover:bg-secondary/10 hover:text-secondary"
                   >
                     <FontAwesomeIcon icon={getLinkIcon(link.linkType)} />
-                    <p className="pl-1">{link.name}</p>
+                    <p className="pl-1">{link.name ?? link.linkType}</p>
                   </a>
                 ))}
             </div>
