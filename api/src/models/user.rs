@@ -18,7 +18,8 @@ pub struct User {
 #[serde(rename_all = "camelCase")]
 pub struct UserLink {
     pub link_type: String,
-    pub link_url: String,
+    pub url: String,
+    pub name: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize, sqlx::FromRow, Clone)]
