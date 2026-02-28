@@ -99,18 +99,19 @@ export default function ProfileInfo({ user }: Props) {
           {user.links != undefined && user.links.length > 0 ? (
             <div className="mt-3 flex flex-wrap gap-3">
               {user.links
-                .filter((x) => isSafeLink(x.linkUrl))
+                .filter((x) => isSafeLink(x.url))
                 .map((link, key) => (
                   <a
                     key={key}
-                    href={link.linkUrl}
+                    href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
                     title={link.linkType}
                     aria-label={`Open ${link.linkType} link`}
-                    className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-secondary/15 bg-secondary/5 text-secondary/60 transition-all hover:border-secondary/30 hover:bg-secondary/10 hover:text-secondary"
+                    className="inline-flex h-10 px-5  items-center justify-center rounded-lg border border-secondary/15 bg-secondary/5 text-secondary/60 transition-all hover:border-secondary/30 hover:bg-secondary/10 hover:text-secondary"
                   >
                     <FontAwesomeIcon icon={getLinkIcon(link.linkType)} />
+                    <p className="pl-1">{link.name ?? link.linkType}</p>
                   </a>
                 ))}
             </div>

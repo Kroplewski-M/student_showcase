@@ -6,7 +6,8 @@ import ErrorSVG from "../SVGS/ErrorSVG";
 
 export interface Links {
   linkType: string;
-  linkUrl: string;
+  url: string;
+  name: string | null;
 }
 export interface UserProfile {
   id: string;
