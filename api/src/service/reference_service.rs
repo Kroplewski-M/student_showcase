@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    db::reference_repo::ReferenceRepoTrait, dtos::reference::LinkTypes, errors::ErrorMessage,
+    db::reference_repo::ReferenceRepoTrait, dtos::reference::LinkType, errors::ErrorMessage,
 };
 
 #[derive(Clone)]
@@ -15,7 +15,7 @@ impl ReferenceService {
     }
 }
 impl ReferenceService {
-    pub async fn get_link_types(&self) -> Result<Vec<LinkTypes>, ErrorMessage> {
+    pub async fn get_link_types(&self) -> Result<Vec<LinkType>, ErrorMessage> {
         self.reference_repo
             .get_link_types()
             .await
