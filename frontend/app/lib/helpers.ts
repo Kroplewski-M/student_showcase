@@ -62,6 +62,48 @@ export function getProfileImgUrl(img_name: string) {
   return `/uploads/user_images/${encodeURIComponent(img_name)}`;
 }
 
+export function validateLinkUrl(linkType: string, url: string): string | null {
+  let hostname: string;
+  try {
+    hostname = new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "Enter a valid URL";
+  }
+
+  switch (linkType.toLowerCase()) {
+    case "github":
+      if (hostname !== "github.com") return "Must be a GitHub URL (github.com)";
+      break;
+    case "youtube":
+      if (hostname !== "youtube.com" && hostname !== "youtu.be")
+        return "Must be a YouTube URL (youtube.com)";
+      break;
+    case "linkedin":
+      if (hostname !== "linkedin.com")
+        return "Must be a LinkedIn URL (linkedin.com)";
+      break;
+    case "gitlab":
+      if (hostname !== "gitlab.com")
+        return "Must be a GitLab URL (gitlab.com)";
+      break;
+    case "bitbucket":
+      if (hostname !== "bitbucket.org")
+        return "Must be a Bitbucket URL (bitbucket.org)";
+      break;
+    case "stack overflow":
+      if (hostname !== "stackoverflow.com")
+        return "Must be a Stack Overflow URL (stackoverflow.com)";
+      break;
+    case "figma":
+      if (hostname !== "figma.com")
+        return "Must be a Figma URL (figma.com)";
+      break;
+    // "live preview" and any unknown type: any safe URL is fine
+  }
+
+  return null;
+}
+
 export function isSafeLink(link: string) {
   try {
     const url = new URL(link);
