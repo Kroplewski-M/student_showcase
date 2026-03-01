@@ -27,6 +27,7 @@ impl ReferenceRepoTrait for ReferenceRepo {
             LinkType,
             r#"
             SELECT l.id, l.name FROM link_types l
+            ORDER BY l.name
         "#
         )
         .fetch_all(&self.pool)
@@ -38,6 +39,7 @@ impl ReferenceRepoTrait for ReferenceRepo {
             Course,
             r#"
             SELECT c.id, c.name FROM courses c
+            ORDER BY c.name
         "#
         )
         .fetch_all(&self.pool)
