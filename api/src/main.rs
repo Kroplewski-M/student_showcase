@@ -65,7 +65,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .expect("Failed to initialize embedding model"),
     );
     let cache = Cache::builder()
-        .max_capacity(10_000)
+        .max_capacity(20)
         .time_to_live(Duration::from_secs((60 * 60) * 24)) //one day
         .build();
     let mem_cache = MemoryCache::new(cache);

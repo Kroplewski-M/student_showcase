@@ -24,7 +24,7 @@ pub struct UserProfileRowView {
     pub description: Option<String>,
 }
 
-#[derive(Debug, Serialize, sqlx::FromRow, Clone)]
+#[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct UserProfileView {
     #[serde(flatten)]
