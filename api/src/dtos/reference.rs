@@ -6,3 +6,9 @@ pub struct LinkType {
     pub id: Uuid,
     pub name: String,
 }
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Course {
+    pub id: Uuid,
+    pub name: String,
+}
