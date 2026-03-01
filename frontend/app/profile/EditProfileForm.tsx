@@ -6,7 +6,7 @@ import ErrorDisplay from "../components/ErrorDisplay";
 import Loading from "../SVGS/Loading";
 import Search from "../SVGS/Search";
 import Close from "../SVGS/Close";
-import { isSafeLink, validateLinkUrl } from "../lib/helpers";
+import * as helpers from "../lib/helpers";
 
 interface Course {
   id: string;
@@ -119,7 +119,7 @@ export default function EditProfileForm({ onClose }: Props) {
   }, []);
 
   const addTool = (id: string) => {
-    setSelectedTools((prev) => [...prev, id]);
+    setSelectedTools((prev) => (prev.includes(id) ? prev : [...prev, id]));
     setToolSearch("");
   };
 
@@ -176,15 +176,16 @@ export default function EditProfileForm({ onClose }: Props) {
       const linkErr: { url?: string; name?: string } = {};
       if (!link.url.trim()) {
         linkErr.url = "URL is required";
-      } else if (!isSafeLink(link.url)) {
+      } else if (!helpers.isSafeLink(link.url)) {
         linkErr.url = "Must be a valid http/https URL";
       } else if (seenUrls.has(link.url)) {
         linkErr.url = "Duplicate URL";
       } else {
         seenUrls.add(link.url);
         const linkTypeName =
-          formData?.linkTypes.find((lt) => lt.id === link.linkTypeId)?.name ?? "";
-        const typeError = validateLinkUrl(linkTypeName, link.url);
+          formData?.linkTypes.find((lt) => lt.id === link.linkTypeId)?.name ??
+          "";
+        const typeError = helpers.validateLinkUrl(linkTypeName, link.url);
         if (typeError) linkErr.url = typeError;
       }
       if (link.name.length > 50) linkErr.name = "Max 50 characters";
