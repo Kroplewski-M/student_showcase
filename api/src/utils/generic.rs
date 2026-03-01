@@ -42,6 +42,73 @@ impl MemoryCache {
 mod tests {
     use super::*;
 
+    fn make_cache() -> MemoryCache {
+        MemoryCache::new(Cache::builder().max_capacity(100).build())
+    }
+
+    #[tokio::test]
+    async fn get_or_cache_miss_fetches_and_returns_value() {
+        let cache = make_cache();
+        let result = cache
+            .get_or_cache("key", || async { Ok::<String, ErrorMessage>("hello".to_string()) })
+            .await;
+        assert_eq!(result.unwrap(), "hello");
+    }
+
+    #[tokio::test]
+    async fn get_or_cache_hit_returns_cached_value_without_calling_fetch() {
+        let cache = make_cache();
+        cache
+            .get_or_cache("key", || async { Ok::<String, ErrorMessage>("cached".to_string()) })
+            .await
+            .unwrap();
+        let result = cache
+            .get_or_cache("key", || async { Ok::<String, ErrorMessage>("new".to_string()) })
+            .await;
+        assert_eq!(result.unwrap(), "cached");
+    }
+
+    #[tokio::test]
+    async fn get_or_cache_propagates_fetch_error() {
+        let cache = make_cache();
+        let result = cache
+            .get_or_cache::<String, _, _>("key", || async { Err(ErrorMessage::ServerError) })
+            .await;
+        assert_eq!(result.unwrap_err(), ErrorMessage::ServerError);
+    }
+
+    #[tokio::test]
+    async fn get_or_cache_different_keys_do_not_interfere() {
+        let cache = make_cache();
+        cache
+            .get_or_cache("key1", || async { Ok::<String, ErrorMessage>("value1".to_string()) })
+            .await
+            .unwrap();
+        cache
+            .get_or_cache("key2", || async { Ok::<String, ErrorMessage>("value2".to_string()) })
+            .await
+            .unwrap();
+
+        let r1 = cache
+            .get_or_cache("key1", || async { Ok::<String, ErrorMessage>("x".to_string()) })
+            .await;
+        let r2 = cache
+            .get_or_cache("key2", || async { Ok::<String, ErrorMessage>("x".to_string()) })
+            .await;
+
+        assert_eq!(r1.unwrap(), "value1");
+        assert_eq!(r2.unwrap(), "value2");
+    }
+
+    #[tokio::test]
+    async fn get_or_cache_works_with_complex_types() {
+        let cache = make_cache();
+        let result = cache
+            .get_or_cache("key", || async { Ok::<Vec<u32>, ErrorMessage>(vec![1, 2, 3]) })
+            .await;
+        assert_eq!(result.unwrap(), vec![1u32, 2, 3]);
+    }
+
     #[test]
     fn formats_email_correctly() {
         let email = get_email_for_student("1234567");
