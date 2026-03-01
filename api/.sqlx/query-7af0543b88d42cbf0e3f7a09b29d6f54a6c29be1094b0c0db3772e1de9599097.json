@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                first_name AS \"first_name?\",\n                last_name AS \"last_name?\",\n                personal_email AS \"personal_email?\",\n                description AS \"description?\",\n                course_id AS \"course_id?\"\n            FROM users\n            WHERE id = $1\n            AND verified = true\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "first_name?",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "last_name?",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "personal_email?",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "description?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "course_id?",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "7af0543b88d42cbf0e3f7a09b29d6f54a6c29be1094b0c0db3772e1de9599097"
+}
