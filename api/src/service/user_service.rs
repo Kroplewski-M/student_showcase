@@ -5,9 +5,8 @@ use tracing::error;
 
 use crate::{
     db::user_repo::UserRepoTrait,
-    dtos::auth::validate_student_id,
+    dtos::{auth::validate_student_id, user::UserProfileView},
     errors::ErrorMessage,
-    models::user::UserProfile,
     utils::{
         file_storage::FileStorageTrait,
         images::{DEFAULT_MAX_IMAGE_SIZE, ValidatedImage},
@@ -90,7 +89,7 @@ impl UserService {
 
         Ok(())
     }
-    pub async fn get_user_profile(&self, user_id: String) -> Result<UserProfile, ErrorMessage> {
+    pub async fn get_user_profile(&self, user_id: String) -> Result<UserProfileView, ErrorMessage> {
         let valid = validate_student_id(&user_id).map_err(|_| false);
         if valid.is_err() {
             return Err(ErrorMessage::UserNoLongerExists);
@@ -112,8 +111,8 @@ impl UserService {
 mod tests {
     use super::*;
     use crate::db::user_repo::mocks::MockUserRepo;
+    use crate::dtos::user::UserProfileRowView;
     use crate::models::file::File;
-    use crate::models::user::UserProfileRow;
     use crate::utils::file_storage::mocks::MockFileStorage;
     use crate::utils::images::DEFAULT_MAX_IMAGE_SIZE;
     use chrono::Utc;
@@ -246,8 +245,8 @@ mod tests {
         let mut repo = MockUserRepo::new();
         let storage = MockFileStorage::new();
         repo.expect_get_user_profile().returning(|_| {
-            Ok(UserProfile {
-                base: UserProfileRow {
+            Ok(UserProfileView {
+                base: UserProfileRowView {
                     id: "test-id".to_string(),
                     profile_image_name: None,
                     first_name: None,

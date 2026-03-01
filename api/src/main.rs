@@ -5,6 +5,7 @@ use crate::service::reference_service::ReferenceService;
 use crate::service::{auth_service::AuthService, user_service::UserService};
 use crate::utils::email::EmailService;
 use crate::utils::file_storage::FileStorageType;
+use crate::utils::generic::MemoryCache;
 use actix_web::{App, HttpServer, web};
 use dotenv::dotenv;
 use fastembed::{EmbeddingModel, InitOptions, TextEmbedding};
@@ -30,7 +31,6 @@ pub struct AppState {
     pub user_service: UserService,
     pub reference_service: ReferenceService,
     pub embedding_model: Arc<TextEmbedding>,
-    pub cache: Cache<String, serde_json::Value>,
 }
 
 #[actix_web::main]
@@ -68,6 +68,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .max_capacity(10_000)
         .time_to_live(Duration::from_secs((60 * 60) * 24)) //one day
         .build();
+    let mem_cache = MemoryCache::new(cache);
 
     let app_state = AppState {
         config: config.clone(),
@@ -82,9 +83,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             Arc::new(db_client.user.clone()),
             Arc::new(FileStorageType::UserImage),
         ),
-        reference_service: ReferenceService::new(Arc::new(db_client.reference.clone())),
+        reference_service: ReferenceService::new(
+            Arc::new(db_client.reference.clone()),
+            mem_cache.clone(),
+        ),
         embedding_model,
-        cache,
     };
 
     println!("API starting on 0.0.0.0:{}", config.port);

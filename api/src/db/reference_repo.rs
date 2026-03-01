@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use sqlx::{Pool, Postgres};
 
-use crate::dtos::reference::{Course, LinkType};
+use crate::dtos::reference::{Course, LinkType, SoftwareTool};
 
 #[derive(Debug, Clone)]
 pub struct ReferenceRepo {
@@ -18,6 +18,7 @@ impl ReferenceRepo {
 pub trait ReferenceRepoTrait: Send + Sync {
     async fn get_link_types(&self) -> Result<Vec<LinkType>, sqlx::Error>;
     async fn get_courses(&self) -> Result<Vec<Course>, sqlx::Error>;
+    async fn get_tools(&self) -> Result<Vec<SoftwareTool>, sqlx::Error>;
 }
 
 #[async_trait]
@@ -40,6 +41,17 @@ impl ReferenceRepoTrait for ReferenceRepo {
             r#"
             SELECT c.id, c.name FROM courses c
             ORDER BY c.name
+        "#
+        )
+        .fetch_all(&self.pool)
+        .await
+    }
+    async fn get_tools(&self) -> Result<Vec<SoftwareTool>, sqlx::Error> {
+        sqlx::query_as!(
+            SoftwareTool,
+            r#"
+            SELECT t.id, t.name FROM software_tools t 
+            ORDER BY t.name
         "#
         )
         .fetch_all(&self.pool)

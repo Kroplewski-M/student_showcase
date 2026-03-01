@@ -1,9 +1,9 @@
 use async_trait::async_trait;
 use sqlx::{Pool, Postgres};
 
-use crate::models::{
-    file::File,
-    user::{User, UserLink, UserProfile, UserProfileRow},
+use crate::{
+    dtos::user::{UserLinkView, UserProfileRowView, UserProfileView},
+    models::{file::File, user::User},
 };
 
 #[derive(Debug, Clone)]
@@ -31,7 +31,7 @@ pub trait UserRepoTrait: Send + Sync {
         extension: &str,
     ) -> Result<(), sqlx::Error>;
     async fn get_user_image(&self, user_id: &str) -> Result<Option<File>, sqlx::Error>;
-    async fn get_user_profile(&self, user_id: &str) -> Result<UserProfile, sqlx::Error>;
+    async fn get_user_profile(&self, user_id: &str) -> Result<UserProfileView, sqlx::Error>;
 }
 
 #[async_trait]
@@ -143,9 +143,9 @@ impl UserRepoTrait for UserRepo {
         .await
     }
 
-    async fn get_user_profile(&self, user_id: &str) -> Result<UserProfile, sqlx::Error> {
+    async fn get_user_profile(&self, user_id: &str) -> Result<UserProfileView, sqlx::Error> {
         let base = sqlx::query_as!(
-            UserProfileRow,
+            UserProfileRowView,
             r#"
                 SELECT 
                     u.id, 
@@ -188,9 +188,9 @@ impl UserRepoTrait for UserRepo {
         .await?;
 
         let links = sqlx::query_as!(
-            UserLink,
+            UserLinkView,
             r#"
-            SELECT lt.name AS "link_type!", 
+            SELECT lt.id, lt.name AS "link_type!", 
             ul.url AS "url!",
             ul.name AS "name"
             FROM user_links ul
@@ -203,7 +203,7 @@ impl UserRepoTrait for UserRepo {
         .fetch_all(&self.pool)
         .await?;
 
-        Ok(UserProfile {
+        Ok(UserProfileView {
             base,
             certificates,
             tools,
@@ -234,7 +234,7 @@ pub mod mocks {
                 extension: &str,
             ) -> Result<(), sqlx::Error>;
             async fn get_user_image(&self, user_id: &str) -> Result<Option<File>, sqlx::Error>;
-            async fn get_user_profile(&self, user_id: &str) -> Result<UserProfile, sqlx::Error>;
+            async fn get_user_profile(&self, user_id: &str) -> Result<UserProfileView, sqlx::Error>;
         }
     }
 }
