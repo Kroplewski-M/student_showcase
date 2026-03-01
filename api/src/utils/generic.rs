@@ -25,17 +25,16 @@ impl MemoryCache {
         F: FnOnce() -> Fut,
         Fut: std::future::Future<Output = Result<T, ErrorMessage>>,
     {
-        if let Some(cached_value) = self.storage.get(cache_key).await {
-            return serde_json::from_value(cached_value).map_err(|_| ErrorMessage::ServerError);
-        }
+        let value = self
+            .storage
+            .try_get_with(cache_key.to_string(), async {
+                let res = fetch().await?;
+                serde_json::to_value(&res).map_err(|_| ErrorMessage::ServerError)
+            })
+            .await
+            .map_err(|e| (*e).clone())?;
 
-        let res = fetch().await?;
-        let value = serde_json::to_value(&res).map_err(|_| ErrorMessage::ServerError)?;
-
-        self.storage
-            .insert(cache_key.to_string(), value.clone())
-            .await;
-        Ok(res)
+        serde_json::from_value(value).map_err(|_| ErrorMessage::ServerError)
     }
 }
 
