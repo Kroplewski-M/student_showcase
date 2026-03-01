@@ -29,7 +29,7 @@ impl MemoryCache {
             return serde_json::from_value(cached_value).map_err(|_| ErrorMessage::ServerError);
         }
 
-        let res = fetch().await.map_err(|_| ErrorMessage::ServerError)?;
+        let res = fetch().await?;
         let value = serde_json::to_value(&res).map_err(|_| ErrorMessage::ServerError)?;
 
         self.storage
