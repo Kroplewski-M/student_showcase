@@ -1,10 +1,18 @@
-# C&E Futures '26 — Student Showcase
+<div align="center">
 
-A web platform for the University of Huddersfield's School of Computing & Engineering annual showcase event, connecting final-year students with industry professionals and recruiters.
+<img src="https://huddersfieldshowcase.cloud/favicon.ico" width="64" height="64" alt="C&E Futures logo" />
 
-**Live site:** [huddersfieldshowcase.cloud](https://huddersfieldshowcase.cloud/)
+# C&E Futures '26
+
+### Student Showcase — University of Huddersfield
+
+[![Live Site](https://img.shields.io/badge/Live%20Site-huddersfieldshowcase.cloud-a1e9f0?style=for-the-badge&labelColor=204346)](https://huddersfieldshowcase.cloud/)
+
+</div>
 
 ---
+
+A web platform for the University of Huddersfield's School of Computing & Engineering annual showcase event, connecting final-year students with industry professionals and recruiters.
 
 ## About
 
@@ -35,4 +43,8 @@ The event runs from **12:00 PM to 5:00 PM** and covers the university's areas of
 
 ---
 
+<div align="center">
+
 *Built by [Mateusz Kroplewski](https://github.com/Kroplewski-M)*
+
+</div>
