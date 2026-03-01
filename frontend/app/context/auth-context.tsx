@@ -29,7 +29,8 @@ export function AuthProvider({
       return;
     }
     router.refresh();
-  }, [pathname, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
   return (
     <AuthContext.Provider value={{ user, isAuthenticated: user != null }}>
       {children}
