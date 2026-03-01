@@ -5,7 +5,7 @@ use tracing::error;
 
 use crate::{
     db::user_repo::UserRepoTrait,
-    dtos::{auth::validate_student_id, user::UserProfileView},
+    dtos::{auth::validate_student_id, user::{UserFormData, UserProfileView}},
     errors::ErrorMessage,
     utils::{
         file_storage::FileStorageTrait,
@@ -88,6 +88,22 @@ impl UserService {
         }
 
         Ok(())
+    }
+    pub async fn get_user_form_data(&self, user_id: String) -> Result<UserFormData, ErrorMessage> {
+        let valid = validate_student_id(&user_id).map_err(|_| false);
+        if valid.is_err() {
+            return Err(ErrorMessage::UserNoLongerExists);
+        }
+        self.user_repo
+            .get_user_form_data(&user_id)
+            .map_err(|e| match e {
+                sqlx::Error::RowNotFound => ErrorMessage::UserNoLongerExists,
+                e => {
+                    error!("error fetching user form data: {}", e);
+                    ErrorMessage::ServerError
+                }
+            })
+            .await
     }
     pub async fn get_user_profile(&self, user_id: String) -> Result<UserProfileView, ErrorMessage> {
         let valid = validate_student_id(&user_id).map_err(|_| false);

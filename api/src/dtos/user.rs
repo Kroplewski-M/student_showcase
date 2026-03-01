@@ -34,16 +34,25 @@ pub struct UserProfileView {
     pub links: Vec<UserLinkView>,
 }
 
-pub struct UserProfileForm {
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct UserFormData {
     pub first_name: Option<String>,
     pub last_name: Option<String>,
     pub personal_email: Option<String>,
     pub description: Option<String>,
-    pub courses_list: Vec<Course>,
     pub selected_course: Option<Uuid>,
-    pub link_types: Vec<LinkType>,
     pub links: Vec<UserLinkView>,
     pub certificates: Vec<String>,
-    pub tools_list: Vec<SoftwareTool>,
     pub selected_tools: Vec<Uuid>,
+}
+
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct UserProfileForm {
+    #[serde(flatten)]
+    pub user_data: UserFormData,
+    pub courses_list: Vec<Course>,
+    pub link_types: Vec<LinkType>,
+    pub tools_list: Vec<SoftwareTool>,
 }

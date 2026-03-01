@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use sqlx::{Pool, Postgres};
 
 use crate::{
-    dtos::user::{UserLinkView, UserProfileRowView, UserProfileView},
+    dtos::user::{UserFormData, UserLinkView, UserProfileRowView, UserProfileView},
     models::{file::File, user::User},
 };
 
@@ -32,6 +32,7 @@ pub trait UserRepoTrait: Send + Sync {
     ) -> Result<(), sqlx::Error>;
     async fn get_user_image(&self, user_id: &str) -> Result<Option<File>, sqlx::Error>;
     async fn get_user_profile(&self, user_id: &str) -> Result<UserProfileView, sqlx::Error>;
+    async fn get_user_form_data(&self, user_id: &str) -> Result<UserFormData, sqlx::Error>;
 }
 
 #[async_trait]
@@ -210,6 +211,76 @@ impl UserRepoTrait for UserRepo {
             links,
         })
     }
+
+    async fn get_user_form_data(&self, user_id: &str) -> Result<UserFormData, sqlx::Error> {
+        struct BaseRow {
+            first_name: Option<String>,
+            last_name: Option<String>,
+            personal_email: Option<String>,
+            description: Option<String>,
+            course_id: Option<uuid::Uuid>,
+        }
+
+        let base = sqlx::query_as!(
+            BaseRow,
+            r#"
+            SELECT
+                first_name AS "first_name?",
+                last_name AS "last_name?",
+                personal_email AS "personal_email?",
+                description AS "description?",
+                course_id AS "course_id?"
+            FROM users
+            WHERE id = $1
+            AND verified = true
+            "#,
+            user_id
+        )
+        .fetch_optional(&self.pool)
+        .await?
+        .ok_or(sqlx::Error::RowNotFound)?;
+
+        let selected_tools = sqlx::query_scalar!(
+            r#"SELECT software_tool_id AS "software_tool_id!" FROM user_tools WHERE user_id = $1"#,
+            user_id
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        let certificates = sqlx::query_scalar!(
+            r#"SELECT certificate AS "certificate!" FROM user_certificates WHERE user_id = $1 ORDER BY certificate"#,
+            user_id
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        let links = sqlx::query_as!(
+            UserLinkView,
+            r#"
+            SELECT lt.id, lt.name AS "link_type!",
+            ul.url AS "url!",
+            ul.name AS "name"
+            FROM user_links ul
+            JOIN link_types lt ON lt.id = ul.link_type_id
+            WHERE ul.user_id = $1
+            ORDER BY lt.name, ul.name, ul.url
+            "#,
+            user_id
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(UserFormData {
+            first_name: base.first_name,
+            last_name: base.last_name,
+            personal_email: base.personal_email,
+            description: base.description,
+            selected_course: base.course_id,
+            selected_tools,
+            certificates,
+            links,
+        })
+    }
 }
 
 #[cfg(test)]
@@ -235,6 +306,7 @@ pub mod mocks {
             ) -> Result<(), sqlx::Error>;
             async fn get_user_image(&self, user_id: &str) -> Result<Option<File>, sqlx::Error>;
             async fn get_user_profile(&self, user_id: &str) -> Result<UserProfileView, sqlx::Error>;
+            async fn get_user_form_data(&self, user_id: &str) -> Result<UserFormData, sqlx::Error>;
         }
     }
 }

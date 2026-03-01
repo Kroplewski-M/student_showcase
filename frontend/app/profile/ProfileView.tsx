@@ -1,17 +1,21 @@
 "use client";
 
+import { useState } from "react";
 import type { UserProfile } from "./page";
 import { motion } from "framer-motion";
 import GlassCard from "../components/GlassCard";
 import Avatar from "./Avatar";
 import ProfileInfo from "./ProfileInfo";
 import Edit from "../SVGS/Edit";
+import EditProfileForm from "./EditProfileForm";
 
 interface Props {
   profile: UserProfile;
 }
 
 export default function ProfileView({ profile }: Props) {
+  const [editOpen, setEditOpen] = useState(false);
+
   return (
     <>
       <div className="min-h-screen overflow-hidden pt-16 font-[Poppins] text-secondary bg-[radial-gradient(ellipse_at_20%_0%,#1a4a4e_0%,#0d2426_40%,#081618_100%)]">
@@ -47,12 +51,13 @@ export default function ProfileView({ profile }: Props) {
             <h1 className="mb-5 text-2xl font-bold text-white">Profile</h1>
             <button
               type="button"
-              onClick={() => {}}
+              onClick={() => setEditOpen(true)}
               className="flex cursor-pointer items-center gap-2 rounded-lg border border-secondary/20 bg-secondary/6 px-4 py-2 text-sm font-medium text-secondary/70 transition-all hover:border-secondary/35 hover:bg-secondary/10 hover:text-secondary"
             >
               <Edit />
               Edit Profile
             </button>
+            {editOpen && <EditProfileForm onClose={() => setEditOpen(false)} />}
           </div>
           {/* Profile Card */}
           <GlassCard className="mb-8 animate-[slideUp_0.6s_ease_0.1s_both] p-8">
