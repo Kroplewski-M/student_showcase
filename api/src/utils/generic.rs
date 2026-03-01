@@ -1,36 +1,41 @@
-use actix_web::{HttpResponse, web};
+use moka::future::Cache;
+use serde::de::DeserializeOwned;
 
-use crate::{AppState, errors::HttpError};
+use crate::errors::ErrorMessage;
 
 pub fn get_email_for_student(student_id: &str) -> String {
     format!("U{student_id}@unimail.hud.ac.uk")
 }
 
-pub async fn get_or_cache<T, F, Fut, E>(
-    app_state: &web::Data<AppState>,
-    cache_key: &str,
-    fetch: F,
-) -> Result<HttpResponse, HttpError>
-where
-    T: serde::Serialize,
-    F: FnOnce() -> Fut,
-    Fut: std::future::Future<Output = Result<T, E>>,
-    E: ToString,
-{
-    if let Some(cached_value) = app_state.cache.get(cache_key).await {
-        return Ok(HttpResponse::Ok().json(cached_value));
+#[derive(Clone)]
+pub struct MemoryCache {
+    storage: Cache<String, serde_json::Value>,
+}
+impl MemoryCache {
+    pub fn new(storage: Cache<String, serde_json::Value>) -> Self {
+        Self { storage }
     }
-    let res = fetch()
-        .await
-        .map_err(|e| HttpError::server_error(e.to_string()))?;
+    pub async fn get_or_cache<T, F, Fut>(
+        &self,
+        cache_key: &str,
+        fetch: F,
+    ) -> Result<T, ErrorMessage>
+    where
+        T: serde::Serialize + DeserializeOwned,
+        F: FnOnce() -> Fut,
+        Fut: std::future::Future<Output = Result<T, ErrorMessage>>,
+    {
+        let value = self
+            .storage
+            .try_get_with(cache_key.to_string(), async {
+                let res = fetch().await?;
+                serde_json::to_value(&res).map_err(|_| ErrorMessage::ServerError)
+            })
+            .await
+            .map_err(|e| (*e).clone())?;
 
-    let value = serde_json::to_value(&res).map_err(|e| HttpError::server_error(e.to_string()))?;
-
-    app_state
-        .cache
-        .insert(cache_key.to_string(), value.clone())
-        .await;
-    Ok(HttpResponse::Ok().json(value))
+        serde_json::from_value(value).map_err(|_| ErrorMessage::ServerError)
+    }
 }
 
 #[cfg(test)]
