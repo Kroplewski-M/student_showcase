@@ -1,5 +1,36 @@
+use actix_web::{HttpResponse, web};
+
+use crate::{AppState, errors::HttpError};
+
 pub fn get_email_for_student(student_id: &str) -> String {
     format!("U{student_id}@unimail.hud.ac.uk")
+}
+
+pub async fn get_or_cache<T, F, Fut, E>(
+    app_state: &web::Data<AppState>,
+    cache_key: &str,
+    fetch: F,
+) -> Result<HttpResponse, HttpError>
+where
+    T: serde::Serialize,
+    F: FnOnce() -> Fut,
+    Fut: std::future::Future<Output = Result<T, E>>,
+    E: ToString,
+{
+    if let Some(cached_value) = app_state.cache.get(cache_key).await {
+        return Ok(HttpResponse::Ok().json(cached_value));
+    }
+    let res = fetch()
+        .await
+        .map_err(|e| HttpError::server_error(e.to_string()))?;
+
+    let value = serde_json::to_value(&res).map_err(|e| HttpError::server_error(e.to_string()))?;
+
+    app_state
+        .cache
+        .insert(cache_key.to_string(), value.clone())
+        .await;
+    Ok(HttpResponse::Ok().json(value))
 }
 
 #[cfg(test)]
