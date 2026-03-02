@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import ErrorDisplay from "../components/ErrorDisplay";
 import Loading from "../SVGS/Loading";
@@ -20,25 +20,25 @@ interface SoftwareTool {
   id: string;
   name: string;
 }
-interface ProfileFormData {
-  firstName: string | null;
-  lastName: string | null;
-  personalEmail: string | null;
-  description: string | null;
-  coursesList: Course[];
-  selectedCourse: string | null;
-  linkTypes: LinkType[];
-  links: { id: string; linkType: string; url: string; name: string | null }[];
-  certificates: string[];
-  toolsList: SoftwareTool[];
-  selectedTools: string[];
-}
-
 interface LinkEntry {
   _key: string;
   linkTypeId: string;
   url: string;
   name: string;
+}
+
+interface FormState {
+  coursesList: Course[];
+  linkTypes: LinkType[];
+  toolsList: SoftwareTool[];
+  firstName: string;
+  lastName: string;
+  personalEmail: string;
+  description: string;
+  selectedCourse: string;
+  selectedTools: string[];
+  certificates: string[];
+  links: LinkEntry[];
 }
 
 interface FormErrors {
@@ -53,21 +53,13 @@ interface Props {
 }
 
 export default function EditProfileForm({ onClose }: Props) {
-  const [formData, setFormData] = useState<ProfileFormData | null>(null);
+  const [formState, setFormState] = useState<FormState | null>(null);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FormErrors>({ links: {} });
 
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [personalEmail, setPersonalEmail] = useState("");
-  const [description, setDescription] = useState("");
-  const [selectedCourse, setSelectedCourse] = useState("");
-  const [selectedTools, setSelectedTools] = useState<string[]>([]);
-  const [certificates, setCertificates] = useState<string[]>([]);
-  const [links, setLinks] = useState<LinkEntry[]>([]);
   const [newCert, setNewCert] = useState("");
   const [toolSearch, setToolSearch] = useState("");
   const [toolDropdownOpen, setToolDropdownOpen] = useState(false);
@@ -86,23 +78,31 @@ export default function EditProfileForm({ onClose }: Props) {
         if (!res.ok) throw new Error();
         return res.json();
       })
-      .then((data: ProfileFormData) => {
-        setFormData(data);
-        setFirstName(data.firstName ?? "");
-        setLastName(data.lastName ?? "");
-        setPersonalEmail(data.personalEmail ?? "");
-        setDescription(data.description ?? "");
-        setSelectedCourse(data.selectedCourse ?? "");
-        setSelectedTools(data.selectedTools ?? []);
-        setCertificates(data.certificates ?? []);
-        setLinks(
-          (data.links ?? []).map((l) => ({
-            _key: crypto.randomUUID(),
-            linkTypeId: l.id,
-            url: l.url,
-            name: l.name ?? "",
-          })),
-        );
+      .then((data) => {
+        setFormState({
+          coursesList: Array.isArray(data.coursesList) ? data.coursesList : [],
+          linkTypes: Array.isArray(data.linkTypes) ? data.linkTypes : [],
+          toolsList: Array.isArray(data.toolsList) ? data.toolsList : [],
+          firstName: data.firstName ?? "",
+          lastName: data.lastName ?? "",
+          personalEmail: data.personalEmail ?? "",
+          description: data.description ?? "",
+          selectedCourse: data.selectedCourse ?? "",
+          selectedTools: Array.isArray(data.selectedTools)
+            ? data.selectedTools
+            : [],
+          certificates: Array.isArray(data.certificates)
+            ? data.certificates
+            : [],
+          links: (data.links ?? []).map(
+            (l: { id: string; url: string; name: string | null }) => ({
+              _key: crypto.randomUUID(),
+              linkTypeId: l.id,
+              url: l.url,
+              name: l.name ?? "",
+            }),
+          ),
+        });
       })
       .catch(() => setFetchError("Failed to load profile data."))
       .finally(() => setFetchLoading(false));
@@ -118,61 +118,91 @@ export default function EditProfileForm({ onClose }: Props) {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  const setField = <K extends keyof FormState>(key: K, value: FormState[K]) =>
+    setFormState((prev) => (prev ? { ...prev, [key]: value } : prev));
+
   const addTool = (id: string) => {
-    setSelectedTools((prev) => (prev.includes(id) ? prev : [...prev, id]));
+    setFormState((prev) => {
+      if (!prev) return prev;
+      return prev.selectedTools.includes(id)
+        ? prev
+        : { ...prev, selectedTools: [...prev.selectedTools, id] };
+    });
     setToolSearch("");
   };
 
   const removeTool = (id: string) =>
-    setSelectedTools((prev) => prev.filter((t) => t !== id));
+    setFormState((prev) =>
+      prev
+        ? { ...prev, selectedTools: prev.selectedTools.filter((t) => t !== id) }
+        : prev,
+    );
 
   const addCert = () => {
     const trimmed = newCert.trim();
-    if (trimmed && !certificates.includes(trimmed)) {
-      setCertificates((prev) => [...prev, trimmed]);
-      setNewCert("");
-    }
+    if (!trimmed || formState?.certificates.includes(trimmed)) return;
+    setFormState((prev) =>
+      prev ? { ...prev, certificates: [...prev.certificates, trimmed] } : prev,
+    );
+    setNewCert("");
   };
 
-  const addLink = useCallback(() => {
-    if (!formData?.linkTypes.length) return;
-    setLinks((prev) => [
-      ...prev,
-      {
-        _key: crypto.randomUUID(),
-        linkTypeId: formData.linkTypes[0].id,
-        url: "",
-        name: "",
-      },
-    ]);
-  }, [formData]);
+  const addLink = () => {
+    setFormState((prev) => {
+      if (!prev?.linkTypes.length) return prev;
+      return {
+        ...prev,
+        links: [
+          ...prev.links,
+          {
+            _key: crypto.randomUUID(),
+            linkTypeId: prev.linkTypes[0].id,
+            url: "",
+            name: "",
+          },
+        ],
+      };
+    });
+  };
 
   const updateLink = (
     key: string,
     field: keyof Omit<LinkEntry, "_key">,
     value: string,
   ) =>
-    setLinks((prev) =>
-      prev.map((l) => (l._key === key ? { ...l, [field]: value } : l)),
+    setFormState((prev) =>
+      prev
+        ? {
+            ...prev,
+            links: prev.links.map((l) =>
+              l._key === key ? { ...l, [field]: value } : l,
+            ),
+          }
+        : prev,
     );
 
   const removeLink = (key: string) =>
-    setLinks((prev) => prev.filter((l) => l._key !== key));
+    setFormState((prev) =>
+      prev
+        ? { ...prev, links: prev.links.filter((l) => l._key !== key) }
+        : prev,
+    );
 
   const validate = (): FormErrors => {
     const errors: FormErrors = { links: {} };
+    if (!formState) return errors;
 
-    if (firstName.length > 50) errors.firstName = "Max 50 characters";
-    if (lastName.length > 50) errors.lastName = "Max 50 characters";
-    if (personalEmail) {
-      if (personalEmail.length > 250)
+    if (formState.firstName.length > 50) errors.firstName = "Max 50 characters";
+    if (formState.lastName.length > 50) errors.lastName = "Max 50 characters";
+    if (formState.personalEmail) {
+      if (formState.personalEmail.length > 250)
         errors.personalEmail = "Max 250 characters";
-      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(personalEmail))
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formState.personalEmail))
         errors.personalEmail = "Enter a valid email address";
     }
 
     const seenUrls = new Set<string>();
-    for (const link of links) {
+    for (const link of formState.links) {
       const linkErr: { url?: string; name?: string } = {};
       if (!link.url.trim()) {
         linkErr.url = "URL is required";
@@ -183,7 +213,7 @@ export default function EditProfileForm({ onClose }: Props) {
       } else {
         seenUrls.add(link.url);
         const linkTypeName =
-          formData?.linkTypes.find((lt) => lt.id === link.linkTypeId)?.name ??
+          formState.linkTypes.find((lt) => lt.id === link.linkTypeId)?.name ??
           "";
         const typeError = helpers.validateLinkUrl(linkTypeName, link.url);
         if (typeError) linkErr.url = typeError;
@@ -208,6 +238,7 @@ export default function EditProfileForm({ onClose }: Props) {
     }
     setSaving(true);
     setSaveError(null);
+    console.log(formState);
     // TODO: call PATCH /api/user/profile_form when backend endpoint is implemented
     setSaving(false);
   };
@@ -237,7 +268,7 @@ export default function EditProfileForm({ onClose }: Props) {
 
           {fetchError && <ErrorDisplay text={fetchError} />}
 
-          {formData && !fetchLoading && (
+          {formState && !fetchLoading && (
             <>
               {/* Basic info */}
               <section className="space-y-3">
@@ -250,9 +281,9 @@ export default function EditProfileForm({ onClose }: Props) {
                       First Name
                     </label>
                     <input
-                      value={firstName}
+                      value={formState.firstName}
                       onChange={(e) => {
-                        setFirstName(e.target.value);
+                        setField("firstName", e.target.value);
                         setFieldErrors((prev) => ({
                           ...prev,
                           firstName: undefined,
@@ -272,9 +303,9 @@ export default function EditProfileForm({ onClose }: Props) {
                       Last Name
                     </label>
                     <input
-                      value={lastName}
+                      value={formState.lastName}
                       onChange={(e) => {
-                        setLastName(e.target.value);
+                        setField("lastName", e.target.value);
                         setFieldErrors((prev) => ({
                           ...prev,
                           lastName: undefined,
@@ -295,9 +326,9 @@ export default function EditProfileForm({ onClose }: Props) {
                     Personal Email
                   </label>
                   <input
-                    value={personalEmail}
+                    value={formState.personalEmail}
                     onChange={(e) => {
-                      setPersonalEmail(e.target.value);
+                      setField("personalEmail", e.target.value);
                       setFieldErrors((prev) => ({
                         ...prev,
                         personalEmail: undefined,
@@ -318,8 +349,8 @@ export default function EditProfileForm({ onClose }: Props) {
                     Description
                   </label>
                   <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
+                    value={formState.description}
+                    onChange={(e) => setField("description", e.target.value)}
                     placeholder="Tell us about yourself…"
                     rows={3}
                     className="resize-none rounded-xl border border-secondary/15 bg-secondary/5 px-4 py-2.5 text-sm text-secondary placeholder-secondary/30 outline-none transition-colors focus:border-secondary/35 focus:bg-secondary/8"
@@ -333,12 +364,12 @@ export default function EditProfileForm({ onClose }: Props) {
                   Course
                 </p>
                 <select
-                  value={selectedCourse}
-                  onChange={(e) => setSelectedCourse(e.target.value)}
+                  value={formState.selectedCourse}
+                  onChange={(e) => setField("selectedCourse", e.target.value)}
                   className="w-full rounded-xl border border-secondary/15 bg-primary/60 px-4 py-2.5 text-sm text-secondary outline-none transition-colors focus:border-secondary/35"
                 >
                   <option value="">— No course selected —</option>
-                  {formData.coursesList.map((c) => (
+                  {formState.coursesList.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
                     </option>
@@ -349,13 +380,12 @@ export default function EditProfileForm({ onClose }: Props) {
               {/* Tools */}
               <section className="space-y-3">
                 <p className="text-xs font-semibold uppercase tracking-wider text-secondary/50">
-                  Tech Interests ({selectedTools.length})
+                  Tech Interests ({formState.selectedTools.length})
                 </p>
-                {/* Selected chips */}
-                {selectedTools.length > 0 && (
+                {formState.selectedTools.length > 0 && (
                   <div className="flex flex-wrap gap-2">
-                    {selectedTools.map((id) => {
-                      const tool = formData.toolsList.find((t) => t.id === id);
+                    {formState.selectedTools.map((id) => {
+                      const tool = formState.toolsList.find((t) => t.id === id);
                       if (!tool) return null;
                       return (
                         <span
@@ -375,7 +405,6 @@ export default function EditProfileForm({ onClose }: Props) {
                     })}
                   </div>
                 )}
-                {/* Search input + dropdown */}
                 <div ref={toolsRef} className="relative">
                   <div className="flex items-center gap-2 rounded-xl border border-secondary/15 bg-secondary/5 px-4 py-2.5 transition-colors focus-within:border-secondary/35 focus-within:bg-secondary/8">
                     <Search />
@@ -393,10 +422,10 @@ export default function EditProfileForm({ onClose }: Props) {
                   {toolDropdownOpen && (
                     <div className="absolute z-10 mt-1.5 w-full rounded-xl border border-secondary/15 bg-[#0d2426] shadow-[0_8px_32px_rgba(0,0,0,0.4)] overflow-hidden">
                       <ul className="max-h-48 overflow-y-auto py-1">
-                        {formData.toolsList
+                        {formState.toolsList
                           .filter(
                             (t) =>
-                              !selectedTools.includes(t.id) &&
+                              !formState.selectedTools.includes(t.id) &&
                               t.name
                                 .toLowerCase()
                                 .includes(toolSearch.toLowerCase()),
@@ -413,15 +442,16 @@ export default function EditProfileForm({ onClose }: Props) {
                               </button>
                             </li>
                           ))}
-                        {formData.toolsList.filter(
+                        {formState.toolsList.filter(
                           (t) =>
-                            !selectedTools.includes(t.id) &&
+                            !formState.selectedTools.includes(t.id) &&
                             t.name
                               .toLowerCase()
                               .includes(toolSearch.toLowerCase()),
                         ).length === 0 && (
                           <li className="px-4 py-3 text-xs text-secondary/35">
-                            {selectedTools.length === formData.toolsList.length
+                            {formState.selectedTools.length ===
+                            formState.toolsList.length
                               ? "All tools selected"
                               : "No tools match your search"}
                           </li>
@@ -435,11 +465,11 @@ export default function EditProfileForm({ onClose }: Props) {
               {/* Certificates */}
               <section className="space-y-3">
                 <p className="text-xs font-semibold uppercase tracking-wider text-secondary/50">
-                  Certificates ({certificates.length})
+                  Certificates ({formState.certificates.length})
                 </p>
-                {certificates.length > 0 && (
+                {formState.certificates.length > 0 && (
                   <div className="flex flex-wrap gap-2">
-                    {certificates.map((cert) => (
+                    {formState.certificates.map((cert) => (
                       <span
                         key={cert}
                         className="inline-flex items-center gap-1.5 rounded-lg border border-secondary/15 bg-secondary/5 px-3 py-1 text-xs font-medium text-secondary/80"
@@ -448,8 +478,9 @@ export default function EditProfileForm({ onClose }: Props) {
                         <button
                           type="button"
                           onClick={() =>
-                            setCertificates((prev) =>
-                              prev.filter((c) => c !== cert),
+                            setField(
+                              "certificates",
+                              formState.certificates.filter((c) => c !== cert),
                             )
                           }
                           className="text-secondary/40 hover:text-secondary/80 transition-colors"
@@ -483,10 +514,10 @@ export default function EditProfileForm({ onClose }: Props) {
               {/* Links */}
               <section className="space-y-3">
                 <p className="text-xs font-semibold uppercase tracking-wider text-secondary/50">
-                  Links ({links.length})
+                  Links ({formState.links.length})
                 </p>
                 <div className="space-y-2">
-                  {links.map((link) => (
+                  {formState.links.map((link) => (
                     <div
                       key={link._key}
                       className="flex flex-col gap-2 rounded-xl border border-secondary/10 bg-secondary/3 p-3"
@@ -499,7 +530,7 @@ export default function EditProfileForm({ onClose }: Props) {
                           }
                           className="rounded-lg border border-secondary/15 bg-primary/60 px-3 py-2 text-xs text-secondary outline-none focus:border-secondary/35"
                         >
-                          {formData.linkTypes.map((lt) => (
+                          {formState.linkTypes.map((lt) => (
                             <option key={lt.id} value={lt.id}>
                               {lt.name}
                             </option>
@@ -590,7 +621,7 @@ export default function EditProfileForm({ onClose }: Props) {
         </div>
 
         {/* Footer */}
-        {formData && !fetchLoading && (
+        {formState && !fetchLoading && (
           <div className="flex flex-col gap-3 border-t border-secondary/10 px-8 py-5">
             {saveError && <ErrorDisplay text={saveError} />}
             <div className="flex justify-end gap-3">
