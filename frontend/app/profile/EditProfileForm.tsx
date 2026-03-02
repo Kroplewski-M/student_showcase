@@ -26,11 +26,7 @@ interface LinkEntry {
   url: string;
   name: string;
 }
-
-interface FormState {
-  coursesList: Course[];
-  linkTypes: LinkType[];
-  toolsList: SoftwareTool[];
+interface UserForm {
   firstName: string;
   lastName: string;
   personalEmail: string;
@@ -39,6 +35,12 @@ interface FormState {
   selectedTools: string[];
   certificates: string[];
   links: LinkEntry[];
+}
+interface FormState {
+  userInfo: UserForm;
+  coursesList: Course[];
+  linkTypes: LinkType[];
+  toolsList: SoftwareTool[];
 }
 
 interface FormErrors {
@@ -73,7 +75,7 @@ export default function EditProfileForm({ onClose }: Props) {
   }, []);
 
   useEffect(() => {
-    fetch("/api/user/profile_form", { credentials: "include" })
+    fetch("/api/user/update_profile", { credentials: "include" })
       .then((res) => {
         if (!res.ok) throw new Error();
         return res.json();
@@ -83,25 +85,27 @@ export default function EditProfileForm({ onClose }: Props) {
           coursesList: Array.isArray(data.coursesList) ? data.coursesList : [],
           linkTypes: Array.isArray(data.linkTypes) ? data.linkTypes : [],
           toolsList: Array.isArray(data.toolsList) ? data.toolsList : [],
-          firstName: data.firstName ?? "",
-          lastName: data.lastName ?? "",
-          personalEmail: data.personalEmail ?? "",
-          description: data.description ?? "",
-          selectedCourse: data.selectedCourse ?? "",
-          selectedTools: Array.isArray(data.selectedTools)
-            ? data.selectedTools
-            : [],
-          certificates: Array.isArray(data.certificates)
-            ? data.certificates
-            : [],
-          links: (data.links ?? []).map(
-            (l: { id: string; url: string; name: string | null }) => ({
-              _key: crypto.randomUUID(),
-              linkTypeId: l.id,
-              url: l.url,
-              name: l.name ?? "",
-            }),
-          ),
+          userInfo: {
+            firstName: data.firstName ?? "",
+            lastName: data.lastName ?? "",
+            personalEmail: data.personalEmail ?? "",
+            description: data.description ?? "",
+            selectedCourse: data.selectedCourse ?? "",
+            selectedTools: Array.isArray(data.selectedTools)
+              ? data.selectedTools
+              : [],
+            certificates: Array.isArray(data.certificates)
+              ? data.certificates
+              : [],
+            links: (data.links ?? []).map(
+              (l: { id: string; url: string; name: string | null }) => ({
+                _key: crypto.randomUUID(),
+                linkTypeId: l.id,
+                url: l.url,
+                name: l.name ?? "",
+              }),
+            ),
+          },
         });
       })
       .catch(() => setFetchError("Failed to load profile data."))
@@ -118,15 +122,23 @@ export default function EditProfileForm({ onClose }: Props) {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const setField = <K extends keyof FormState>(key: K, value: FormState[K]) =>
-    setFormState((prev) => (prev ? { ...prev, [key]: value } : prev));
+  const setField = <K extends keyof UserForm>(key: K, value: UserForm[K]) =>
+    setFormState((prev) =>
+      prev ? { ...prev, userInfo: { ...prev.userInfo, [key]: value } } : prev,
+    );
 
   const addTool = (id: string) => {
     setFormState((prev) => {
       if (!prev) return prev;
-      return prev.selectedTools.includes(id)
+      return prev.userInfo.selectedTools.includes(id)
         ? prev
-        : { ...prev, selectedTools: [...prev.selectedTools, id] };
+        : {
+            ...prev,
+            userInfo: {
+              ...prev.userInfo,
+              selectedTools: [...prev.userInfo.selectedTools, id],
+            },
+          };
     });
     setToolSearch("");
   };
@@ -134,15 +146,31 @@ export default function EditProfileForm({ onClose }: Props) {
   const removeTool = (id: string) =>
     setFormState((prev) =>
       prev
-        ? { ...prev, selectedTools: prev.selectedTools.filter((t) => t !== id) }
+        ? {
+            ...prev,
+            userInfo: {
+              ...prev.userInfo,
+              selectedTools: prev.userInfo.selectedTools.filter(
+                (t) => t !== id,
+              ),
+            },
+          }
         : prev,
     );
 
   const addCert = () => {
     const trimmed = newCert.trim();
-    if (!trimmed || formState?.certificates.includes(trimmed)) return;
+    if (!trimmed || formState?.userInfo.certificates.includes(trimmed)) return;
     setFormState((prev) =>
-      prev ? { ...prev, certificates: [...prev.certificates, trimmed] } : prev,
+      prev
+        ? {
+            ...prev,
+            userInfo: {
+              ...prev.userInfo,
+              certificates: [...prev.userInfo.certificates, trimmed],
+            },
+          }
+        : prev,
     );
     setNewCert("");
   };
@@ -152,15 +180,18 @@ export default function EditProfileForm({ onClose }: Props) {
       if (!prev?.linkTypes.length) return prev;
       return {
         ...prev,
-        links: [
-          ...prev.links,
-          {
-            _key: crypto.randomUUID(),
-            linkTypeId: prev.linkTypes[0].id,
-            url: "",
-            name: "",
-          },
-        ],
+        userInfo: {
+          ...prev.userInfo,
+          links: [
+            ...prev.userInfo.links,
+            {
+              _key: crypto.randomUUID(),
+              linkTypeId: prev.linkTypes[0].id,
+              url: "",
+              name: "",
+            },
+          ],
+        },
       };
     });
   };
@@ -174,9 +205,12 @@ export default function EditProfileForm({ onClose }: Props) {
       prev
         ? {
             ...prev,
-            links: prev.links.map((l) =>
-              l._key === key ? { ...l, [field]: value } : l,
-            ),
+            userInfo: {
+              ...prev.userInfo,
+              links: prev.userInfo.links.map((l) =>
+                l._key === key ? { ...l, [field]: value } : l,
+              ),
+            },
           }
         : prev,
     );
@@ -184,7 +218,13 @@ export default function EditProfileForm({ onClose }: Props) {
   const removeLink = (key: string) =>
     setFormState((prev) =>
       prev
-        ? { ...prev, links: prev.links.filter((l) => l._key !== key) }
+        ? {
+            ...prev,
+            userInfo: {
+              ...prev.userInfo,
+              links: prev.userInfo.links.filter((l) => l._key !== key),
+            },
+          }
         : prev,
     );
 
@@ -192,17 +232,21 @@ export default function EditProfileForm({ onClose }: Props) {
     const errors: FormErrors = { links: {} };
     if (!formState) return errors;
 
-    if (formState.firstName.length > 50) errors.firstName = "Max 50 characters";
-    if (formState.lastName.length > 50) errors.lastName = "Max 50 characters";
-    if (formState.personalEmail) {
-      if (formState.personalEmail.length > 250)
+    if (formState.userInfo.firstName.length > 50)
+      errors.firstName = "Max 50 characters";
+    if (formState.userInfo.lastName.length > 50)
+      errors.lastName = "Max 50 characters";
+    if (formState.userInfo.personalEmail) {
+      if (formState.userInfo.personalEmail.length > 250)
         errors.personalEmail = "Max 250 characters";
-      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formState.personalEmail))
+      else if (
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formState.userInfo.personalEmail)
+      )
         errors.personalEmail = "Enter a valid email address";
     }
 
     const seenUrls = new Set<string>();
-    for (const link of formState.links) {
+    for (const link of formState.userInfo.links) {
       const linkErr: { url?: string; name?: string } = {};
       if (!link.url.trim()) {
         linkErr.url = "URL is required";
@@ -238,7 +282,7 @@ export default function EditProfileForm({ onClose }: Props) {
     }
     setSaving(true);
     setSaveError(null);
-    console.log(formState);
+    console.log(formState?.userInfo);
     // TODO: call PATCH /api/user/profile_form when backend endpoint is implemented
     setSaving(false);
   };
@@ -281,7 +325,7 @@ export default function EditProfileForm({ onClose }: Props) {
                       First Name
                     </label>
                     <input
-                      value={formState.firstName}
+                      value={formState.userInfo.firstName}
                       onChange={(e) => {
                         setField("firstName", e.target.value);
                         setFieldErrors((prev) => ({
@@ -303,7 +347,7 @@ export default function EditProfileForm({ onClose }: Props) {
                       Last Name
                     </label>
                     <input
-                      value={formState.lastName}
+                      value={formState.userInfo.lastName}
                       onChange={(e) => {
                         setField("lastName", e.target.value);
                         setFieldErrors((prev) => ({
@@ -326,7 +370,7 @@ export default function EditProfileForm({ onClose }: Props) {
                     Personal Email
                   </label>
                   <input
-                    value={formState.personalEmail}
+                    value={formState.userInfo.personalEmail}
                     onChange={(e) => {
                       setField("personalEmail", e.target.value);
                       setFieldErrors((prev) => ({
@@ -349,7 +393,7 @@ export default function EditProfileForm({ onClose }: Props) {
                     Description
                   </label>
                   <textarea
-                    value={formState.description}
+                    value={formState.userInfo.description}
                     onChange={(e) => setField("description", e.target.value)}
                     placeholder="Tell us about yourself…"
                     rows={3}
@@ -364,7 +408,7 @@ export default function EditProfileForm({ onClose }: Props) {
                   Course
                 </p>
                 <select
-                  value={formState.selectedCourse}
+                  value={formState.userInfo.selectedCourse}
                   onChange={(e) => setField("selectedCourse", e.target.value)}
                   className="w-full rounded-xl border border-secondary/15 bg-primary/60 px-4 py-2.5 text-sm text-secondary outline-none transition-colors focus:border-secondary/35"
                 >
@@ -380,11 +424,11 @@ export default function EditProfileForm({ onClose }: Props) {
               {/* Tools */}
               <section className="space-y-3">
                 <p className="text-xs font-semibold uppercase tracking-wider text-secondary/50">
-                  Tech Interests ({formState.selectedTools.length})
+                  Tech Interests ({formState.userInfo.selectedTools.length})
                 </p>
-                {formState.selectedTools.length > 0 && (
+                {formState.userInfo.selectedTools.length > 0 && (
                   <div className="flex flex-wrap gap-2">
-                    {formState.selectedTools.map((id) => {
+                    {formState.userInfo.selectedTools.map((id) => {
                       const tool = formState.toolsList.find((t) => t.id === id);
                       if (!tool) return null;
                       return (
@@ -425,7 +469,9 @@ export default function EditProfileForm({ onClose }: Props) {
                         {formState.toolsList
                           .filter(
                             (t) =>
-                              !formState.selectedTools.includes(t.id) &&
+                              !formState.userInfo.selectedTools.includes(
+                                t.id,
+                              ) &&
                               t.name
                                 .toLowerCase()
                                 .includes(toolSearch.toLowerCase()),
@@ -444,13 +490,13 @@ export default function EditProfileForm({ onClose }: Props) {
                           ))}
                         {formState.toolsList.filter(
                           (t) =>
-                            !formState.selectedTools.includes(t.id) &&
+                            !formState.userInfo.selectedTools.includes(t.id) &&
                             t.name
                               .toLowerCase()
                               .includes(toolSearch.toLowerCase()),
                         ).length === 0 && (
                           <li className="px-4 py-3 text-xs text-secondary/35">
-                            {formState.selectedTools.length ===
+                            {formState.userInfo.selectedTools.length ===
                             formState.toolsList.length
                               ? "All tools selected"
                               : "No tools match your search"}
@@ -465,11 +511,11 @@ export default function EditProfileForm({ onClose }: Props) {
               {/* Certificates */}
               <section className="space-y-3">
                 <p className="text-xs font-semibold uppercase tracking-wider text-secondary/50">
-                  Certificates ({formState.certificates.length})
+                  Certificates ({formState.userInfo.certificates.length})
                 </p>
-                {formState.certificates.length > 0 && (
+                {formState.userInfo.certificates.length > 0 && (
                   <div className="flex flex-wrap gap-2">
-                    {formState.certificates.map((cert) => (
+                    {formState.userInfo.certificates.map((cert) => (
                       <span
                         key={cert}
                         className="inline-flex items-center gap-1.5 rounded-lg border border-secondary/15 bg-secondary/5 px-3 py-1 text-xs font-medium text-secondary/80"
@@ -480,7 +526,9 @@ export default function EditProfileForm({ onClose }: Props) {
                           onClick={() =>
                             setField(
                               "certificates",
-                              formState.certificates.filter((c) => c !== cert),
+                              formState.userInfo.certificates.filter(
+                                (c) => c !== cert,
+                              ),
                             )
                           }
                           className="text-secondary/40 hover:text-secondary/80 transition-colors"
@@ -514,10 +562,10 @@ export default function EditProfileForm({ onClose }: Props) {
               {/* Links */}
               <section className="space-y-3">
                 <p className="text-xs font-semibold uppercase tracking-wider text-secondary/50">
-                  Links ({formState.links.length})
+                  Links ({formState.userInfo.links.length})
                 </p>
                 <div className="space-y-2">
-                  {formState.links.map((link) => (
+                  {formState.userInfo.links.map((link) => (
                     <div
                       key={link._key}
                       className="flex flex-col gap-2 rounded-xl border border-secondary/10 bg-secondary/3 p-3"
