@@ -11,25 +11,21 @@ pub struct Embedding {
 
 impl Embedding {
     pub fn new(cpu_count: usize) -> Result<Self, ErrorMessage> {
-        // Split cores evenly: 2 instances each using half the cores
-        // e.g. 4 cores → 2 instances × 2 threads each
+        // Use half the cores as pool size — ONNX Runtime uses multiple threads
+        // per inference internally, so fewer instances avoids over-subscribing the CPU
         let pool_size = (cpu_count / 2).max(1);
-        let threads_per_instance = (cpu_count / pool_size).max(1);
 
         let pool = (0..pool_size)
             .map(|_| {
-                TextEmbedding::try_new(
-                    InitOptions::new(EmbeddingModel::AllMiniLML6V2)
-                        .with_intra_threads(threads_per_instance),
-                )
-                .map(|m| Arc::new(Mutex::new(m)))
-                .map_err(|_| ErrorMessage::EmbeddingFailed)
+                TextEmbedding::try_new(InitOptions::new(EmbeddingModel::AllMiniLML6V2))
+                    .map(|m| Arc::new(Mutex::new(m)))
+                    .map_err(|_| ErrorMessage::EmbeddingFailed)
             })
             .collect::<Result<Vec<_>, ErrorMessage>>()?;
 
         info!(
-            "embedding pool: {} instances × {} threads ({} total cores)",
-            pool_size, threads_per_instance, cpu_count
+            "embedding pool: {} instances ({} total cores)",
+            pool_size, cpu_count
         );
         Ok(Self { pool })
     }
