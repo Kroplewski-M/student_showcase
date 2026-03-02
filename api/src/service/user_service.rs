@@ -1,13 +1,19 @@
 use std::sync::Arc;
 
 use futures_util::TryFutureExt;
+use pgvector::Vector;
 use tracing::error;
 
 use crate::{
     db::user_repo::UserRepoTrait,
-    dtos::{auth::validate_student_id, user::{UserFormData, UserProfileView}},
+    dtos::{
+        auth::validate_student_id,
+        user::{UpdateUserInfo, UserFormData, UserProfileView},
+    },
     errors::ErrorMessage,
+    service::reference_service::ReferenceService,
     utils::{
+        embedding::Embedding,
         file_storage::FileStorageTrait,
         images::{DEFAULT_MAX_IMAGE_SIZE, ValidatedImage},
     },
@@ -17,13 +23,22 @@ use crate::{
 pub struct UserService {
     user_repo: Arc<dyn UserRepoTrait>,
     file_storage: Arc<dyn FileStorageTrait>,
+    embedding: Arc<Embedding>,
+    reference_service: ReferenceService,
 }
 
 impl UserService {
-    pub fn new(user_repo: Arc<dyn UserRepoTrait>, file_storage: Arc<dyn FileStorageTrait>) -> Self {
+    pub fn new(
+        user_repo: Arc<dyn UserRepoTrait>,
+        file_storage: Arc<dyn FileStorageTrait>,
+        embedding: Arc<Embedding>,
+        reference_service: ReferenceService,
+    ) -> Self {
         Self {
             user_repo,
             file_storage,
+            embedding,
+            reference_service,
         }
     }
     pub async fn verified_user_exists(&self, user_id: String) -> Result<bool, ErrorMessage> {
@@ -121,21 +136,65 @@ impl UserService {
             })
             .await
     }
+    pub async fn update_user(
+        &self,
+        user_id: String,
+        data: UpdateUserInfo,
+    ) -> Result<(), ErrorMessage> {
+        let courses = self.reference_service.get_courses().await?;
+        let tools = self.reference_service.get_tools().await?;
+        let selected_course = data
+            .selected_course
+            .and_then(|id| courses.iter().find(|c| c.id == id))
+            .map(|c| c.name.as_str());
+        let tool_names: Vec<String> = data
+            .selected_tools
+            .iter()
+            .filter_map(|id| tools.iter().find(|t| t.id == *id))
+            .map(|t| t.name.clone())
+            .collect();
+
+        let embed_doc = data.to_embedding_document(selected_course, &tool_names);
+        let vector = pgvector::Vector::from(self.embedding.embed_document(embed_doc).await?);
+        self.user_repo
+            .update_user(user_id.as_str(), data, vector)
+            .await
+            .map_err(|_| ErrorMessage::ServerError)?;
+        Ok(())
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::db::reference_repo::mocks::MockReferenceRepo;
     use crate::db::user_repo::mocks::MockUserRepo;
     use crate::dtos::user::UserProfileRowView;
     use crate::models::file::File;
     use crate::utils::file_storage::mocks::MockFileStorage;
+    use crate::utils::generic::MemoryCache;
     use crate::utils::images::DEFAULT_MAX_IMAGE_SIZE;
     use chrono::Utc;
+    use moka::future::Cache;
     use uuid::Uuid;
 
+    fn make_reference_service() -> ReferenceService {
+        let mut mock_repo = MockReferenceRepo::new();
+        mock_repo.expect_get_courses().returning(|| Ok(vec![]));
+        mock_repo.expect_get_tools().returning(|| Ok(vec![]));
+        mock_repo.expect_get_link_types().returning(|| Ok(vec![]));
+        let cache = MemoryCache::new(Cache::builder().max_capacity(100).build());
+        ReferenceService::new(Arc::new(mock_repo), cache)
+    }
+
     fn make_service(repo: MockUserRepo, storage: MockFileStorage) -> UserService {
-        UserService::new(Arc::new(repo), Arc::new(storage))
+        let embedding = Arc::new(Embedding::new(1).expect("Failed to create embedding"));
+        UserService::new(
+            Arc::new(repo),
+            Arc::new(storage),
+            embedding,
+            make_reference_service(),
+        )
     }
 
     fn dummy_jpeg() -> Vec<u8> {

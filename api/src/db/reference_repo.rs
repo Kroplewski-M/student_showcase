@@ -3,6 +3,23 @@ use sqlx::{Pool, Postgres};
 
 use crate::dtos::reference::{Course, LinkType, SoftwareTool};
 
+#[cfg(test)]
+pub mod mocks {
+    use super::*;
+    use mockall::mock;
+
+    mock! {
+        pub ReferenceRepo {}
+
+        #[async_trait]
+        impl ReferenceRepoTrait for ReferenceRepo {
+            async fn get_link_types(&self) -> Result<Vec<LinkType>, sqlx::Error>;
+            async fn get_courses(&self) -> Result<Vec<Course>, sqlx::Error>;
+            async fn get_tools(&self) -> Result<Vec<SoftwareTool>, sqlx::Error>;
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct ReferenceRepo {
     pool: Pool<Postgres>,

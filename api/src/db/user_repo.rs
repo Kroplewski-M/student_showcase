@@ -1,8 +1,10 @@
 use async_trait::async_trait;
+use pgvector::Vector;
 use sqlx::{Pool, Postgres};
+use uuid::Uuid;
 
 use crate::{
-    dtos::user::{UserFormData, UserLinkView, UserProfileRowView, UserProfileView},
+    dtos::user::{UpdateUserInfo, UserFormData, UserLinkView, UserProfileRowView, UserProfileView},
     models::{file::File, user::User},
 };
 
@@ -33,6 +35,12 @@ pub trait UserRepoTrait: Send + Sync {
     async fn get_user_image(&self, user_id: &str) -> Result<Option<File>, sqlx::Error>;
     async fn get_user_profile(&self, user_id: &str) -> Result<UserProfileView, sqlx::Error>;
     async fn get_user_form_data(&self, user_id: &str) -> Result<UserFormData, sqlx::Error>;
+    async fn update_user(
+        &self,
+        user_id: &str,
+        data: UpdateUserInfo,
+        embedding: Vector,
+    ) -> Result<(), sqlx::Error>;
 }
 
 #[async_trait]
@@ -281,6 +289,79 @@ impl UserRepoTrait for UserRepo {
             links,
         })
     }
+    async fn update_user(
+        &self,
+        user_id: &str,
+        data: UpdateUserInfo,
+        embedding: Vector,
+    ) -> Result<(), sqlx::Error> {
+        let mut tx = self.pool.begin().await?;
+
+        //update basic user info first
+        sqlx::query!(
+            r#"
+            UPDATE users
+            SET first_name = $1,
+            last_name = $2,
+            personal_email = $3,
+            description = $4,
+            course_id = $5,
+            embedding = $6
+            WHERE id = $7
+        "#,
+            data.first_name,
+            data.last_name,
+            data.personal_email,
+            data.description,
+            data.selected_course,
+            embedding as Vector,
+            user_id,
+        )
+        .execute(tx.as_mut())
+        .await?;
+
+        //reset links
+        sqlx::query!("DELETE FROM user_links WHERE user_id = $1", user_id)
+            .execute(tx.as_mut())
+            .await?;
+
+        if !data.links.is_empty() {
+            let link_type_ids: Vec<Uuid> = data.links.iter().map(|l| l.link_type_id).collect();
+            let urls: Vec<String> = data.links.iter().map(|l| l.url.clone()).collect();
+            let names: Vec<Option<String>> = data.links.iter().map(|l| l.name.clone()).collect();
+
+            sqlx::query!(
+                "INSERT INTO user_links (user_id, link_type_id, url, name)
+               SELECT $1, * FROM UNNEST(
+                   $2::uuid[],
+                   $3::text[],
+                   $4::text[]
+               )",
+                user_id,
+                &link_type_ids,
+                &urls,
+                &names as &[Option<String>],
+            )
+            .execute(tx.as_mut())
+            .await?;
+        }
+        //reset tools
+        sqlx::query!("DELETE FROM user_tools WHERE user_id = $1", user_id)
+            .execute(tx.as_mut())
+            .await?;
+        if !data.selected_tools.is_empty() {
+            sqlx::query!(
+                "INSERT INTO user_tools (user_id, software_tool_id)
+                 SELECT $1, * FROM UNNEST($2::uuid[])",
+                user_id,
+                &data.selected_tools,
+            )
+            .execute(&mut *tx)
+            .await?;
+        }
+        tx.commit().await?;
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -307,6 +388,12 @@ pub mod mocks {
             async fn get_user_image(&self, user_id: &str) -> Result<Option<File>, sqlx::Error>;
             async fn get_user_profile(&self, user_id: &str) -> Result<UserProfileView, sqlx::Error>;
             async fn get_user_form_data(&self, user_id: &str) -> Result<UserFormData, sqlx::Error>;
+            async fn update_user(
+                &self,
+                user_id: &str,
+                data: UpdateUserInfo,
+                embedding: Vector,
+            ) -> Result<(), sqlx::Error>;
         }
     }
 }
