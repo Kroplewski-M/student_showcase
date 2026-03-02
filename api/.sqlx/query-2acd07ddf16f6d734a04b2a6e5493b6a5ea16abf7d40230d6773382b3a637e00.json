@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO user_links (user_id, link_type_id, url, name)\n               SELECT $1, * FROM UNNEST(\n                   $2::uuid[],\n                   $3::text[],\n                   $4::text[]\n               )",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "UuidArray",
+        "TextArray",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2acd07ddf16f6d734a04b2a6e5493b6a5ea16abf7d40230d6773382b3a637e00"
+}

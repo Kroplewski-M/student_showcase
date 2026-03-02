@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO user_certificates (user_id, certificate)\n                          SELECT $1, * FROM UNNEST($2::text[])",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5e961b10a1c71e369408c641524c7b90db0d8bbd52d0800e412b388e54e5ae25"
+}

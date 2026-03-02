@@ -1,9 +1,13 @@
 use actix_multipart::Multipart;
 use actix_web::{HttpResponse, dev::HttpServiceFactory, web};
+use validator::Validate;
 
 use crate::{
     AppState,
-    dtos::{Response, user::UserProfileForm},
+    dtos::{
+        Response,
+        user::{UpdateUserInfo, UserProfileForm},
+    },
     errors::{ErrorMessage, HttpError},
     middleware::auth::{AuthenticatedUserId, RequireAuth},
     models::file::FormFile,
@@ -86,6 +90,23 @@ pub async fn get_user_profile_form(
         tools_list: tools,
     }))
 }
-pub async fn patch_user_profile() -> Result<HttpResponse, HttpError> {
-    Ok(HttpResponse::Ok().body("ok"))
+pub async fn patch_user_profile(
+    app_state: web::Data<AppState>,
+    user_id: AuthenticatedUserId,
+    data: web::Json<UpdateUserInfo>,
+) -> Result<HttpResponse, HttpError> {
+    data.validate()
+        .map_err(|e| HttpError::bad_request(e.to_string()))?;
+    app_state
+        .user_service
+        .update_user(user_id.to_string(), data.0)
+        .await
+        .map_err(|e| match e {
+            ErrorMessage::UserNoLongerExists => HttpError::not_found("user not found"),
+            _ => HttpError::server_error(e),
+        })?;
+    Ok(HttpResponse::Ok().json(Response {
+        status: "success",
+        message: "User updated successfully".to_string(),
+    }))
 }

@@ -128,7 +128,6 @@ pub mod mocks {
 
     mock! {
         pub FileStorage {}
-
         #[async_trait]
         impl FileStorageTrait for FileStorage {
             async fn write(&self, name: &str, data: &[u8]) -> Result<(), ErrorMessage>;

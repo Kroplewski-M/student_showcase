@@ -35,6 +35,7 @@ pub enum ErrorMessage {
     FileInvalidName,
     NoFileProvided,
     InvalidFileData,
+    EmbeddingFailed,
 }
 impl fmt::Display for ErrorMessage {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -46,6 +47,7 @@ impl From<ErrorMessage> for String {
         value.to_string()
     }
 }
+impl std::error::Error for ErrorMessage {}
 impl ErrorMessage {
     fn to_str(&self) -> String {
         match self {
@@ -89,6 +91,7 @@ impl ErrorMessage {
             ErrorMessage::FileInvalidName => "Invalid file name".to_string(),
             ErrorMessage::NoFileProvided => "No File Provided".to_string(),
             ErrorMessage::InvalidFileData => "Invalid File Data".to_string(),
+            ErrorMessage::EmbeddingFailed => "Failed to embed data".to_string(),
         }
     }
 }

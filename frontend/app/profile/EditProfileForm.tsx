@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import ErrorDisplay from "../components/ErrorDisplay";
 import Loading from "../SVGS/Loading";
@@ -47,6 +48,8 @@ interface FormErrors {
   firstName?: string;
   lastName?: string;
   personalEmail?: string;
+  selectedCourse?: string;
+  linkedIn?: string;
   links: Record<string, { url?: string; name?: string }>;
 }
 
@@ -55,6 +58,7 @@ interface Props {
 }
 
 export default function EditProfileForm({ onClose }: Props) {
+  const router = useRouter();
   const [formState, setFormState] = useState<FormState | null>(null);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -232,10 +236,25 @@ export default function EditProfileForm({ onClose }: Props) {
     const errors: FormErrors = { links: {} };
     if (!formState) return errors;
 
-    if (formState.userInfo.firstName.length > 50)
+    if (!formState.userInfo.firstName.trim()) errors.firstName = "Required";
+    else if (formState.userInfo.firstName.length > 50)
       errors.firstName = "Max 50 characters";
-    if (formState.userInfo.lastName.length > 50)
+
+    if (!formState.userInfo.lastName.trim()) errors.lastName = "Required";
+    else if (formState.userInfo.lastName.length > 50)
       errors.lastName = "Max 50 characters";
+
+    if (!formState.userInfo.selectedCourse)
+      errors.selectedCourse = "Please select a course";
+
+    const hasLinkedIn = formState.userInfo.links.some(
+      (l) =>
+        formState.linkTypes
+          .find((lt) => lt.id === l.linkTypeId)
+          ?.name?.toLowerCase() === "linkedin",
+    );
+    if (!hasLinkedIn)
+      errors.linkedIn = "At least one LinkedIn link is required";
     if (formState.userInfo.personalEmail) {
       if (formState.userInfo.personalEmail.length > 250)
         errors.personalEmail = "Max 250 characters";
@@ -275,6 +294,8 @@ export default function EditProfileForm({ onClose }: Props) {
       errors.firstName ||
       errors.lastName ||
       errors.personalEmail ||
+      errors.selectedCourse ||
+      errors.linkedIn ||
       Object.keys(errors.links).length > 0;
     if (hasErrors) {
       setFieldErrors(errors);
@@ -282,9 +303,36 @@ export default function EditProfileForm({ onClose }: Props) {
     }
     setSaving(true);
     setSaveError(null);
-    console.log(formState?.userInfo);
-    // TODO: call PATCH /api/user/profile_form when backend endpoint is implemented
-    setSaving(false);
+    try {
+      const { userInfo } = formState!;
+      const payload = {
+        firstName: userInfo.firstName || null,
+        lastName: userInfo.lastName || null,
+        personalEmail: userInfo.personalEmail || null,
+        description: userInfo.description || null,
+        selectedCourse: userInfo.selectedCourse || null,
+        selectedTools: userInfo.selectedTools,
+        certificates: userInfo.certificates,
+        links: userInfo.links.map(({ linkTypeId, url, name }) => ({
+          linkTypeId,
+          url,
+          name: name || null,
+        })),
+      };
+      const res = await fetch("/api/user/update_profile", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error();
+      router.refresh();
+      onClose();
+    } catch {
+      setSaveError("Failed to save profile. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return createPortal(
@@ -409,8 +457,14 @@ export default function EditProfileForm({ onClose }: Props) {
                 </p>
                 <select
                   value={formState.userInfo.selectedCourse}
-                  onChange={(e) => setField("selectedCourse", e.target.value)}
-                  className="w-full rounded-xl border border-secondary/15 bg-primary/60 px-4 py-2.5 text-sm text-secondary outline-none transition-colors focus:border-secondary/35"
+                  onChange={(e) => {
+                    setField("selectedCourse", e.target.value);
+                    setFieldErrors((prev) => ({
+                      ...prev,
+                      selectedCourse: undefined,
+                    }));
+                  }}
+                  className={`w-full rounded-xl border px-4 py-2.5 text-sm text-secondary outline-none transition-colors ${fieldErrors.selectedCourse ? "border-danger/50 bg-danger/5" : "border-secondary/15 bg-primary/60 focus:border-secondary/35"}`}
                 >
                   <option value="">— No course selected —</option>
                   {formState.coursesList.map((c) => (
@@ -419,6 +473,11 @@ export default function EditProfileForm({ onClose }: Props) {
                     </option>
                   ))}
                 </select>
+                {fieldErrors.selectedCourse && (
+                  <p className="text-xs text-danger">
+                    {fieldErrors.selectedCourse}
+                  </p>
+                )}
               </section>
 
               {/* Tools */}
@@ -564,6 +623,9 @@ export default function EditProfileForm({ onClose }: Props) {
                 <p className="text-xs font-semibold uppercase tracking-wider text-secondary/50">
                   Links ({formState.userInfo.links.length})
                 </p>
+                {fieldErrors.linkedIn && (
+                  <p className="text-xs text-danger">{fieldErrors.linkedIn}</p>
+                )}
                 <div className="space-y-2">
                   {formState.userInfo.links.map((link) => (
                     <div
@@ -573,9 +635,13 @@ export default function EditProfileForm({ onClose }: Props) {
                       <div className="flex gap-2">
                         <select
                           value={link.linkTypeId}
-                          onChange={(e) =>
-                            updateLink(link._key, "linkTypeId", e.target.value)
-                          }
+                          onChange={(e) => {
+                            updateLink(link._key, "linkTypeId", e.target.value);
+                            setFieldErrors((prev) => ({
+                              ...prev,
+                              linkedIn: undefined,
+                            }));
+                          }}
                           className="rounded-lg border border-secondary/15 bg-primary/60 px-3 py-2 text-xs text-secondary outline-none focus:border-secondary/35"
                         >
                           {formState.linkTypes.map((lt) => (

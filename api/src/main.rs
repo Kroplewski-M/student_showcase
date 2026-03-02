@@ -4,11 +4,11 @@ use crate::db::DbClient;
 use crate::service::reference_service::ReferenceService;
 use crate::service::{auth_service::AuthService, user_service::UserService};
 use crate::utils::email::EmailService;
+use crate::utils::embedding::Embedding;
 use crate::utils::file_storage::FileStorageType;
 use crate::utils::generic::MemoryCache;
 use actix_web::{App, HttpServer, web};
 use dotenv::dotenv;
-use fastembed::{EmbeddingModel, InitOptions, TextEmbedding};
 use moka::future::Cache;
 use sqlx::postgres::PgPoolOptions;
 use std::sync::Arc;
@@ -30,7 +30,6 @@ pub struct AppState {
     pub auth_service: AuthService,
     pub user_service: UserService,
     pub reference_service: ReferenceService,
-    pub embedding_model: Arc<TextEmbedding>,
 }
 
 #[actix_web::main]
@@ -58,17 +57,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let db_client = DbClient::new(pool);
     let email_service = EmailService::new(config.clone()).await;
-    let embedding_model = Arc::new(
-        TextEmbedding::try_new(
-            InitOptions::new(EmbeddingModel::AllMiniLML6V2).with_show_download_progress(true),
-        )
-        .expect("Failed to initialize embedding model"),
-    );
-    let cache = Cache::builder()
-        .max_capacity(20)
-        .time_to_live(Duration::from_secs((60 * 60) * 24)) //one day
-        .build();
-    let mem_cache = MemoryCache::new(cache);
+
+    let mem_cache = get_cache();
+    let cpu_count = std::thread::available_parallelism()
+        .map(|n| n.get())
+        .unwrap_or(4);
+
+    let embedding = Arc::new(Embedding::new(cpu_count)?);
+    let ref_service =
+        ReferenceService::new(Arc::new(db_client.reference.clone()), mem_cache.clone());
 
     let app_state = AppState {
         config: config.clone(),
@@ -82,12 +79,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         user_service: UserService::new(
             Arc::new(db_client.user.clone()),
             Arc::new(FileStorageType::UserImage),
+            embedding,
+            ref_service.clone(),
         ),
-        reference_service: ReferenceService::new(
-            Arc::new(db_client.reference.clone()),
-            mem_cache.clone(),
-        ),
-        embedding_model,
+        reference_service: ref_service.clone(),
     };
 
     println!("API starting on 0.0.0.0:{}", config.port);
@@ -106,8 +101,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-pub fn init_logging() {
+fn init_logging() {
     tracing_subscriber::fmt()
         .with_env_filter(EnvFilter::try_from_default_env().unwrap_or_else(|_| "info".into()))
         .init();
+}
+fn get_cache() -> MemoryCache {
+    let cache = Cache::builder()
+        .max_capacity(20)
+        .time_to_live(Duration::from_secs((60 * 60) * 24)) //one day
+        .build();
+    MemoryCache::new(cache)
 }
