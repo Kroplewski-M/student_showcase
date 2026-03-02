@@ -88,8 +88,12 @@ export default function EditProfileForm({ onClose }: Props) {
           personalEmail: data.personalEmail ?? "",
           description: data.description ?? "",
           selectedCourse: data.selectedCourse ?? "",
-          selectedTools: data.selectedTools ?? [],
-          certificates: data.certificates ?? [],
+          selectedTools: Array.isArray(data.selectedTools)
+            ? data.selectedTools
+            : [],
+          certificates: Array.isArray(data.certificates)
+            ? data.certificates
+            : [],
           links: (data.links ?? []).map(
             (l: { id: string; url: string; name: string | null }) => ({
               _key: crypto.randomUUID(),
