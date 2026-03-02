@@ -80,9 +80,9 @@ export default function EditProfileForm({ onClose }: Props) {
       })
       .then((data) => {
         setFormState({
-          coursesList: data.coursesList,
-          linkTypes: data.linkTypes,
-          toolsList: data.toolsList,
+          coursesList: Array.isArray(data.coursesList) ? data.coursesList : [],
+          linkTypes: Array.isArray(data.linkTypes) ? data.linkTypes : [],
+          toolsList: Array.isArray(data.toolsList) ? data.toolsList : [],
           firstName: data.firstName ?? "",
           lastName: data.lastName ?? "",
           personalEmail: data.personalEmail ?? "",
