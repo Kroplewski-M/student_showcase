@@ -18,7 +18,8 @@ pub fn user_handler() -> impl HttpServiceFactory {
             web::scope("")
                 .wrap(RequireAuth)
                 .route("/update_image", web::post().to(update_user_image))
-                .route("/profile_form", web::get().to(get_user_profile_form)),
+                .route("/update_profile", web::get().to(get_user_profile_form))
+                .route("/update_profile", web::patch().to(patch_user_profile)),
         )
 }
 
@@ -66,7 +67,9 @@ pub async fn get_user_profile_form(
     user_id: AuthenticatedUserId,
 ) -> Result<HttpResponse, HttpError> {
     let (form_data, courses, link_types, tools) = tokio::try_join!(
-        app_state.user_service.get_user_form_data(user_id.to_string()),
+        app_state
+            .user_service
+            .get_user_form_data(user_id.to_string()),
         app_state.reference_service.get_courses(),
         app_state.reference_service.get_link_types(),
         app_state.reference_service.get_tools(),
@@ -82,4 +85,7 @@ pub async fn get_user_profile_form(
         link_types,
         tools_list: tools,
     }))
+}
+pub async fn patch_user_profile() -> Result<HttpResponse, HttpError> {
+    Ok(HttpResponse::Ok().body("ok"))
 }
