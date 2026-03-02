@@ -101,6 +101,12 @@ pub async fn patch_user_profile(
         .user_service
         .update_user(user_id.to_string(), data.0)
         .await
-        .map_err(HttpError::server_error)?;
-    Ok(HttpResponse::Ok().body("ok"))
+        .map_err(|e| match e {
+            ErrorMessage::UserNoLongerExists => HttpError::bad_request("user not found"),
+            _ => HttpError::server_error(e),
+        })?;
+    Ok(HttpResponse::Ok().json(Response {
+        status: "success",
+        message: "User updated successfully".to_string(),
+    }))
 }

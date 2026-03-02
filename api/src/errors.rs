@@ -91,7 +91,7 @@ impl ErrorMessage {
             ErrorMessage::FileInvalidName => "Invalid file name".to_string(),
             ErrorMessage::NoFileProvided => "No File Provided".to_string(),
             ErrorMessage::InvalidFileData => "Invalid File Data".to_string(),
-            ErrorMessage::EmbeddingFailed => "Failed To embed data".to_string(),
+            ErrorMessage::EmbeddingFailed => "Failed to embed data".to_string(),
         }
     }
 }

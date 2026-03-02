@@ -298,7 +298,7 @@ impl UserRepoTrait for UserRepo {
         let mut tx = self.pool.begin().await?;
 
         //update basic user info first
-        sqlx::query!(
+        let updated_res = sqlx::query!(
             r#"
             UPDATE users
             SET first_name = $1,
@@ -319,6 +319,9 @@ impl UserRepoTrait for UserRepo {
         )
         .execute(tx.as_mut())
         .await?;
+        if updated_res.rows_affected() == 0 {
+            return Err(sqlx::Error::RowNotFound);
+        }
 
         //reset links
         sqlx::query!("DELETE FROM user_links WHERE user_id = $1", user_id)
@@ -352,11 +355,25 @@ impl UserRepoTrait for UserRepo {
         if !data.selected_tools.is_empty() {
             sqlx::query!(
                 "INSERT INTO user_tools (user_id, software_tool_id)
-                 SELECT $1, * FROM UNNEST($2::uuid[])",
+                 SELECT DISTINCT $1, * FROM UNNEST($2::uuid[])",
                 user_id,
                 &data.selected_tools,
             )
-            .execute(&mut *tx)
+            .execute(tx.as_mut())
+            .await?;
+        }
+        //reset certificates
+        sqlx::query!("DELETE FROM user_certificates WHERE user_id = $1", user_id)
+            .execute(tx.as_mut())
+            .await?;
+        if !data.certificates.is_empty() {
+            sqlx::query!(
+                "INSERT INTO user_certificates (user_id, certificate)
+                          SELECT $1, * FROM UNNEST($2::text[])",
+                user_id,
+                &data.certificates
+            )
+            .execute(tx.as_mut())
             .await?;
         }
         tx.commit().await?;

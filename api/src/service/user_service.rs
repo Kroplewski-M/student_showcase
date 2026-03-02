@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use futures_util::TryFutureExt;
-use pgvector::Vector;
 use tracing::error;
 
 use crate::{
@@ -159,7 +158,10 @@ impl UserService {
         self.user_repo
             .update_user(user_id.as_str(), data, vector)
             .await
-            .map_err(|_| ErrorMessage::ServerError)?;
+            .map_err(|e| match e {
+                sqlx::Error::RowNotFound => ErrorMessage::UserNoLongerExists,
+                _ => ErrorMessage::ServerError,
+            })?;
         Ok(())
     }
 }
