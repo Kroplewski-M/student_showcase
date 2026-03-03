@@ -8,6 +8,7 @@ import Avatar from "./Avatar";
 import ProfileInfo from "./ProfileInfo";
 import Edit from "../SVGS/Edit";
 import EditProfileForm from "./EditProfileForm";
+import UserProjects from "./UserProjects";
 
 interface Props {
   profile: UserProfile;
@@ -66,6 +67,7 @@ export default function ProfileView({ profile }: Props) {
               <ProfileInfo user={profile} />
             </div>
           </GlassCard>
+          <UserProjects />
         </motion.div>
       </div>
     </>
