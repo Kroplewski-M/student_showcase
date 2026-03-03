@@ -306,7 +306,8 @@ impl UserRepoTrait for UserRepo {
             personal_email = $3,
             description = $4,
             course_id = $5,
-            embedding = $6
+            embedding = $6,
+            updated_at = now()
             WHERE id = $7
         "#,
             data.first_name,

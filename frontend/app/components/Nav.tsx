@@ -39,16 +39,16 @@ export default function Nav() {
           {isAuthenticated === false ? (
             <>
               <Link
+                href="https://www.eventbrite.co.uk/e/school-of-computing-and-engineering-futures-2026-student-showcase-tickets-1983441764711"
+                className="rounded-xl bg-secondary px-5 py-2 text-sm font-bold text-primary transition-all hover:bg-secondary/85 hover:shadow-lg hover:shadow-secondary/20 active:scale-[0.985]"
+              >
+                Book Your Place
+              </Link>
+              <Link
                 href="/login"
                 className="rounded-xl px-5 py-2 text-sm font-semibold text-support transition-colors hover:text-light"
               >
-                Login
-              </Link>
-              <Link
-                href="/register"
-                className="rounded-xl bg-secondary px-5 py-2 text-sm font-bold text-primary transition-all hover:bg-secondary/85 hover:shadow-lg hover:shadow-secondary/20 active:scale-[0.985]"
-              >
-                Register
+                Student Sign In
               </Link>
             </>
           ) : (
@@ -122,18 +122,18 @@ export default function Nav() {
                 {isAuthenticated === false ? (
                   <>
                     <Link
-                      href="/login"
+                      href="https://www.eventbrite.co.uk/e/school-of-computing-and-engineering-futures-2026-student-showcase-tickets-1983441764711"
                       onClick={() => setMenuOpen(false)}
                       className="rounded-xl border border-third/40 bg-third/20 px-5 py-3.5 text-center text-sm font-semibold text-light transition-colors hover:bg-third/30"
                     >
-                      Login
+                      Register Your Place
                     </Link>
                     <Link
-                      href="/register"
+                      href="/login"
                       onClick={() => setMenuOpen(false)}
                       className="rounded-xl bg-secondary px-5 py-3.5 text-center text-sm font-bold text-primary transition-all hover:bg-secondary/85 active:scale-[0.985]"
                     >
-                      Register
+                      Student Sign In
                     </Link>
                   </>
                 ) : (
