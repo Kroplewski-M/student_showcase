@@ -30,19 +30,6 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* Navigation */}
-          <div className="flex gap-8 text-xs font-semibold uppercase tracking-wider text-support/50">
-            <Link href="/login" className="transition-colors hover:text-light">
-              Login
-            </Link>
-            <Link
-              href="/register"
-              className="transition-colors hover:text-light"
-            >
-              Register
-            </Link>
-          </div>
-
           {/* Socials */}
           <div className="flex items-center gap-4">
             <a

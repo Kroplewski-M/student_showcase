@@ -64,7 +64,7 @@ export default function Hero() {
                 }}
                 className="font-extrabold leading-[0.85] tracking-tighter text-light text-[clamp(3.5rem,12vw,11rem)]"
               >
-                C&amp;E
+                SCE
               </motion.h1>
               <motion.h1
                 initial={{ opacity: 0, y: 40 }}
