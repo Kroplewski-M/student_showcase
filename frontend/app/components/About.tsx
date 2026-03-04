@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
 import { useRef } from "react";
 import Calendar from "../SVGS/Calendar";
@@ -41,13 +41,31 @@ const highlights = [
 export default function About() {
   const sectionRef = useRef<HTMLDivElement>(null);
 
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start end", "start 0.5"],
+  });
+
+  const rotate = useTransform(scrollYProgress, [0, 1], [5, 0]);
+
   return (
     <motion.section
       ref={sectionRef}
       id="about"
+      style={{ rotate, transformOrigin: "bottom center" }}
       className="relative z-20  bg-primary shadow-[0_-40px_80px_rgba(0,0,0,0.5)] min-h-screen pb-16"
     >
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-secondary/40 to-transparent" />
+
+      {/* Page fold — top-left corner */}
+      <div className="pointer-events-none absolute top-0 left-0 z-30">
+        {/* Crease shadow */}
+        <div className="absolute top-0 left-0 w-28 h-28 bg-gradient-to-br from-black/45 to-transparent" />
+        {/* Folded flap */}
+        <div className="w-0 h-0 border-solid border-t-[85px] border-r-[85px] border-b-0 border-l-0 border-t-[#192e30] border-r-transparent [filter:drop-shadow(2px_3px_6px_rgba(0,0,0,0.6))]" />
+        {/* Crease highlight line */}
+        <div className="absolute top-0 left-0 w-[120px] h-px bg-gradient-to-r from-secondary/20 to-transparent rotate-45 origin-top-left" />
+      </div>
 
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         {/* Glow orbs */}
