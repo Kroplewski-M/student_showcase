@@ -10,7 +10,8 @@ RUN apt-get update && apt-get install -y \
 
 RUN cargo install sqlx-cli \
     --no-default-features \
-    --features postgres
+    --features postgres \
+    && cargo install cargo-watch
 
 WORKDIR /api
 COPY . .

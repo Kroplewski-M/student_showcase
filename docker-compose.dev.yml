@@ -13,12 +13,15 @@ services:
     build:
       context: ./api
       target: dev
-    command: cargo run
+    tty: true
+    command: cargo watch -x run
     env_file: .env.dev
     environment:
       - CARGO_TARGET_DIR=/cargo/target
     volumes:
       - ./api:/api
+      - /cargo/target #prevents permission errors
+      - cargo-cache:/usr/local/cargo/registry # Mounts your cache volume
       - uploads:/srv/uploads
       - hf_cache:/root/.cache/huggingface
     depends_on:
@@ -32,6 +35,7 @@ services:
     env_file: .env.dev
     volumes:
       - ./frontend:/app
+      - /app/node_modules
     depends_on:
       - api
     networks:
