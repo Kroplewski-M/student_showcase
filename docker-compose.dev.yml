@@ -20,7 +20,7 @@ services:
       - CARGO_TARGET_DIR=/cargo/target
     volumes:
       - ./api:/api
-      - /api/target #prevents permission errors
+      - /cargo/target #prevents permission errors
       - cargo-cache:/usr/local/cargo/registry # Mounts your cache volume
       - uploads:/srv/uploads
       - hf_cache:/root/.cache/huggingface
