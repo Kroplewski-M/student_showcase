@@ -12,9 +12,10 @@ import UserProjects from "./UserProjects";
 
 interface Props {
   profile: UserProfile;
+  canEdit?: boolean;
 }
 
-export default function ProfileView({ profile }: Props) {
+export default function ProfileView({ profile, canEdit = false }: Props) {
   const [editOpen, setEditOpen] = useState(false);
 
   return (
@@ -50,24 +51,30 @@ export default function ProfileView({ profile }: Props) {
         >
           <div className="flex flex-wrap items-start justify-between ">
             <h1 className="mb-5 text-2xl font-bold text-white">Profile</h1>
-            <button
-              type="button"
-              onClick={() => setEditOpen(true)}
-              className="flex cursor-pointer items-center gap-2 rounded-lg border border-secondary/20 bg-secondary/6 px-4 py-2 text-sm font-medium text-secondary/70 transition-all hover:border-secondary/35 hover:bg-secondary/10 hover:text-secondary"
-            >
-              <Edit />
-              Edit Profile
-            </button>
-            {editOpen && <EditProfileForm onClose={() => setEditOpen(false)} />}
+            {canEdit && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setEditOpen(true)}
+                  className="flex cursor-pointer items-center gap-2 rounded-lg border border-secondary/20 bg-secondary/6 px-4 py-2 text-sm font-medium text-secondary/70 transition-all hover:border-secondary/35 hover:bg-secondary/10 hover:text-secondary"
+                >
+                  <Edit />
+                  Edit Profile
+                </button>
+                {editOpen && (
+                  <EditProfileForm onClose={() => setEditOpen(false)} />
+                )}
+              </>
+            )}
           </div>
           {/* Profile Card */}
           <GlassCard className="mb-8 animate-[slideUp_0.6s_ease_0.1s_both] p-8">
             <div className="flex flex-col md:flex-row flex-wrap items-start gap-7">
-              <Avatar image={profile.profileImageName} />
+              <Avatar image={profile.profileImageName} canEdit={canEdit} />
               <ProfileInfo user={profile} />
             </div>
           </GlassCard>
-          <UserProjects />
+          <UserProjects canEdit={canEdit} />
         </motion.div>
       </div>
     </>
