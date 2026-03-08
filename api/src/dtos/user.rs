@@ -24,6 +24,14 @@ pub struct UserProfileRowView {
     pub course_name: Option<String>,
     pub description: Option<String>,
 }
+
+#[derive(sqlx::FromRow, Debug)]
+pub struct ProjToolRow {
+    pub project_id: Uuid,
+    pub name: String,
+}
+
+#[derive(sqlx::FromRow, Debug)]
 pub struct ProjLinkRow {
     pub project_id: Uuid,
     pub id: Uuid,
@@ -31,6 +39,7 @@ pub struct ProjLinkRow {
     pub url: String,
     pub name: Option<String>,
 }
+#[derive(sqlx::FromRow, Debug)]
 pub struct ProjImageRow {
     pub project_id: Uuid,
     pub file_id: Uuid,
@@ -90,7 +99,6 @@ pub struct UserProfileForm {
 }
 
 //patch user info form
-
 #[derive(Debug, Deserialize, Clone, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateUserLinks {

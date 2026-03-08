@@ -7,8 +7,8 @@ use uuid::Uuid;
 
 use crate::{
     dtos::user::{
-        ProjImageRow, ProjLinkRow, ProjectProfileView, ProjectProfileViewBase, UpdateUserInfo,
-        UserFormData, UserLinkView, UserProfileRowView, UserProfileView,
+        ProjImageRow, ProjLinkRow, ProjToolRow, ProjectProfileView, ProjectProfileViewBase,
+        UpdateUserInfo, UserFormData, UserLinkView, UserProfileRowView, UserProfileView,
     },
     models::{file::File, user::User},
 };
@@ -236,11 +236,6 @@ impl UserRepoTrait for UserRepo {
         .fetch_all(&self.pool)
         .await?;
         let project_ids: Vec<Uuid> = project_bases.iter().map(|p| p.id).collect();
-
-        struct ProjToolRow {
-            project_id: Uuid,
-            name: String,
-        }
         let all_tools = sqlx::query_as!(
             ProjToolRow,
             r#"
