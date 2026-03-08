@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT \n                p.id,\n                p.name AS \"name!\",\n                p.description AS \"description?\",\n                p.live_link AS \"live_link?\",\n                p.featured_image_id as \"featured_img_id?\"\n            FROM projects p\n            WHERE p.user_id = $1\n            ORDER BY p.created_at\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "name!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "description?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "live_link?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "featured_img_id?",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "58aabff079c1cabb46b4fcd4cdc01fd36a0fd3c3afe2cb1a491f00083ee31c80"
+}
