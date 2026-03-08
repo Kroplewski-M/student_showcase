@@ -24,7 +24,18 @@ pub struct UserProfileRowView {
     pub course_name: Option<String>,
     pub description: Option<String>,
 }
-
+pub struct ProjLinkRow {
+    pub project_id: Uuid,
+    pub id: Uuid,
+    pub link_type: String,
+    pub url: String,
+    pub name: Option<String>,
+}
+pub struct ProjImageRow {
+    pub project_id: Uuid,
+    pub file_id: Uuid,
+    pub file_name: String,
+}
 #[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ProjectProfileViewBase {

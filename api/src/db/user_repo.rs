@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use async_trait::async_trait;
 use pgvector::Vector;
 use sqlx::{Pool, Postgres};
@@ -5,8 +7,8 @@ use uuid::Uuid;
 
 use crate::{
     dtos::user::{
-        ProjectProfileView, ProjectProfileViewBase, UpdateUserInfo, UserFormData, UserLinkView,
-        UserProfileRowView, UserProfileView,
+        ProjImageRow, ProjLinkRow, ProjectProfileView, ProjectProfileViewBase, UpdateUserInfo,
+        UserFormData, UserLinkView, UserProfileRowView, UserProfileView,
     },
     models::{file::File, user::User},
 };
@@ -233,65 +235,92 @@ impl UserRepoTrait for UserRepo {
         )
         .fetch_all(&self.pool)
         .await?;
-        let mut projects = Vec::<ProjectProfileView>::with_capacity(project_bases.len());
-        for proj in project_bases {
-            let proj_id = proj.id;
+        let project_ids: Vec<Uuid> = project_bases.iter().map(|p| p.id).collect();
 
-            let proj_tools = sqlx::query_scalar!(
-                r#"
-                SELECT st.name AS "name!"
-                FROM project_tools pt
-                JOIN software_tools st ON st.id = pt.tool_id
-                WHERE pt.project_id = $1
-                ORDER BY st.name
-            "#,
-                proj_id
-            )
-            .fetch_all(&self.pool)
-            .await?;
-
-            let proj_images: Vec<(uuid::Uuid, String)> = sqlx::query!(
-                r#"
-                SELECT f.id AS "id!", f.new_file_name || '.' || f.extension AS "file_name!"
-                FROM project_files pf 
-                JOIN files f ON f.id = pf.file_id
-                WHERE pf.project_id = $1
-                ORDER BY f.created_at"#,
-                proj_id
-            )
-            .fetch_all(&self.pool)
-            .await?
-            .into_iter()
-            .map(|r| (r.id, r.file_name))
-            .collect();
-
-            let proj_links = sqlx::query_as!(
-                UserLinkView,
-                r#"
-                SELECT pl.id, lt.name AS "link_type!", pl.url AS "url!", pl.name 
-                FROM project_links pl
-                JOIN link_types lt ON lt.id = pl.link_type_id
-                WHERE pl.project_id = $1
-                ORDER BY lt.name, pl.url
-            "#,
-                proj_id
-            )
-            .fetch_all(&self.pool)
-            .await?;
-
-            projects.push(ProjectProfileView {
-                base: ProjectProfileViewBase {
-                    id: proj.id,
-                    name: proj.name,
-                    description: proj.description,
-                    live_link: proj.live_link,
-                    featured_img_id: proj.featured_img_id,
-                },
-                tools: proj_tools,
-                images: proj_images,
-                links: proj_links,
-            });
+        struct ProjToolRow {
+            project_id: Uuid,
+            name: String,
         }
+        let all_tools = sqlx::query_as!(
+            ProjToolRow,
+            r#"
+            SELECT pt.project_id AS "project_id!", st.name AS "name!"
+            FROM project_tools pt
+            JOIN software_tools st ON st.id = pt.tool_id
+            WHERE pt.project_id = ANY($1)
+            ORDER BY st.name
+            "#,
+            &project_ids
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        let all_images = sqlx::query_as!(
+            ProjImageRow,
+            r#"
+            SELECT pf.project_id AS "project_id!", f.id AS "file_id!",
+                   f.new_file_name || '.' || f.extension AS "file_name!"
+            FROM project_files pf
+            JOIN files f ON f.id = pf.file_id
+            WHERE pf.project_id = ANY($1)
+            ORDER BY f.created_at
+            "#,
+            &project_ids
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        let all_links = sqlx::query_as!(
+            ProjLinkRow,
+            r#"
+            SELECT pl.project_id AS "project_id!", pl.id AS "id!",
+                   lt.name AS "link_type!", pl.url AS "url!", pl.name
+            FROM project_links pl
+            JOIN link_types lt ON lt.id = pl.link_type_id
+            WHERE pl.project_id = ANY($1)
+            ORDER BY lt.name, pl.url
+            "#,
+            &project_ids
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        let mut tools_map: HashMap<Uuid, Vec<String>> = HashMap::new();
+        for row in all_tools {
+            tools_map.entry(row.project_id).or_default().push(row.name);
+        }
+        let mut images_map: HashMap<Uuid, Vec<(Uuid, String)>> = HashMap::new();
+        for row in all_images {
+            images_map
+                .entry(row.project_id)
+                .or_default()
+                .push((row.file_id, row.file_name));
+        }
+        let mut links_map: HashMap<Uuid, Vec<UserLinkView>> = HashMap::new();
+        for row in all_links {
+            links_map
+                .entry(row.project_id)
+                .or_default()
+                .push(UserLinkView {
+                    id: row.id,
+                    link_type: row.link_type,
+                    url: row.url,
+                    name: row.name,
+                });
+        }
+
+        let projects: Vec<ProjectProfileView> = project_bases
+            .into_iter()
+            .map(|p| {
+                let id = p.id;
+                ProjectProfileView {
+                    base: p,
+                    tools: tools_map.remove(&id).unwrap_or_default(),
+                    images: images_map.remove(&id).unwrap_or_default(),
+                    links: links_map.remove(&id).unwrap_or_default(),
+                }
+            })
+            .collect();
 
         Ok(UserProfileView {
             base,
