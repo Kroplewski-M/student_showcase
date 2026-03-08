@@ -1,51 +1,35 @@
-import { redirect } from "next/navigation";
-import { getUser } from "../lib/auth";
-import ProfileView from "./ProfileView";
+import { UserProfile } from "@/app/profile/page";
+import ProfileView from "@/app/profile/ProfileView";
+import ErrorSVG from "@/app/SVGS/ErrorSVG";
 import Link from "next/link";
-import ErrorSVG from "../SVGS/ErrorSVG";
+import { redirect } from "next/navigation";
 
-export interface Links {
-  linkType: string;
-  url: string;
-  name: string | null;
-}
-export interface UserProfile {
-  id: string;
-  profileImageName: string | null;
-  firstName: string | null;
-  lastName: string | null;
-  description: string | null;
-  personalEmail: string | null;
-  courseName: string | null;
-  certificates: string[] | null;
-  links: Links[] | null;
-  tools: string[] | null;
-}
-
-export default async function ProfilePage() {
-  const user = await getUser();
-  if (!user) redirect("/login");
-
+export default async function Student({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const studenId = (await params).id;
   let profile: UserProfile | null = null;
   let error: string | null = null;
-
+  let notFound = false;
   try {
     const res = await fetch(
-      `${process.env.API_INTERNAL_URL}/user/info/${user.id}`,
+      `${process.env.API_INTERNAL_URL}/user/info/${studenId}`,
       {
         cache: "no-store",
       },
     );
     if (!res.ok) {
-      error =
-        res.status === 404
-          ? "Profile not found."
-          : "Something went wrong loading your profile.";
+      notFound = true;
     } else {
       profile = await res.json();
     }
   } catch {
     error = "Unable to connect to the server. Please try again later.";
+  }
+  if (notFound) {
+    redirect("/404");
   }
 
   if (error || !profile) {
@@ -65,15 +49,15 @@ export default async function ProfilePage() {
           </div>
 
           <Link
-            href="/profile"
+            href="/"
             className="mt-1 rounded-xl border border-third/40 bg-third/10 px-8 py-3 text-sm font-semibold text-light backdrop-blur-sm transition-all hover:border-third/60 hover:bg-third/20 active:scale-[0.985] cursor-pointer"
           >
-            Try again
+            Back Home
           </Link>
         </div>
       </div>
     );
   }
 
-  return <ProfileView profile={profile} canEdit={true} />;
+  return <ProfileView profile={profile} canEdit={false} />;
 }
