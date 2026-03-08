@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT pt.project_id AS \"project_id!\", st.name AS \"name!\"\n            FROM project_tools pt\n            JOIN software_tools st ON st.id = pt.tool_id\n            WHERE pt.project_id = ANY($1)\n            ORDER BY st.name\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "project_id!",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "name!",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "UuidArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "4038ef7b6a70f5e070549cfe377f0cfbd673009c0ab2dad3eb60efef607d9743"
+}
