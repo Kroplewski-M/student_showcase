@@ -5,7 +5,7 @@ import Image from "next/image";
 import UpdateImageForm from "./UpdateImageForm";
 interface AvatarProps {
   image: string | null;
-  canEdit: boolean;
+  canEdit?: boolean;
 }
 export default function Avatar({ image, canEdit = false }: AvatarProps) {
   const [showImageForm, setShowImageForm] = useState(false);

@@ -9,13 +9,13 @@ export default async function Student({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const studenId = (await params).id;
+  const studentId = (await params).id;
   let profile: UserProfile | null = null;
   let error: string | null = null;
   let notFound = false;
   try {
     const res = await fetch(
-      `${process.env.API_INTERNAL_URL}/user/info/${studenId}`,
+      `${process.env.API_INTERNAL_URL}/user/info/${studentId}`,
       {
         cache: "no-store",
       },
@@ -59,5 +59,5 @@ export default async function Student({
     );
   }
 
-  return <ProfileView profile={profile} canEdit={false} />;
+  return <ProfileView profile={profile} />;
 }

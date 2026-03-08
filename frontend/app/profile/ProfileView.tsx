@@ -12,7 +12,7 @@ import UserProjects from "./UserProjects";
 
 interface Props {
   profile: UserProfile;
-  canEdit: boolean;
+  canEdit?: boolean;
 }
 
 export default function ProfileView({ profile, canEdit = false }: Props) {
