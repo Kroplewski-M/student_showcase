@@ -101,13 +101,20 @@ jobs:
         run: docker compose -f docker-compose.dev.yml up -d --build
 
       - name: Wait for services to stabilize
-        run: sleep 10 # Give the containers a moment to start up
+        run: |
+          for i in {1..30}; do
+            if curl --fail http://localhost/; then
+              exit 0
+            fi
+            sleep 2
+          done
+          exit 1
 
       # Replace localhost:8080 with whatever port your frontend or API is exposed on
       - name: Verify containers are running and responding
         run: |
           # Fails the pipeline if the curl request doesn't return a 200 OK
-          curl --fail http://localhost:8080 || exit 1
+          curl --fail http://localhost/ || exit 1
 
       - name: Show logs on failure
         if: failure()
