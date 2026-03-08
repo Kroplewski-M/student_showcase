@@ -1,10 +1,16 @@
+use std::collections::HashMap;
+
 use async_trait::async_trait;
 use pgvector::Vector;
 use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 
 use crate::{
-    dtos::user::{UpdateUserInfo, UserFormData, UserLinkView, UserProfileRowView, UserProfileView},
+    dtos::user::{
+        ProjImageRow, ProjLinkRow, ProjToolRow, ProjectImageView, ProjectProfileView,
+        ProjectProfileViewBase, UpdateUserInfo, UserFormData, UserLinkView, UserProfileRowView,
+        UserProfileView,
+    },
     models::{file::File, user::User},
 };
 
@@ -153,6 +159,7 @@ impl UserRepoTrait for UserRepo {
     }
 
     async fn get_user_profile(&self, user_id: &str) -> Result<UserProfileView, sqlx::Error> {
+        //all user info
         let base = sqlx::query_as!(
             UserProfileRowView,
             r#"
@@ -211,12 +218,115 @@ impl UserRepoTrait for UserRepo {
         )
         .fetch_all(&self.pool)
         .await?;
+        // project info
+        let project_bases = sqlx::query_as!(
+            ProjectProfileViewBase,
+            r#"
+            SELECT 
+                p.id,
+                p.name AS "name!",
+                p.description AS "description?",
+                p.live_link AS "live_link?",
+                p.featured_image_id as "featured_img_id?"
+            FROM projects p
+            WHERE p.user_id = $1
+            ORDER BY p.created_at
+        "#,
+            user_id
+        )
+        .fetch_all(&self.pool)
+        .await?;
+        let project_ids: Vec<Uuid> = project_bases.iter().map(|p| p.id).collect();
+        let all_tools = sqlx::query_as!(
+            ProjToolRow,
+            r#"
+            SELECT pt.project_id AS "project_id!", st.name AS "name!"
+            FROM project_tools pt
+            JOIN software_tools st ON st.id = pt.tool_id
+            WHERE pt.project_id = ANY($1)
+            ORDER BY st.name
+            "#,
+            &project_ids
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        let all_images = sqlx::query_as!(
+            ProjImageRow,
+            r#"
+            SELECT pf.project_id AS "project_id!", f.id AS "file_id!",
+                   f.new_file_name || '.' || f.extension AS "file_name!"
+            FROM project_files pf
+            JOIN files f ON f.id = pf.file_id
+            WHERE pf.project_id = ANY($1)
+            ORDER BY f.created_at
+            "#,
+            &project_ids
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        let all_links = sqlx::query_as!(
+            ProjLinkRow,
+            r#"
+            SELECT pl.project_id AS "project_id!", pl.id AS "id!",
+                   lt.name AS "link_type!", pl.url AS "url!", pl.name
+            FROM project_links pl
+            JOIN link_types lt ON lt.id = pl.link_type_id
+            WHERE pl.project_id = ANY($1)
+            ORDER BY lt.name, pl.url
+            "#,
+            &project_ids
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        let mut tools_map: HashMap<Uuid, Vec<String>> = HashMap::new();
+        for row in all_tools {
+            tools_map.entry(row.project_id).or_default().push(row.name);
+        }
+        let mut images_map: HashMap<Uuid, Vec<ProjectImageView>> = HashMap::new();
+        for row in all_images {
+            images_map
+                .entry(row.project_id)
+                .or_default()
+                .push(ProjectImageView {
+                    file_id: row.file_id,
+                    file_name: row.file_name,
+                });
+        }
+        let mut links_map: HashMap<Uuid, Vec<UserLinkView>> = HashMap::new();
+        for row in all_links {
+            links_map
+                .entry(row.project_id)
+                .or_default()
+                .push(UserLinkView {
+                    id: row.id,
+                    link_type: row.link_type,
+                    url: row.url,
+                    name: row.name,
+                });
+        }
+
+        let projects: Vec<ProjectProfileView> = project_bases
+            .into_iter()
+            .map(|p| {
+                let id = p.id;
+                ProjectProfileView {
+                    base: p,
+                    tools: tools_map.remove(&id).unwrap_or_default(),
+                    images: images_map.remove(&id).unwrap_or_default(),
+                    links: links_map.remove(&id).unwrap_or_default(),
+                }
+            })
+            .collect();
 
         Ok(UserProfileView {
             base,
             certificates,
             tools,
             links,
+            projects,
         })
     }
 

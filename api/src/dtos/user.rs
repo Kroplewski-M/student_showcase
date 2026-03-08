@@ -25,6 +25,50 @@ pub struct UserProfileRowView {
     pub description: Option<String>,
 }
 
+#[derive(sqlx::FromRow, Debug)]
+pub struct ProjToolRow {
+    pub project_id: Uuid,
+    pub name: String,
+}
+
+#[derive(sqlx::FromRow, Debug)]
+pub struct ProjLinkRow {
+    pub project_id: Uuid,
+    pub id: Uuid,
+    pub link_type: String,
+    pub url: String,
+    pub name: Option<String>,
+}
+#[derive(sqlx::FromRow, Debug)]
+pub struct ProjImageRow {
+    pub project_id: Uuid,
+    pub file_id: Uuid,
+    pub file_name: String,
+}
+#[derive(Debug, Deserialize, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct ProjectProfileViewBase {
+    pub id: Uuid,
+    pub name: String,
+    pub description: Option<String>,
+    pub live_link: Option<String>,
+    pub featured_img_id: Option<Uuid>,
+}
+#[derive(Debug, Deserialize, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct ProjectImageView {
+    pub file_id: Uuid,
+    pub file_name: String,
+}
+#[derive(Debug, Deserialize, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct ProjectProfileView {
+    #[serde(flatten)]
+    pub base: ProjectProfileViewBase,
+    pub tools: Vec<String>,
+    pub images: Vec<ProjectImageView>,
+    pub links: Vec<UserLinkView>,
+}
 #[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct UserProfileView {
@@ -33,6 +77,7 @@ pub struct UserProfileView {
     pub certificates: Vec<String>,
     pub tools: Vec<String>,
     pub links: Vec<UserLinkView>,
+    pub projects: Vec<ProjectProfileView>,
 }
 
 //Used to get the form to edit profile
@@ -60,7 +105,6 @@ pub struct UserProfileForm {
 }
 
 //patch user info form
-
 #[derive(Debug, Deserialize, Clone, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateUserLinks {
