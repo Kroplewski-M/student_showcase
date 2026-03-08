@@ -4,7 +4,10 @@ use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 
 use crate::{
-    dtos::user::{UpdateUserInfo, UserFormData, UserLinkView, UserProfileRowView, UserProfileView},
+    dtos::user::{
+        ProjectProfileView, ProjectProfileViewBase, UpdateUserInfo, UserFormData, UserLinkView,
+        UserProfileRowView, UserProfileView,
+    },
     models::{file::File, user::User},
 };
 
@@ -153,6 +156,7 @@ impl UserRepoTrait for UserRepo {
     }
 
     async fn get_user_profile(&self, user_id: &str) -> Result<UserProfileView, sqlx::Error> {
+        //all user info
         let base = sqlx::query_as!(
             UserProfileRowView,
             r#"
@@ -211,12 +215,90 @@ impl UserRepoTrait for UserRepo {
         )
         .fetch_all(&self.pool)
         .await?;
+        // project info
+        let project_bases = sqlx::query_as!(
+            ProjectProfileViewBase,
+            r#"
+            SELECT 
+                p.id,
+                p.name AS "name!",
+                p.description AS "description?",
+                p.live_link AS "live_link?",
+                p.featured_image_id as "featured_img_id?"
+            FROM projects p
+            WHERE p.user_id = $1
+            ORDER BY p.created_at
+        "#,
+            user_id
+        )
+        .fetch_all(&self.pool)
+        .await?;
+        let mut projects = Vec::<ProjectProfileView>::with_capacity(project_bases.len());
+        for proj in project_bases {
+            let proj_id = proj.id;
+
+            let proj_tools = sqlx::query_scalar!(
+                r#"
+                SELECT st.name AS "name!"
+                FROM project_tools pt
+                JOIN software_tools st ON st.id = pt.tool_id
+                WHERE pt.project_id = $1
+                ORDER BY st.name
+            "#,
+                proj_id
+            )
+            .fetch_all(&self.pool)
+            .await?;
+
+            let proj_images: Vec<(uuid::Uuid, String)> = sqlx::query!(
+                r#"
+                SELECT f.id AS "id!", f.new_file_name || '.' || f.extension AS "file_name!"
+                FROM project_files pf 
+                JOIN files f ON f.id = pf.file_id
+                WHERE pf.project_id = $1
+                ORDER BY f.created_at"#,
+                proj_id
+            )
+            .fetch_all(&self.pool)
+            .await?
+            .into_iter()
+            .map(|r| (r.id, r.file_name))
+            .collect();
+
+            let proj_links = sqlx::query_as!(
+                UserLinkView,
+                r#"
+                SELECT pl.id, lt.name AS "link_type!", pl.url AS "url!", pl.name 
+                FROM project_links pl
+                JOIN link_types lt ON lt.id = pl.link_type_id
+                WHERE pl.project_id = $1
+                ORDER BY lt.name, pl.url
+            "#,
+                proj_id
+            )
+            .fetch_all(&self.pool)
+            .await?;
+
+            projects.push(ProjectProfileView {
+                base: ProjectProfileViewBase {
+                    id: proj.id,
+                    name: proj.name,
+                    description: proj.description,
+                    live_link: proj.live_link,
+                    featured_img_id: proj.featured_img_id,
+                },
+                tools: proj_tools,
+                images: proj_images,
+                links: proj_links,
+            });
+        }
 
         Ok(UserProfileView {
             base,
             certificates,
             tools,
             links,
+            projects,
         })
     }
 

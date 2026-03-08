@@ -25,6 +25,24 @@ pub struct UserProfileRowView {
     pub description: Option<String>,
 }
 
+#[derive(Debug, Deserialize, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct ProjectProfileViewBase {
+    pub id: Uuid,
+    pub name: String,
+    pub description: Option<String>,
+    pub live_link: Option<String>,
+    pub featured_img_id: Option<Uuid>,
+}
+#[derive(Debug, Deserialize, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct ProjectProfileView {
+    #[serde(flatten)]
+    pub base: ProjectProfileViewBase,
+    pub tools: Vec<String>,
+    pub images: Vec<(Uuid, String)>,
+    pub links: Vec<UserLinkView>,
+}
 #[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct UserProfileView {
@@ -33,6 +51,7 @@ pub struct UserProfileView {
     pub certificates: Vec<String>,
     pub tools: Vec<String>,
     pub links: Vec<UserLinkView>,
+    pub projects: Vec<ProjectProfileView>,
 }
 
 //Used to get the form to edit profile

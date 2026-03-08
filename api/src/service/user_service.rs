@@ -335,6 +335,7 @@ mod tests {
                 certificates: vec![],
                 tools: vec![],
                 links: vec![],
+                projects: vec![],
             })
         });
         let service = make_service(repo, storage);
