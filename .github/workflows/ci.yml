@@ -47,9 +47,11 @@ jobs:
 
       - name: Run Migrations
         run: sqlx migrate run
+        working-directory: ./api
 
       - name: Run API tests
         run: cargo test
+        working-directory: ./api
 
   build-frontend:
     name: Build Frontend
