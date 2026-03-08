@@ -7,8 +7,9 @@ use uuid::Uuid;
 
 use crate::{
     dtos::user::{
-        ProjImageRow, ProjLinkRow, ProjToolRow, ProjectProfileView, ProjectProfileViewBase,
-        UpdateUserInfo, UserFormData, UserLinkView, UserProfileRowView, UserProfileView,
+        ProjImageRow, ProjLinkRow, ProjToolRow, ProjectImageView, ProjectProfileView,
+        ProjectProfileViewBase, UpdateUserInfo, UserFormData, UserLinkView, UserProfileRowView,
+        UserProfileView,
     },
     models::{file::File, user::User},
 };
@@ -284,12 +285,15 @@ impl UserRepoTrait for UserRepo {
         for row in all_tools {
             tools_map.entry(row.project_id).or_default().push(row.name);
         }
-        let mut images_map: HashMap<Uuid, Vec<(Uuid, String)>> = HashMap::new();
+        let mut images_map: HashMap<Uuid, Vec<ProjectImageView>> = HashMap::new();
         for row in all_images {
             images_map
                 .entry(row.project_id)
                 .or_default()
-                .push((row.file_id, row.file_name));
+                .push(ProjectImageView {
+                    file_id: row.file_id,
+                    file_name: row.file_name,
+                });
         }
         let mut links_map: HashMap<Uuid, Vec<UserLinkView>> = HashMap::new();
         for row in all_links {

@@ -56,11 +56,17 @@ pub struct ProjectProfileViewBase {
 }
 #[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
+pub struct ProjectImageView {
+    pub file_id: Uuid,
+    pub file_name: String,
+}
+#[derive(Debug, Deserialize, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct ProjectProfileView {
     #[serde(flatten)]
     pub base: ProjectProfileViewBase,
     pub tools: Vec<String>,
-    pub images: Vec<(Uuid, String)>,
+    pub images: Vec<ProjectImageView>,
     pub links: Vec<UserLinkView>,
 }
 #[derive(Debug, Serialize, Clone)]
