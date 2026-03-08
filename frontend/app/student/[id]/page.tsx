@@ -2,7 +2,7 @@ import { UserProfile } from "@/app/profile/page";
 import ProfileView from "@/app/profile/ProfileView";
 import ErrorSVG from "@/app/SVGS/ErrorSVG";
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
 export default async function Student({
   params,
@@ -12,7 +12,7 @@ export default async function Student({
   const studentId = (await params).id;
   let profile: UserProfile | null = null;
   let error: string | null = null;
-  let notFound = false;
+  let isNotFound = false;
   try {
     const res = await fetch(
       `${process.env.API_INTERNAL_URL}/user/info/${studentId}`,
@@ -20,16 +20,19 @@ export default async function Student({
         cache: "no-store",
       },
     );
-    if (!res.ok) {
-      notFound = true;
+    if (res.status === 404) {
+      isNotFound = true;
+    } else if (!res.ok) {
+      error = "Unable to load this profile right now";
     } else {
       profile = await res.json();
     }
   } catch {
     error = "Unable to connect to the server. Please try again later.";
   }
-  if (notFound) {
-    redirect("/404");
+
+  if (isNotFound) {
+    notFound();
   }
 
   if (error || !profile) {
