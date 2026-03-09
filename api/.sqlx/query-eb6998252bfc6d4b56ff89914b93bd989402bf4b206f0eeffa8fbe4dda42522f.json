@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n          SELECT pl.id, lt.name AS \"link_type!\", pl.url AS \"url!\", pl.name\n          FROM project_links pl\n          JOIN link_types lt ON lt.id = pl.link_type_id\n          WHERE pl.project_id = $1\n          ORDER BY lt.name, pl.url\n          ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "link_type!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "url!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "name",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "eb6998252bfc6d4b56ff89914b93bd989402bf4b206f0eeffa8fbe4dda42522f"
+}

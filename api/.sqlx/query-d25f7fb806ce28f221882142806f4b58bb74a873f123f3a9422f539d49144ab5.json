@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n          SELECT f.new_file_name || '.' || f.extension AS \"file_name!\"\n          FROM project_files pf\n          JOIN files f ON f.id = pf.file_id\n          WHERE pf.project_id = $1\n          ORDER BY f.created_at\n          ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "file_name!",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "d25f7fb806ce28f221882142806f4b58bb74a873f123f3a9422f539d49144ab5"
+}
