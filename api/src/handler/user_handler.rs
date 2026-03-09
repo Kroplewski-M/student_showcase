@@ -1,12 +1,13 @@
 use actix_multipart::Multipart;
 use actix_web::{HttpResponse, dev::HttpServiceFactory, web};
+use uuid::Uuid;
 use validator::Validate;
 
 use crate::{
     AppState,
     dtos::{
         Response,
-        user::{UpdateUserInfo, UserProfileForm},
+        user::{UpdateUserInfo, UpsertProjectQuery, UserProfileForm},
     },
     errors::{ErrorMessage, HttpError},
     middleware::auth::{AuthenticatedUserId, RequireAuth},
@@ -23,7 +24,8 @@ pub fn user_handler() -> impl HttpServiceFactory {
                 .wrap(RequireAuth)
                 .route("/update_image", web::post().to(update_user_image))
                 .route("/update_profile", web::get().to(get_user_profile_form))
-                .route("/update_profile", web::patch().to(patch_user_profile)),
+                .route("/update_profile", web::patch().to(patch_user_profile))
+                .route("/upsert_project", web::get().to(upsert_user_project)),
         )
 }
 
@@ -109,4 +111,19 @@ pub async fn patch_user_profile(
         status: "success",
         message: "User updated successfully".to_string(),
     }))
+}
+pub async fn upsert_user_project(
+    app_state: web::Data<AppState>,
+    user_id: AuthenticatedUserId,
+    query: web::Query<UpsertProjectQuery>,
+) -> Result<HttpResponse, HttpError> {
+    let data = app_state
+        .user_service
+        .get_user_project_form_data(user_id.to_string(), query.project_id)
+        .await
+        .map_err(|e| match e {
+            ErrorMessage::ProjectNotFound => HttpError::not_found(e),
+            _ => HttpError::server_error(e),
+        })?;
+    Ok(HttpResponse::Ok().json(data))
 }

@@ -7,11 +7,11 @@ use uuid::Uuid;
 
 use crate::{
     dtos::user::{
-        ProjImageRow, ProjLinkRow, ProjToolRow, ProjectImageView, ProjectProfileView,
-        ProjectProfileViewBase, UpdateUserInfo, UserFormData, UserLinkView, UserProfileRowView,
-        UserProfileView,
+        ProjImageRow, ProjLinkRow, ProjToolRow, ProjectFormData, ProjectImageView,
+        ProjectProfileView, ProjectProfileViewBase, UpdateUserInfo, UserFormData, UserLinkView,
+        UserProfileRowView, UserProfileView,
     },
-    models::{file::File, user::User},
+    models::{file::File, user::ProjectBaseRow, user::User},
 };
 
 #[derive(Debug, Clone)]
@@ -41,6 +41,11 @@ pub trait UserRepoTrait: Send + Sync {
     async fn get_user_image(&self, user_id: &str) -> Result<Option<File>, sqlx::Error>;
     async fn get_user_profile(&self, user_id: &str) -> Result<UserProfileView, sqlx::Error>;
     async fn get_user_form_data(&self, user_id: &str) -> Result<UserFormData, sqlx::Error>;
+    async fn get_user_project_form_data(
+        &self,
+        user_id: &str,
+        project_id: Uuid,
+    ) -> Result<ProjectFormData, sqlx::Error>;
     async fn update_user(
         &self,
         user_id: &str,
@@ -490,6 +495,68 @@ impl UserRepoTrait for UserRepo {
         tx.commit().await?;
         Ok(())
     }
+    async fn get_user_project_form_data(
+        &self,
+        user_id: &str,
+        project_id: Uuid,
+    ) -> Result<ProjectFormData, sqlx::Error> {
+        let base = sqlx::query_as!(
+            ProjectBaseRow,
+            r#"
+            SELECT id, name, description
+            FROM projects
+            WHERE id = $1
+            AND user_id = $2
+       "#,
+            project_id,
+            user_id
+        )
+        .fetch_optional(&self.pool)
+        .await?
+        .ok_or(sqlx::Error::RowNotFound)?;
+
+        let selected_tools = sqlx::query_scalar!(
+            r#"SELECT tool_id AS "tools_id!" FROM project_tools WHERE project_id = $1"#,
+            project_id,
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        let links = sqlx::query_as!(
+            UserLinkView,
+            r#"
+          SELECT pl.id, lt.name AS "link_type!", pl.url AS "url!", pl.name
+          FROM project_links pl
+          JOIN link_types lt ON lt.id = pl.link_type_id
+          WHERE pl.project_id = $1
+          ORDER BY lt.name, pl.url
+          "#,
+            project_id
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        let existing_images = sqlx::query_scalar!(
+            r#"
+          SELECT f.new_file_name || '.' || f.extension AS "file_name!"
+          FROM project_files pf
+          JOIN files f ON f.id = pf.file_id
+          WHERE pf.project_id = $1
+          ORDER BY f.created_at
+          "#,
+            project_id
+        )
+        .fetch_all(&self.pool)
+        .await?;
+        Ok(ProjectFormData {
+            id: Some(base.id),
+            name: base.name,
+            description: base.description,
+            links,
+            selected_tools,
+            existing_images,
+        })
+    }
 }
 
 #[cfg(test)]
@@ -522,6 +589,12 @@ pub mod mocks {
                 data: UpdateUserInfo,
                 embedding: Vector,
             ) -> Result<(), sqlx::Error>;
+            async fn get_user_project_form_data(
+                &self,
+                user_id: &str,
+                project_id: Uuid,
+            ) -> Result<ProjectFormData, sqlx::Error>;
+
         }
     }
 }

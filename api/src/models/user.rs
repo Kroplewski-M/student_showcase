@@ -1,5 +1,6 @@
 use chrono::prelude::*;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 #[derive(Debug, Serialize, sqlx::FromRow, Clone)]
 pub struct User {
@@ -12,4 +13,11 @@ pub struct User {
     pub updated_at: DateTime<Utc>,
     #[serde(skip)]
     pub password: Option<String>,
+}
+#[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
+#[serde(rename_all = "camelCase")]
+pub struct ProjectBaseRow {
+    pub id: Uuid,
+    pub name: String,
+    pub description: String,
 }
