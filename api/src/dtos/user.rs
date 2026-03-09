@@ -1,3 +1,4 @@
+use actix_multipart::form::{MultipartForm, json::Json, tempfile::TempFile};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use validator::Validate;
@@ -173,4 +174,29 @@ impl UpdateUserInfo {
 
         parts.join(". ")
     }
+}
+
+//used to get the form to upsert project
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct ProjectFormData {
+    pub id: Option<Uuid>,
+    pub name: String,
+    pub description: String,
+    pub links: Vec<UserLinkView>,
+    pub selected_tools: Vec<Uuid>,
+    pub existing_images: Vec<String>,
+}
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct ProjectForm {
+    #[serde(flatten)]
+    pub project_data: ProjectFormData,
+    pub link_types: Vec<LinkType>,
+    pub tools_list: Vec<SoftwareTool>,
+}
+#[derive(Debug, MultipartForm)]
+pub struct ProjectFormUpsert {
+    data: Json<ProjectForm>,
+    new_files: Vec<TempFile>,
 }
