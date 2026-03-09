@@ -128,6 +128,9 @@ pub async fn upsert_user_project(
         .user_service
         .get_user_project_form_data(user_id.to_string(), proj_id)
         .await
-        .map_err(HttpError::server_error)?;
+        .map_err(|e| match e {
+            ErrorMessage::ProjectNotFound => HttpError::not_found(e),
+            _ => HttpError::server_error(e),
+        })?;
     Ok(HttpResponse::Ok().json(data))
 }
