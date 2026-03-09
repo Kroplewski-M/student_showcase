@@ -2,12 +2,13 @@ use std::sync::Arc;
 
 use futures_util::TryFutureExt;
 use tracing::error;
+use uuid::Uuid;
 
 use crate::{
     db::user_repo::UserRepoTrait,
     dtos::{
         auth::validate_student_id,
-        user::{UpdateUserInfo, UserFormData, UserProfileView},
+        user::{ProjectForm, ProjectFormData, UpdateUserInfo, UserFormData, UserProfileView},
     },
     errors::ErrorMessage,
     service::reference_service::ReferenceService,
@@ -163,6 +164,30 @@ impl UserService {
                 _ => ErrorMessage::ServerError,
             })?;
         Ok(())
+    }
+    pub async fn get_user_project_form_data(
+        &self,
+        user_id: String,
+        project_id: Option<Uuid>,
+    ) -> Result<ProjectForm, ErrorMessage> {
+        let tools = self.reference_service.get_tools().await?;
+        let link_types = self.reference_service.get_link_types().await?;
+        let mut data: ProjectFormData = ProjectFormData::default();
+        if let Some(proj_id) = project_id {
+            data = self
+                .user_repo
+                .get_user_project_form_data(&user_id, proj_id)
+                .await
+                .map_err(|e| match e {
+                    sqlx::Error::RowNotFound => ErrorMessage::ProjectNotFound,
+                    _ => ErrorMessage::ServerError,
+                })?;
+        }
+        Ok(ProjectForm {
+            project: data,
+            tools_list: tools,
+            link_types,
+        })
     }
 }
 

@@ -36,6 +36,7 @@ pub enum ErrorMessage {
     NoFileProvided,
     InvalidFileData,
     EmbeddingFailed,
+    ProjectNotFound,
 }
 impl fmt::Display for ErrorMessage {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -92,6 +93,7 @@ impl ErrorMessage {
             ErrorMessage::NoFileProvided => "No File Provided".to_string(),
             ErrorMessage::InvalidFileData => "Invalid File Data".to_string(),
             ErrorMessage::EmbeddingFailed => "Failed to embed data".to_string(),
+            ErrorMessage::ProjectNotFound => "Project not found".to_string(),
         }
     }
 }
