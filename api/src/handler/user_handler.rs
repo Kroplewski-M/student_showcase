@@ -117,16 +117,9 @@ pub async fn upsert_user_project(
     user_id: AuthenticatedUserId,
     query: web::Query<UpsertProjectQuery>,
 ) -> Result<HttpResponse, HttpError> {
-    let proj_id = query
-        .project_id
-        .as_deref()
-        .map(Uuid::try_parse)
-        .transpose()
-        .map_err(|_| HttpError::bad_request("invalid project id"))?;
-
     let data = app_state
         .user_service
-        .get_user_project_form_data(user_id.to_string(), proj_id)
+        .get_user_project_form_data(user_id.to_string(), query.project_id)
         .await
         .map_err(|e| match e {
             ErrorMessage::ProjectNotFound => HttpError::not_found(e),

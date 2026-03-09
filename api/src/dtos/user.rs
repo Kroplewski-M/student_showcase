@@ -220,5 +220,5 @@ pub struct ProjectFormUpsert {
 }
 #[derive(Deserialize)]
 pub struct UpsertProjectQuery {
-    pub project_id: Option<String>,
+    pub project_id: Option<Uuid>,
 }
