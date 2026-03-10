@@ -108,7 +108,7 @@ pub struct UserProfileForm {
 //patch user info form
 #[derive(Debug, Deserialize, Clone, Validate)]
 #[serde(rename_all = "camelCase")]
-pub struct UpdateUserLinks {
+pub struct UpsertLinkPayload {
     pub link_type_id: Uuid,
     #[validate(length(max = 50))]
     pub name: Option<String>,
@@ -127,7 +127,7 @@ pub struct UpdateUserInfo {
     #[validate(required)]
     pub selected_course: Option<Uuid>,
     #[validate(nested)]
-    pub links: Vec<UpdateUserLinks>,
+    pub links: Vec<UpsertLinkPayload>,
     pub certificates: Vec<String>,
     pub selected_tools: Vec<Uuid>,
 }
@@ -215,10 +215,23 @@ pub struct ProjectForm {
     pub link_types: Vec<LinkType>,
     pub tools_list: Vec<SoftwareTool>,
 }
+
+#[derive(Debug, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct ProjectUpsertData {
+    pub id: Option<Uuid>,
+    pub name: String,
+    pub description: String,
+    pub live_link: Option<String>,
+    pub links: Vec<UpsertLinkPayload>,
+    pub selected_tools: Vec<Uuid>,
+    pub existing_images: Vec<String>,
+}
+
 #[derive(Debug, MultipartForm)]
 pub struct ProjectFormUpsert {
-    data: Json<ProjectForm>,
-    new_files: Vec<TempFile>,
+    pub data: Json<ProjectUpsertData>,
+    pub new_files: Vec<TempFile>,
 }
 #[derive(Deserialize)]
 pub struct UpsertProjectQuery {
