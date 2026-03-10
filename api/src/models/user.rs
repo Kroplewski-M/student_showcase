@@ -20,4 +20,5 @@ pub struct ProjectBaseRow {
     pub id: Uuid,
     pub name: String,
     pub description: String,
+    pub live_link: Option<String>,
 }
