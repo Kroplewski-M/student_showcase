@@ -135,8 +135,8 @@ pub async fn post_user_project_form(
     MultipartForm(form): MultipartForm<ProjectFormUpsert>,
 ) -> Result<HttpResponse, HttpError> {
     let data = form.data.into_inner();
-    println!("{:#?}", data);
-    println!("new_files count: {}", form.new_files.len());
+    data.validate()
+        .map_err(|e| HttpError::bad_request(e.to_string()))?;
 
     app_state
         .user_service

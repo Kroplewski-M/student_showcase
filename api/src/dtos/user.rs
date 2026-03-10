@@ -215,17 +215,45 @@ pub struct ProjectForm {
     pub link_types: Vec<LinkType>,
     pub tools_list: Vec<SoftwareTool>,
 }
-
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct ProjectUpsertData {
     pub id: Option<Uuid>,
+    #[validate(length(min = 1, max = 250))]
     pub name: String,
     pub description: String,
     pub live_link: Option<String>,
     pub links: Vec<UpsertLinkPayload>,
     pub selected_tools: Vec<Uuid>,
     pub existing_images: Vec<String>,
+}
+impl ProjectUpsertData {
+    pub fn to_embedding_document(&self, tool_names: &[String]) -> String {
+        let mut parts: Vec<String> = Vec::new();
+
+        parts.push(format!("{} is a project", self.name));
+
+        if !self.description.trim().is_empty() {
+            parts.push(self.description.clone());
+        }
+
+        if !tool_names.is_empty() {
+            let tools = tool_names.join(", ");
+            if tool_names.len() == 1 {
+                parts.push(format!("It uses {}", tools));
+            } else {
+                parts.push(format!("It uses the following tools: {}", tools));
+            }
+        }
+
+        if let Some(link) = &self.live_link
+            && !link.trim().is_empty()
+        {
+            parts.push(format!("It is live at {}", link));
+        }
+
+        parts.join(". ")
+    }
 }
 
 #[derive(Debug, MultipartForm)]

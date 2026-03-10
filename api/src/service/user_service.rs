@@ -201,9 +201,12 @@ impl UserService {
     ) -> Result<(), ErrorMessage> {
         //max images
         const MAX_IMAGES: usize = 5;
-        if data.existing_images.iter().count() + new_images.iter().count() > MAX_IMAGES {
+        if data.existing_images.len() + new_images.len() > MAX_IMAGES {
             return Err(ErrorMessage::TooManyFiles(MAX_IMAGES));
         }
+        //update/create project
+        //delete and upload images
+        //update project_files table
         let mut validated_images = Vec::with_capacity(new_images.len());
         for f in new_images {
             let file_name = f.file_name.unwrap_or_default();
