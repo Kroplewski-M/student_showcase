@@ -1,14 +1,18 @@
-use std::sync::Arc;
+use std::{io::Read, sync::Arc};
 
+use actix_multipart::form::{bytes, tempfile::TempFile};
 use futures_util::TryFutureExt;
-use tracing::error;
+use tracing::{error, info};
 use uuid::Uuid;
 
 use crate::{
     db::user_repo::UserRepoTrait,
     dtos::{
         auth::validate_student_id,
-        user::{ProjectForm, ProjectFormData, UpdateUserInfo, UserFormData, UserProfileView},
+        user::{
+            ProjectForm, ProjectFormData, ProjectUpsertData, UpdateUserInfo, UserFormData,
+            UserProfileView,
+        },
     },
     errors::ErrorMessage,
     service::reference_service::ReferenceService,
@@ -188,6 +192,29 @@ impl UserService {
             tools_list: tools,
             link_types,
         })
+    }
+    pub async fn upsert_user_project(
+        &self,
+        user_id: String,
+        data: ProjectUpsertData,
+        new_images: Vec<TempFile>,
+    ) -> Result<(), ErrorMessage> {
+        //max images
+        const MAX_IMAGES: usize = 5;
+        if data.existing_images.iter().count() + new_images.iter().count() > MAX_IMAGES {
+            return Err(ErrorMessage::TooManyFiles(MAX_IMAGES));
+        }
+        let mut validated_images = Vec::with_capacity(new_images.len());
+        for f in new_images {
+            let file_name = f.file_name.unwrap_or_default();
+            let bytes = tokio::fs::read(f.file.path())
+                .await
+                .map_err(|_| ErrorMessage::ServerError)?;
+            let validated = ValidatedImage::from_bytes(file_name, bytes, DEFAULT_MAX_IMAGE_SIZE)?;
+            validated_images.push(validated);
+        }
+        info!("added {} images", validated_images.len());
+        Ok(())
     }
 }
 

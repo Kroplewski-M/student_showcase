@@ -1,3 +1,5 @@
+use std::io::Read;
+
 use actix_multipart::{Multipart, form::MultipartForm};
 use actix_web::{HttpResponse, dev::HttpServiceFactory, web};
 use validator::Validate;
@@ -128,12 +130,17 @@ pub async fn get_user_project_form(
     Ok(HttpResponse::Ok().json(data))
 }
 pub async fn post_user_project_form(
-    _app_state: web::Data<AppState>,
-    _user_id: AuthenticatedUserId,
+    app_state: web::Data<AppState>,
+    user_id: AuthenticatedUserId,
     MultipartForm(form): MultipartForm<ProjectFormUpsert>,
 ) -> Result<HttpResponse, HttpError> {
     let data = form.data.into_inner();
     println!("{:#?}", data);
     println!("new_files count: {}", form.new_files.len());
+
+    app_state
+        .user_service
+        .upsert_user_project(user_id.to_string(), data, form.new_files)
+        .await;
     Ok(HttpResponse::Ok().body("ok"))
 }
