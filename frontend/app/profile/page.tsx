@@ -9,6 +9,16 @@ export interface Links {
   url: string;
   name: string | null;
 }
+export interface Project {
+  id: string;
+  name: string;
+  description: string | null;
+  liveLink: string | null;
+  featuredImgId: string | null;
+  tools: string[];
+  images: [string, string][];
+  links: Links[];
+}
 export interface UserProfile {
   id: string;
   profileImageName: string | null;
@@ -20,6 +30,7 @@ export interface UserProfile {
   certificates: string[] | null;
   links: Links[] | null;
   tools: string[] | null;
+  projects: Project[];
 }
 
 export default async function ProfilePage() {

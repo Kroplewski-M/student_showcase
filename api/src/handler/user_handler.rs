@@ -1,6 +1,5 @@
 use actix_multipart::Multipart;
 use actix_web::{HttpResponse, dev::HttpServiceFactory, web};
-use uuid::Uuid;
 use validator::Validate;
 
 use crate::{

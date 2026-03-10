@@ -74,7 +74,7 @@ export default function ProfileView({ profile, canEdit = false }: Props) {
               <ProfileInfo user={profile} />
             </div>
           </GlassCard>
-          <UserProjects canEdit={canEdit} />
+          <UserProjects projects={profile.projects} canEdit={canEdit} />
         </motion.div>
       </div>
     </>

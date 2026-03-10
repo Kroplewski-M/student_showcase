@@ -62,6 +62,10 @@ export function getProfileImgUrl(img_name: string) {
   return `/uploads/user_images/${encodeURIComponent(img_name)}`;
 }
 
+export function getProjectImgUrl(img_name: string) {
+  return `/uploads/project_images/${encodeURIComponent(img_name)}`;
+}
+
 export function validateLinkUrl(linkType: string, url: string): string | null {
   let hostname: string;
   try {
