@@ -525,7 +525,7 @@ impl UserRepoTrait for UserRepo {
         let links = sqlx::query_as!(
             UserLinkView,
             r#"
-          SELECT pl.id, lt.name AS "link_type!", pl.url AS "url!", pl.name
+          SELECT lt.id, lt.name AS "link_type!", pl.url AS "url!", pl.name
           FROM project_links pl
           JOIN link_types lt ON lt.id = pl.link_type_id
           WHERE pl.project_id = $1

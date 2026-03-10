@@ -32,6 +32,7 @@ interface LinkEntry {
   _key: string;
   linkTypeId: string;
   url: string;
+  name: string;
 }
 interface FormData {
   name: string;
@@ -71,6 +72,7 @@ export default function UpsertProjectModal({ project, onClose }: Props) {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({ links: {} });
 
   const [newImages, setNewImages] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [toolSearch, setToolSearch] = useState("");
   const [toolDropdownOpen, setToolDropdownOpen] = useState(false);
   const toolsRef = useRef<HTMLDivElement>(null);
@@ -107,11 +109,14 @@ export default function UpsertProjectModal({ project, onClose }: Props) {
             existingImages: Array.isArray(data.existingImages)
               ? data.existingImages
               : [],
-            links: (data.links ?? []).map((l: { id: string; url: string }) => ({
-              _key: crypto.randomUUID(),
-              linkTypeId: l.id,
-              url: l.url,
-            })),
+            links: (data.links ?? []).map(
+              (l: { id: string; url: string; name: string | null }) => ({
+                _key: crypto.randomUUID(),
+                linkTypeId: l.id,
+                url: l.url,
+                name: l.name ?? "",
+              }),
+            ),
           },
         });
       })
@@ -128,6 +133,12 @@ export default function UpsertProjectModal({ project, onClose }: Props) {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  useEffect(() => {
+    const urls = newImages.map((file) => URL.createObjectURL(file));
+    setPreviewUrls(urls);
+    return () => urls.forEach((url) => URL.revokeObjectURL(url));
+  }, [newImages]);
 
   const setField = <K extends keyof FormData>(key: K, value: FormData[K]) =>
     setFormState((prev) =>
@@ -171,6 +182,7 @@ export default function UpsertProjectModal({ project, onClose }: Props) {
               _key: crypto.randomUUID(),
               linkTypeId: prev.linkTypes[0].id,
               url: "",
+              name: "",
             },
           ],
         },
@@ -319,10 +331,15 @@ export default function UpsertProjectModal({ project, onClose }: Props) {
       const payload = JSON.stringify({
         id: project?.id ?? null,
         name: data.name,
-        description: data.description || null,
+        description: data.description,
+        live_link: data.live_link || null,
         selectedTools: data.selectedTools,
         existingImages: data.existingImages,
-        links: data.links.map(({ linkTypeId, url }) => ({ linkTypeId, url })),
+        links: data.links.map(({ linkTypeId, url, name }) => ({
+          linkTypeId,
+          url,
+          name,
+        })),
       });
       body.append("data", payload);
       for (const file of newImages) {
@@ -560,7 +577,7 @@ export default function UpsertProjectModal({ project, onClose }: Props) {
                       <div key={i} className="relative group">
                         <div className="h-20 w-20 overflow-hidden rounded-xl border border-secondary/30 bg-secondary/5">
                           <Image
-                            src={URL.createObjectURL(file)}
+                            src={previewUrls[i]}
                             alt="New image"
                             width={80}
                             height={80}
@@ -592,7 +609,7 @@ export default function UpsertProjectModal({ project, onClose }: Props) {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="w-full rounded-xl border border-dashed border-secondary/20 py-3 text-xs font-medium text-secondary/50 transition-colors hover:border-secondary/35 hover:text-secondary/70"
+                      className="w-full rounded-xl border border-dashed border-secondary/20 py-3 text-xs font-medium text-secondary/50 transition-colors hover:border-secondary/35 hover:text-secondary/70 cursor-pointer"
                     >
                       + Add Images ({remainingSlots} slot
                       {remainingSlots !== 1 ? "s" : ""} remaining)
@@ -670,6 +687,14 @@ export default function UpsertProjectModal({ project, onClose }: Props) {
                           </p>
                         )}
                       </div>
+                      <input
+                        value={link.name}
+                        onChange={(e) =>
+                          updateLink(link._key, "name", e.target.value)
+                        }
+                        placeholder="Display name (optional)"
+                        className="rounded-lg border border-secondary/15 bg-secondary/5 px-3 py-2 text-xs text-secondary placeholder-secondary/30 outline-none transition-colors focus:border-secondary/35"
+                      />
                     </div>
                   ))}
                 </div>
