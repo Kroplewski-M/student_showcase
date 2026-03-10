@@ -332,7 +332,7 @@ export default function UpsertProjectModal({ project, onClose }: Props) {
         id: project?.id ?? null,
         name: data.name,
         description: data.description,
-        live_link: data.live_link || null,
+        liveLink: data.live_link || null,
         selectedTools: data.selectedTools,
         existingImages: data.existingImages,
         links: data.links.map(({ linkTypeId, url, name }) => ({
