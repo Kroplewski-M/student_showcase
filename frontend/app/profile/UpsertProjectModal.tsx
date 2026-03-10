@@ -37,7 +37,7 @@ interface LinkEntry {
 interface FormData {
   name: string;
   description: string;
-  live_link: string;
+  liveLink: string;
   selectedTools: string[];
   links: LinkEntry[];
   existingImages: string[];
@@ -102,7 +102,7 @@ export default function UpsertProjectModal({ project, onClose }: Props) {
           data: {
             name: data.name ?? "",
             description: data.description ?? "",
-            live_link: data.live_link ?? "",
+            liveLink: data.live_link ?? "",
             selectedTools: Array.isArray(data.selectedTools)
               ? data.selectedTools
               : [],
@@ -277,10 +277,7 @@ export default function UpsertProjectModal({ project, onClose }: Props) {
 
     if (!formState.data.description.trim()) errors.description = "Required";
 
-    if (
-      formState.data.live_link.trim() &&
-      !isSafeLink(formState.data.live_link)
-    )
+    if (formState.data.liveLink.trim() && !isSafeLink(formState.data.liveLink))
       errors.liveLink = "Must be a valid http/https URL";
 
     if (totalImages > MAX_IMAGES)
@@ -332,7 +329,7 @@ export default function UpsertProjectModal({ project, onClose }: Props) {
         id: project?.id ?? null,
         name: data.name,
         description: data.description,
-        liveLink: data.live_link || null,
+        liveLink: data.liveLink || null,
         selectedTools: data.selectedTools,
         existingImages: data.existingImages,
         links: data.links.map(({ linkTypeId, url, name }) => ({
@@ -437,9 +434,9 @@ export default function UpsertProjectModal({ project, onClose }: Props) {
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs text-secondary/60">Live Link</label>
                   <input
-                    value={formState.data.live_link}
+                    value={formState.data.liveLink}
                     onChange={(e) => {
-                      setField("live_link", e.target.value);
+                      setField("liveLink", e.target.value);
                       setFieldErrors((prev) => ({
                         ...prev,
                         liveLink: undefined,
@@ -573,7 +570,7 @@ export default function UpsertProjectModal({ project, onClose }: Props) {
                         </button>
                       </div>
                     ))}
-                    {newImages.map((file, i) => (
+                    {newImages.map((_, i) => (
                       <div key={i} className="relative group">
                         <div className="h-20 w-20 overflow-hidden rounded-xl border border-secondary/30 bg-secondary/5">
                           <Image
