@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT id, name, description\n            FROM projects\n            WHERE id = $1\n            AND user_id = $2\n       ",
+  "query": "\n            SELECT id, name, description, live_link\n            FROM projects\n            WHERE id = $1\n            AND user_id = $2\n       ",
   "describe": {
     "columns": [
       {
@@ -17,6 +17,11 @@
         "ordinal": 2,
         "name": "description",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "live_link",
+        "type_info": "Text"
       }
     ],
     "parameters": {
@@ -28,8 +33,9 @@
     "nullable": [
       false,
       false,
-      false
+      false,
+      true
     ]
   },
-  "hash": "3c96d17ddd2827685860342534b1ce7e56fdb30ac398f8b81c8edc080345f25c"
+  "hash": "f818923f5c29b3baed11b111de61a054585c9f278fb731a02a4abead6cbdeec0"
 }

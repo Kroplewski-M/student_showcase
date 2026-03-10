@@ -503,7 +503,7 @@ impl UserRepoTrait for UserRepo {
         let base = sqlx::query_as!(
             ProjectBaseRow,
             r#"
-            SELECT id, name, description
+            SELECT id, name, description, live_link
             FROM projects
             WHERE id = $1
             AND user_id = $2
@@ -525,7 +525,7 @@ impl UserRepoTrait for UserRepo {
         let links = sqlx::query_as!(
             UserLinkView,
             r#"
-          SELECT pl.id, lt.name AS "link_type!", pl.url AS "url!", pl.name
+          SELECT lt.id, lt.name AS "link_type!", pl.url AS "url!", pl.name
           FROM project_links pl
           JOIN link_types lt ON lt.id = pl.link_type_id
           WHERE pl.project_id = $1
@@ -552,6 +552,7 @@ impl UserRepoTrait for UserRepo {
             id: Some(base.id),
             name: base.name,
             description: base.description,
+            live_link: base.live_link,
             links,
             selected_tools,
             existing_images,

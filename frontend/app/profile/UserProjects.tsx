@@ -1,6 +1,8 @@
 "use client";
+import { useState } from "react";
 import type { Project } from "./page";
 import ProjectCard from "./ProjectCard";
+import UpsertProjectModal from "./UpsertProjectModal";
 
 const MAX_PROJECTS = 5;
 
@@ -10,6 +12,8 @@ interface UserProjectProps {
 }
 
 export default function UserProjects({ projects, canEdit }: UserProjectProps) {
+  const [addOpen, setAddOpen] = useState(false);
+
   return (
     <>
       <div className="flex flex-wrap items-start justify-between">
@@ -20,9 +24,15 @@ export default function UserProjects({ projects, canEdit }: UserProjectProps) {
           </span>
         </h1>
         {canEdit && projects.length < MAX_PROJECTS && (
-          <button className="flex cursor-pointer items-center gap-2 rounded-lg border border-secondary/20 bg-secondary/6 px-4 py-2 text-sm font-medium text-secondary/70 transition-all hover:border-secondary/35 hover:bg-secondary/10 hover:text-secondary">
-            Add Project
-          </button>
+          <>
+            <button
+              onClick={() => setAddOpen(true)}
+              className="flex cursor-pointer items-center gap-2 rounded-lg border border-secondary/20 bg-secondary/6 px-4 py-2 text-sm font-medium text-secondary/70 transition-all hover:border-secondary/35 hover:bg-secondary/10 hover:text-secondary"
+            >
+              Add Project
+            </button>
+            {addOpen && <UpsertProjectModal onClose={() => setAddOpen(false)} />}
+          </>
         )}
       </div>
       {projects.length > 0 ? (

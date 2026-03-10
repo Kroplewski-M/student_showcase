@@ -1,9 +1,13 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons";
 import GlassCard from "../components/GlassCard";
 import { getLinkIcon } from "../components/LinkIcon";
 import { getProjectImgUrl, isSafeLink } from "../lib/helpers";
+import UpsertProjectModal from "./UpsertProjectModal";
 import type { Project } from "./page";
 
 interface Props {
@@ -12,6 +16,7 @@ interface Props {
 }
 
 export default function ProjectCard({ project, canEdit }: Props) {
+  const [editOpen, setEditOpen] = useState(false);
   const featuredImage = project.featuredImgId
     ? project.images.find(([id]) => id === project.featuredImgId)
     : project.images[0];
@@ -61,9 +66,20 @@ export default function ProjectCard({ project, canEdit }: Props) {
             </a>
           )}
           {canEdit && (
-            <button className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-secondary/20 bg-secondary/5 px-3 py-1.5 text-xs font-medium text-secondary/70 transition-all hover:border-secondary/35 hover:bg-secondary/10 hover:text-secondary">
-              Edit
-            </button>
+            <>
+              <button
+                onClick={() => setEditOpen(true)}
+                className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-secondary/20 bg-secondary/5 px-3 py-1.5 text-xs font-medium text-secondary/70 transition-all hover:border-secondary/35 hover:bg-secondary/10 hover:text-secondary"
+              >
+                Edit
+              </button>
+              {editOpen && (
+                <UpsertProjectModal
+                  project={project}
+                  onClose={() => setEditOpen(false)}
+                />
+              )}
+            </>
           )}
         </div>
       </div>
