@@ -71,8 +71,9 @@ export default function UpsertProjectModal({ project, onClose }: Props) {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({ links: {} });
 
-  const [newImages, setNewImages] = useState<File[]>([]);
-  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [newImages, setNewImages] = useState<
+    { file: File; previewUrl: string }[]
+  >([]);
   const [toolSearch, setToolSearch] = useState("");
   const [toolDropdownOpen, setToolDropdownOpen] = useState(false);
   const toolsRef = useRef<HTMLDivElement>(null);
@@ -133,12 +134,6 @@ export default function UpsertProjectModal({ project, onClose }: Props) {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
-
-  useEffect(() => {
-    const urls = newImages.map((file) => URL.createObjectURL(file));
-    setPreviewUrls(urls);
-    return () => urls.forEach((url) => URL.revokeObjectURL(url));
-  }, [newImages]);
 
   const setField = <K extends keyof FormData>(key: K, value: FormData[K]) =>
     setFormState((prev) =>
@@ -240,7 +235,10 @@ export default function UpsertProjectModal({ project, onClose }: Props) {
   };
 
   const removeNewImage = (index: number) => {
-    setNewImages((prev) => prev.filter((_, i) => i !== index));
+    setNewImages((prev) => {
+      URL.revokeObjectURL(prev[index].previewUrl);
+      return prev.filter((_, i) => i !== index);
+    });
     setFieldErrors((prev) => ({ ...prev, images: undefined }));
   };
 
@@ -261,7 +259,9 @@ export default function UpsertProjectModal({ project, onClose }: Props) {
       return;
     }
     const available = MAX_IMAGES - totalImages;
-    const toAdd = files.slice(0, available);
+    const toAdd = files
+      .slice(0, available)
+      .map((file) => ({ file, previewUrl: URL.createObjectURL(file) }));
     setNewImages((prev) => [...prev, ...toAdd]);
     setFieldErrors((prev) => ({ ...prev, images: undefined }));
     e.target.value = "";
@@ -339,7 +339,7 @@ export default function UpsertProjectModal({ project, onClose }: Props) {
         })),
       });
       body.append("data", payload);
-      for (const file of newImages) {
+      for (const { file } of newImages) {
         body.append("new_files", file);
       }
 
@@ -570,11 +570,11 @@ export default function UpsertProjectModal({ project, onClose }: Props) {
                         </button>
                       </div>
                     ))}
-                    {newImages.map((_, i) => (
-                      <div key={i} className="relative group">
+                    {newImages.map(({ previewUrl }, i) => (
+                      <div key={previewUrl} className="relative group">
                         <div className="h-20 w-20 overflow-hidden rounded-xl border border-secondary/30 bg-secondary/5">
                           <Image
-                            src={previewUrls[i]}
+                            src={previewUrl}
                             alt="New image"
                             width={80}
                             height={80}
