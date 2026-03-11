@@ -204,9 +204,11 @@ impl UserService {
         if data.existing_images.len() + new_images.len() > MAX_IMAGES {
             return Err(ErrorMessage::TooManyFiles(MAX_IMAGES));
         }
-        //update/create project
-        //delete and upload images
-        //update project_files table
+        //upload new images to storage
+        //update all project info
+        //base details, tools and links
+        // update project imgages table aswell
+        // if all pass then delete old images, if db changes fail, then delete new images
         let mut validated_images = Vec::with_capacity(new_images.len());
         for f in new_images {
             let file_name = f.file_name.unwrap_or_default();
