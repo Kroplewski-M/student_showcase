@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT pf.file_id AS \"file_id!\"\n                FROM project_files pf\n                JOIN files f ON f.id = pf.file_id\n                WHERE pf.project_id = $1\n                AND f.new_file_name || '.' || f.extension != ALL($2)\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "file_id!",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "d0543e3999c6f977e792b35780aea079400591716faa533f51605a615c02f6b4"
+}

@@ -141,6 +141,7 @@ pub async fn post_user_project_form(
     app_state
         .user_service
         .upsert_user_project(user_id.to_string(), data, form.new_files)
-        .await;
+        .await
+        .map_err(HttpError::server_error)?;
     Ok(HttpResponse::Ok().body("ok"))
 }

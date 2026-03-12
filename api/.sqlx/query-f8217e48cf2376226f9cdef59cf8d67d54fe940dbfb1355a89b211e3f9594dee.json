@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO files (id, old_file_name, new_file_name, file_type, size_bytes, extension)\n                VALUES (gen_random_uuid(), $1, $2, $3, $4, $5)\n                RETURNING id\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Varchar",
+        "Int8",
+        "Varchar"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "f8217e48cf2376226f9cdef59cf8d67d54fe940dbfb1355a89b211e3f9594dee"
+}
