@@ -79,6 +79,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         user_service: UserService::new(
             Arc::new(db_client.user.clone()),
             Arc::new(FileStorageType::UserImage),
+            Arc::new(FileStorageType::ProjectImage),
             embedding,
             ref_service.clone(),
         ),

@@ -18,7 +18,7 @@ interface Props {
 export default function ProjectCard({ project, canEdit }: Props) {
   const [editOpen, setEditOpen] = useState(false);
   const featuredImage = project.featuredImgId
-    ? project.images.find(([id]) => id === project.featuredImgId)
+    ? project.images.find((img) => img.fileId === project.featuredImgId)
     : project.images[0];
 
   return (
@@ -29,7 +29,7 @@ export default function ProjectCard({ project, canEdit }: Props) {
           {featuredImage && (
             <div className="shrink-0 h-14 w-14 overflow-hidden rounded-xl border border-secondary/15 bg-secondary/5">
               <Image
-                src={getProjectImgUrl(featuredImage[1])}
+                src={getProjectImgUrl(featuredImage.fileName)}
                 alt={project.name}
                 width={56}
                 height={56}
@@ -129,14 +129,14 @@ export default function ProjectCard({ project, canEdit }: Props) {
       {project.images.length > 1 && (
         <div className="flex flex-wrap gap-2">
           {project.images
-            .filter(([id]) => id !== featuredImage?.[0])
-            .map(([id, name]) => (
+            .filter((img) => img.fileId !== featuredImage?.fileId)
+            .map((img) => (
               <div
-                key={id}
+                key={img.fileId}
                 className="h-16 w-16 overflow-hidden rounded-lg border border-secondary/15 bg-secondary/5"
               >
                 <Image
-                  src={getProjectImgUrl(name)}
+                  src={getProjectImgUrl(img.fileName)}
                   alt={project.name}
                   width={64}
                   height={64}

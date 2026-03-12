@@ -16,7 +16,7 @@ export interface Project {
   liveLink: string | null;
   featuredImgId: string | null;
   tools: string[];
-  images: [string, string][];
+  images: { fileId: string; fileName: string }[];
   links: Links[];
 }
 export interface UserProfile {

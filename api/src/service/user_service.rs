@@ -1,7 +1,7 @@
-use std::{io::Read, sync::Arc};
+use std::{future, sync::Arc};
 
-use actix_multipart::form::{bytes, tempfile::TempFile};
-use futures_util::TryFutureExt;
+use actix_multipart::form::tempfile::TempFile;
+use futures_util::{TryFutureExt, future::try_join_all};
 use tracing::{error, info};
 use uuid::Uuid;
 
@@ -9,12 +9,14 @@ use crate::{
     db::user_repo::UserRepoTrait,
     dtos::{
         auth::validate_student_id,
+        reference::FileInfo,
         user::{
             ProjectForm, ProjectFormData, ProjectUpsertData, UpdateUserInfo, UserFormData,
             UserProfileView,
         },
     },
     errors::ErrorMessage,
+    models::file::File,
     service::reference_service::ReferenceService,
     utils::{
         embedding::Embedding,
@@ -26,7 +28,8 @@ use crate::{
 #[derive(Clone)]
 pub struct UserService {
     user_repo: Arc<dyn UserRepoTrait>,
-    file_storage: Arc<dyn FileStorageTrait>,
+    user_file_storage: Arc<dyn FileStorageTrait>,
+    project_file_storage: Arc<dyn FileStorageTrait>,
     embedding: Arc<Embedding>,
     reference_service: ReferenceService,
 }
@@ -34,13 +37,15 @@ pub struct UserService {
 impl UserService {
     pub fn new(
         user_repo: Arc<dyn UserRepoTrait>,
-        file_storage: Arc<dyn FileStorageTrait>,
+        user_file_storage: Arc<dyn FileStorageTrait>,
+        project_file_storage: Arc<dyn FileStorageTrait>,
         embedding: Arc<Embedding>,
         reference_service: ReferenceService,
     ) -> Self {
         Self {
             user_repo,
-            file_storage,
+            user_file_storage,
+            project_file_storage,
             embedding,
             reference_service,
         }
@@ -64,10 +69,10 @@ impl UserService {
         let validated_img = ValidatedImage::from_bytes(image_name, image, DEFAULT_MAX_IMAGE_SIZE)?;
 
         let new_stored_name = validated_img.generate_new_filename();
-        let disk_filename = format!("{}.{}", new_stored_name, validated_img.format().extension());
+        let disk_filename = validated_img.full_name(&new_stored_name);
 
         //write new file into storage
-        self.file_storage
+        self.user_file_storage
             .write(disk_filename.as_str(), validated_img.bytes())
             .await
             .map_err(|_| ErrorMessage::ServerError)?;
@@ -77,7 +82,7 @@ impl UserService {
             Ok(img) => img,
             Err(e) => {
                 error!("Error fetching current image: {}", e);
-                let _ = self.file_storage.delete(&disk_filename).await;
+                let _ = self.user_file_storage.delete(&disk_filename).await;
                 return Err(ErrorMessage::ServerError);
             }
         };
@@ -96,12 +101,12 @@ impl UserService {
         {
             error!("Error updating user image: {}", e);
             // Compensate: remove the file we just wrote
-            let _ = self.file_storage.delete(&disk_filename).await;
+            let _ = self.user_file_storage.delete(&disk_filename).await;
             return Err(ErrorMessage::ServerError);
         }
 
         if let Some(img) = current_image
-            && let Err(e) = self.file_storage.delete(&img.get_full_name()).await
+            && let Err(e) = self.user_file_storage.delete(&img.get_full_name()).await
         {
             error!("Failed to delete old image: {}", e);
         }
@@ -204,21 +209,106 @@ impl UserService {
         if data.existing_images.len() + new_images.len() > MAX_IMAGES {
             return Err(ErrorMessage::TooManyFiles(MAX_IMAGES));
         }
+        //get tools
+        let tools = self.reference_service.get_tools().await?;
+        let tool_names: Vec<String> = data
+            .selected_tools
+            .iter()
+            .filter_map(|id| tools.iter().find(|t| t.id == *id))
+            .map(|t| t.name.clone())
+            .collect();
+        let project_embedding_document = data.to_embedding_document(&tool_names);
+        let embedding = self
+            .embedding
+            .embed_document(project_embedding_document)
+            .await?;
+
+        let vector = pgvector::Vector::from(embedding);
+        //get all current project images
+        let current_files = if let Some(id) = &data.id {
+            self.user_repo
+                .get_project_files(id)
+                .await
+                .map_err(|_| ErrorMessage::ServerError)?
+        } else {
+            Vec::<File>::new()
+        };
         //upload new images to storage
-        //update all project info
-        //base details, tools and links
-        // update project imgages table aswell
-        // if all pass then delete old images, if db changes fail, then delete new images
-        let mut validated_images = Vec::with_capacity(new_images.len());
-        for f in new_images {
-            let file_name = f.file_name.unwrap_or_default();
-            let bytes = tokio::fs::read(f.file.path())
+        let validated_images: Vec<ValidatedImage> =
+            try_join_all(new_images.into_iter().map(|f| async move {
+                let file_name = f.file_name.unwrap_or_default();
+                let bytes = tokio::fs::read(f.file.path())
+                    .await
+                    .map_err(|_| ErrorMessage::ServerError)?;
+                ValidatedImage::from_bytes(file_name, bytes, DEFAULT_MAX_IMAGE_SIZE)
+            }))
+            .await?;
+
+        let mut uploaded_images = Vec::<FileInfo>::with_capacity(validated_images.len());
+        for file in validated_images {
+            let new_name = file.generate_new_filename();
+            let disk_filename = file.full_name(&new_name);
+            self.project_file_storage
+                .write(disk_filename.as_str(), file.bytes())
                 .await
                 .map_err(|_| ErrorMessage::ServerError)?;
-            let validated = ValidatedImage::from_bytes(file_name, bytes, DEFAULT_MAX_IMAGE_SIZE)?;
-            validated_images.push(validated);
+            uploaded_images.push(FileInfo {
+                new_name,
+                old_name: file.old_name(),
+                length: file.len(),
+                file_type: file.format().mime_type().to_string(),
+                extenstion: file.format().extension().to_string(),
+            });
         }
-        info!("added {} images", validated_images.len());
+        info!("uploaded images: {:?}", uploaded_images);
+
+        // Disk names of newly uploaded files — needed for rollback if DB fails
+        let uploaded_disk_names: Vec<String> = uploaded_images
+            .iter()
+            .map(|f| format!("{}.{}", f.new_name, f.extenstion))
+            .collect();
+
+        // Current files no longer in existing_images — delete from storage on success
+        let stale_files: Vec<String> = current_files
+            .iter()
+            .filter(|f| !data.existing_images.contains(&f.get_full_name()))
+            .map(|f| f.get_full_name())
+            .collect();
+
+        let res = self
+            .user_repo
+            .upsert_project(
+                &user_id,
+                data.id,
+                &data.name,
+                &data.description,
+                data.live_link,
+                data.selected_tools,
+                data.links,
+                uploaded_images,
+                data.existing_images,
+                vector,
+            )
+            .await;
+
+        match res {
+            Ok(_) => {
+                for name in stale_files {
+                    if let Err(e) = self.project_file_storage.delete(&name).await {
+                        error!("Failed to delete stale project image {}: {}", name, e);
+                    }
+                }
+            }
+            Err(_) => {
+                for name in uploaded_disk_names {
+                    if let Err(e) = self.project_file_storage.delete(&name).await {
+                        error!("Failed to delete uploaded project image {}: {}", name, e);
+                    }
+                }
+                return Err(ErrorMessage::ServerError);
+            }
+        }
+
         Ok(())
     }
 }

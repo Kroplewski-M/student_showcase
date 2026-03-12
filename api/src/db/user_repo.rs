@@ -6,12 +6,18 @@ use sqlx::{Pool, Postgres};
 use uuid::Uuid;
 
 use crate::{
-    dtos::user::{
-        ProjImageRow, ProjLinkRow, ProjToolRow, ProjectFormData, ProjectImageView,
-        ProjectProfileView, ProjectProfileViewBase, UpdateUserInfo, UserFormData, UserLinkView,
-        UserProfileRowView, UserProfileView,
+    dtos::{
+        reference::FileInfo,
+        user::{
+            ProjImageRow, ProjLinkRow, ProjToolRow, ProjectFormData, ProjectImageView,
+            ProjectProfileView, ProjectProfileViewBase, UpdateUserInfo, UpsertLinkPayload,
+            UserFormData, UserLinkView, UserProfileRowView, UserProfileView,
+        },
     },
-    models::{file::File, user::ProjectBaseRow, user::User},
+    models::{
+        file::File,
+        user::{ProjectBaseRow, User},
+    },
 };
 
 #[derive(Debug, Clone)]
@@ -52,6 +58,20 @@ pub trait UserRepoTrait: Send + Sync {
         data: UpdateUserInfo,
         embedding: Vector,
     ) -> Result<(), sqlx::Error>;
+    async fn get_project_files(&self, project_id: &Uuid) -> Result<Vec<File>, sqlx::Error>;
+    async fn upsert_project(
+        &self,
+        user_id: &str,
+        project_id: Option<Uuid>,
+        name: &str,
+        description: &str,
+        live_link: Option<String>,
+        selected_tools: Vec<Uuid>,
+        links: Vec<UpsertLinkPayload>,
+        new_images: Vec<FileInfo>,
+        existing_images: Vec<String>,
+        embedding: Vector,
+    ) -> Result<Uuid, sqlx::Error>;
 }
 
 #[async_trait]
@@ -558,6 +578,188 @@ impl UserRepoTrait for UserRepo {
             existing_images,
         })
     }
+
+    async fn get_project_files(&self, project_id: &Uuid) -> Result<Vec<File>, sqlx::Error> {
+        sqlx::query_as!(
+            File,
+            r#"SELECT f.* FROM project_files pf
+                                 JOIN files f ON pf.file_id = f.id
+                                 WHERE pf.project_id = $1"#,
+            project_id
+        )
+        .fetch_all(&self.pool)
+        .await
+    }
+    async fn upsert_project(
+        &self,
+        user_id: &str,
+        project_id: Option<Uuid>,
+        name: &str,
+        description: &str,
+        live_link: Option<String>,
+        selected_tools: Vec<Uuid>,
+        links: Vec<UpsertLinkPayload>,
+        new_images: Vec<FileInfo>,
+        existing_images: Vec<String>,
+        embedding: Vector,
+    ) -> Result<Uuid, sqlx::Error> {
+        let mut tx = self.pool.begin().await?;
+
+        // Insert or update the project record
+        let id = if let Some(id) = project_id {
+            let result = sqlx::query!(
+                r#"
+                UPDATE projects
+                SET name = $1, description = $2, live_link = $3, embedding = $6, updated_at = now()
+                WHERE id = $4 AND user_id = $5
+                "#,
+                name,
+                description,
+                live_link,
+                id,
+                user_id,
+                embedding as Vector,
+            )
+            .execute(tx.as_mut())
+            .await?;
+
+            if result.rows_affected() == 0 {
+                return Err(sqlx::Error::RowNotFound);
+            }
+            id
+        } else {
+            sqlx::query_scalar!(
+                r#"
+                INSERT INTO projects (id, user_id, name, description, live_link, embedding)
+                VALUES (gen_random_uuid(), $1, $2, $3, $4, $5)
+                RETURNING id
+                "#,
+                user_id,
+                name,
+                description,
+                live_link,
+                embedding as Vector,
+            )
+            .fetch_one(tx.as_mut())
+            .await?
+        };
+
+        // Reset tools
+        sqlx::query!("DELETE FROM project_tools WHERE project_id = $1", id)
+            .execute(tx.as_mut())
+            .await?;
+
+        if !selected_tools.is_empty() {
+            sqlx::query!(
+                "INSERT INTO project_tools (project_id, tool_id)
+                 SELECT DISTINCT $1::uuid, * FROM UNNEST($2::uuid[])",
+                id as Uuid,
+                &selected_tools,
+            )
+            .execute(tx.as_mut())
+            .await?;
+        }
+
+        // Reset links
+        sqlx::query!("DELETE FROM project_links WHERE project_id = $1", id)
+            .execute(tx.as_mut())
+            .await?;
+
+        if !links.is_empty() {
+            let link_type_ids: Vec<Uuid> = links.iter().map(|l| l.link_type_id).collect();
+            let urls: Vec<String> = links.iter().map(|l| l.url.clone()).collect();
+            let names: Vec<Option<String>> = links.iter().map(|l| l.name.clone()).collect();
+
+            sqlx::query!(
+                "INSERT INTO project_links (id, project_id, link_type_id, url, name)
+                 SELECT gen_random_uuid(), $1, * FROM UNNEST($2::uuid[], $3::text[], $4::text[])",
+                id,
+                &link_type_ids,
+                &urls,
+                &names as &[Option<String>],
+            )
+            .execute(tx.as_mut())
+            .await?;
+        }
+
+        // Remove images no longer in existing_images
+        if existing_images.is_empty() {
+            let all_file_ids: Vec<Uuid> = sqlx::query_scalar!(
+                r#"SELECT file_id AS "file_id!" FROM project_files WHERE project_id = $1"#,
+                id
+            )
+            .fetch_all(tx.as_mut())
+            .await?;
+
+            sqlx::query!("DELETE FROM project_files WHERE project_id = $1", id)
+                .execute(tx.as_mut())
+                .await?;
+
+            if !all_file_ids.is_empty() {
+                sqlx::query!("DELETE FROM files WHERE id = ANY($1)", &all_file_ids)
+                    .execute(tx.as_mut())
+                    .await?;
+            }
+        } else {
+            let stale_file_ids: Vec<Uuid> = sqlx::query_scalar!(
+                r#"
+                SELECT pf.file_id AS "file_id!"
+                FROM project_files pf
+                JOIN files f ON f.id = pf.file_id
+                WHERE pf.project_id = $1
+                AND f.new_file_name || '.' || f.extension != ALL($2)
+                "#,
+                id,
+                &existing_images,
+            )
+            .fetch_all(tx.as_mut())
+            .await?;
+
+            if !stale_file_ids.is_empty() {
+                sqlx::query!(
+                    "DELETE FROM project_files WHERE file_id = ANY($1)",
+                    &stale_file_ids,
+                )
+                .execute(tx.as_mut())
+                .await?;
+                sqlx::query!(
+                    "DELETE FROM files WHERE id = ANY($1)",
+                    &stale_file_ids,
+                )
+                .execute(tx.as_mut())
+                .await?;
+            }
+        }
+
+        // Insert new image files and link to project
+        for img in new_images {
+            let file_id = sqlx::query_scalar!(
+                r#"
+                INSERT INTO files (id, old_file_name, new_file_name, file_type, size_bytes, extension)
+                VALUES (gen_random_uuid(), $1, $2, $3, $4, $5)
+                RETURNING id
+                "#,
+                img.old_name,
+                img.new_name,
+                img.file_type,
+                img.length,
+                img.extenstion,
+            )
+            .fetch_one(tx.as_mut())
+            .await?;
+
+            sqlx::query!(
+                "INSERT INTO project_files (project_id, file_id) VALUES ($1, $2)",
+                id,
+                file_id,
+            )
+            .execute(tx.as_mut())
+            .await?;
+        }
+
+        tx.commit().await?;
+        Ok(id)
+    }
 }
 
 #[cfg(test)]
@@ -595,7 +797,20 @@ pub mod mocks {
                 user_id: &str,
                 project_id: Uuid,
             ) -> Result<ProjectFormData, sqlx::Error>;
-
+            async fn get_project_files(&self, project_id: &Uuid) -> Result<Vec<File>, sqlx::Error>;
+            async fn upsert_project(
+                &self,
+                user_id: &str,
+                project_id: Option<Uuid>,
+                name: &str,
+                description: &str,
+                live_link: Option<String>,
+                selected_tools: Vec<Uuid>,
+                links: Vec<UpsertLinkPayload>,
+                new_images: Vec<FileInfo>,
+                existing_images: Vec<String>,
+                embedding: Vector,
+            ) -> Result<Uuid, sqlx::Error>;
         }
     }
 }

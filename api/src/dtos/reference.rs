@@ -18,3 +18,12 @@ pub struct SoftwareTool {
     pub id: Uuid,
     pub name: String,
 }
+
+#[derive(Debug)]
+pub struct FileInfo {
+    pub old_name: String,
+    pub new_name: String,
+    pub extenstion: String,
+    pub length: i64,
+    pub file_type: String,
+}
