@@ -248,16 +248,28 @@ impl UserService {
         for file in validated_images {
             let new_name = file.generate_new_filename();
             let disk_filename = file.full_name(&new_name);
-            self.project_file_storage
+            if let Err(_) = self
+                .project_file_storage
                 .write(disk_filename.as_str(), file.bytes())
                 .await
-                .map_err(|_| ErrorMessage::ServerError)?;
+            {
+                for f in &uploaded_images {
+                    let name = format!("{}.{}", f.new_name, f.extension);
+                    if let Err(e) = self.project_file_storage.delete(&name).await {
+                        error!(
+                            "Failed to delete uploaded project image during rollback {}: {}",
+                            name, e
+                        );
+                    }
+                }
+                return Err(ErrorMessage::ServerError);
+            }
             uploaded_images.push(FileInfo {
                 new_name,
                 old_name: file.old_name(),
                 length: file.len(),
                 file_type: file.format().mime_type().to_string(),
-                extenstion: file.format().extension().to_string(),
+                extension: file.format().extension().to_string(),
             });
         }
         info!("uploaded images: {:?}", uploaded_images);
@@ -265,7 +277,7 @@ impl UserService {
         // Disk names of newly uploaded files — needed for rollback if DB fails
         let uploaded_disk_names: Vec<String> = uploaded_images
             .iter()
-            .map(|f| format!("{}.{}", f.new_name, f.extenstion))
+            .map(|f| format!("{}.{}", f.new_name, f.extension))
             .collect();
 
         // Current files no longer in existing_images — delete from storage on success
@@ -336,11 +348,11 @@ mod tests {
         ReferenceService::new(Arc::new(mock_repo), cache)
     }
 
-    fn make_service(repo: MockUserRepo, storage: MockFileStorage) -> UserService {
+    fn make_service(repo: MockUserRepo, user_storage: MockFileStorage) -> UserService {
         let embedding = Arc::new(Embedding::new(1).expect("Failed to create embedding"));
         UserService::new(
             Arc::new(repo),
-            Arc::new(storage),
+            Arc::new(user_storage),
             embedding,
             make_reference_service(),
         )

@@ -96,7 +96,7 @@ impl ErrorMessage {
             ErrorMessage::EmbeddingFailed => "Failed to embed data".to_string(),
             ErrorMessage::ProjectNotFound => "Project not found".to_string(),
             ErrorMessage::TooManyFiles(size) => {
-                format!("Files uploaded exceeds maximum of : {} files", size)
+                format!("Maximum {} files allowed", size)
             }
         }
     }
