@@ -1,8 +1,8 @@
-use std::{future, sync::Arc};
+use std::sync::Arc;
 
 use actix_multipart::form::tempfile::TempFile;
 use futures_util::{TryFutureExt, future::try_join_all};
-use tracing::{error, info};
+use tracing::error;
 use uuid::Uuid;
 
 use crate::{

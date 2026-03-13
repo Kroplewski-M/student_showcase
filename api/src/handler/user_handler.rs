@@ -1,5 +1,3 @@
-use std::io::Read;
-
 use actix_multipart::{Multipart, form::MultipartForm};
 use actix_web::{HttpResponse, dev::HttpServiceFactory, web};
 use validator::Validate;
@@ -14,7 +12,6 @@ use crate::{
     middleware::auth::{AuthenticatedUserId, RequireAuth},
     models::file::FormFile,
     service::user_service::MAX_IMAGES,
-    utils::images::DEFAULT_MAX_IMAGE_SIZE,
 };
 
 pub fn user_handler() -> impl HttpServiceFactory {
@@ -145,10 +142,19 @@ pub async fn post_user_project_form(
             MAX_IMAGES
         )));
     }
-    app_state
+    let res = app_state
         .user_service
         .upsert_user_project(user_id.to_string(), data, form.new_files)
-        .await
-        .map_err(HttpError::server_error)?;
-    Ok(HttpResponse::Ok().body("ok"))
+        .await;
+    match res {
+        Ok(_) => Ok(HttpResponse::Ok().json(Response {
+            status: "succes",
+            message: "project updated successfully".to_string(),
+        })),
+        Err(e) => match e {
+            ErrorMessage::FileSizeTooBig(_) => Err(HttpError::bad_request(e.to_string())),
+            ErrorMessage::TooManyFiles(_) => Err(HttpError::bad_request(e.to_string())),
+            _ => Err(HttpError::server_error(e.to_string())),
+        },
+    }
 }
