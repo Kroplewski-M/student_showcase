@@ -52,6 +52,7 @@ export default function ProjectCard({ project, canEdit }: Props) {
           {hasMultiple && (
             <>
               <button
+                type="button"
                 onClick={prev}
                 aria-label="Previous image"
                 className="absolute left-2 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full bg-black/40 text-white/80 hover:bg-black/60 transition-colors"
@@ -59,6 +60,7 @@ export default function ProjectCard({ project, canEdit }: Props) {
                 <FontAwesomeIcon icon={faChevronLeft} className="text-xs" />
               </button>
               <button
+                type="button"
                 onClick={next}
                 aria-label="Next image"
                 className="absolute right-2 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full bg-black/40 text-white/80 hover:bg-black/60 transition-colors"
@@ -69,6 +71,7 @@ export default function ProjectCard({ project, canEdit }: Props) {
                 {images.map((_, i) => (
                   <button
                     key={i}
+                    type="button"
                     onClick={() => setSlideIndex(i)}
                     aria-label={`Go to image ${i + 1}`}
                     className={`h-1.5 rounded-full transition-all ${
