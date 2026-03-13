@@ -338,13 +338,13 @@ export default function UpsertProjectModal({ project, onClose }: Props) {
           name,
         })),
       });
-      body.append("data", payload);
+      body.append("data", new Blob([payload], { type: "application/json" }));
       for (const { file } of newImages) {
         body.append("new_files", file);
       }
 
       const res = await fetch("/api/user/upsert_project", {
-        method: isEdit ? "PATCH" : "POST",
+        method: "POST",
         credentials: "include",
         body,
       });

@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO project_links (id, project_id, link_type_id, url, name)\n                 SELECT gen_random_uuid(), $1, * FROM UNNEST($2::uuid[], $3::text[], $4::text[])",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "UuidArray",
+        "TextArray",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "033a48f9ead341104a373e78001dad19dc6b631ea0186914463d9d44991d1448"
+}

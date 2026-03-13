@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE projects\n                SET name = $1, description = $2, live_link = $3, embedding = $6, updated_at = now()\n                WHERE id = $4 AND user_id = $5\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Text",
+        "Text",
+        "Uuid",
+        "Text",
+        {
+          "Custom": {
+            "name": "vector",
+            "kind": "Simple"
+          }
+        }
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "363a089cbf64946186a2f9b4fad870cac5097685214e4eca5e83aaf64c0b4877"
+}

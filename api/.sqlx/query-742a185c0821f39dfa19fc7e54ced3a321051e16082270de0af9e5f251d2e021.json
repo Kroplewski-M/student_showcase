@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "INSERT INTO project_tools (project_id, tool_id)\n                 SELECT DISTINCT $1::uuid, * FROM UNNEST($2::uuid[])",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "UuidArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "742a185c0821f39dfa19fc7e54ced3a321051e16082270de0af9e5f251d2e021"
+}

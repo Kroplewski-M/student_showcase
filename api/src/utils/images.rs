@@ -111,6 +111,9 @@ impl ValidatedImage {
     pub fn generate_new_filename(&self) -> String {
         format!("{}", uuid::Uuid::new_v4())
     }
+    pub fn full_name(&self, name: &str) -> String {
+        format!("{}.{}", name, self.format().extension())
+    }
 }
 
 #[cfg(test)]

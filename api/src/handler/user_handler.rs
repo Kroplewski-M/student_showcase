@@ -1,4 +1,4 @@
-use actix_multipart::Multipart;
+use actix_multipart::{Multipart, form::MultipartForm};
 use actix_web::{HttpResponse, dev::HttpServiceFactory, web};
 use validator::Validate;
 
@@ -6,11 +6,12 @@ use crate::{
     AppState,
     dtos::{
         Response,
-        user::{UpdateUserInfo, UpsertProjectQuery, UserProfileForm},
+        user::{ProjectFormUpsert, UpdateUserInfo, UpsertProjectQuery, UserProfileForm},
     },
     errors::{ErrorMessage, HttpError},
     middleware::auth::{AuthenticatedUserId, RequireAuth},
     models::file::FormFile,
+    service::user_service::MAX_IMAGES,
 };
 
 pub fn user_handler() -> impl HttpServiceFactory {
@@ -24,7 +25,8 @@ pub fn user_handler() -> impl HttpServiceFactory {
                 .route("/update_image", web::post().to(update_user_image))
                 .route("/update_profile", web::get().to(get_user_profile_form))
                 .route("/update_profile", web::patch().to(patch_user_profile))
-                .route("/upsert_project", web::get().to(upsert_user_project)),
+                .route("/upsert_project", web::get().to(get_user_project_form))
+                .route("/upsert_project", web::post().to(post_user_project_form)),
         )
 }
 
@@ -111,7 +113,7 @@ pub async fn patch_user_profile(
         message: "User updated successfully".to_string(),
     }))
 }
-pub async fn upsert_user_project(
+pub async fn get_user_project_form(
     app_state: web::Data<AppState>,
     user_id: AuthenticatedUserId,
     query: web::Query<UpsertProjectQuery>,
@@ -125,4 +127,36 @@ pub async fn upsert_user_project(
             _ => HttpError::server_error(e),
         })?;
     Ok(HttpResponse::Ok().json(data))
+}
+pub async fn post_user_project_form(
+    app_state: web::Data<AppState>,
+    user_id: AuthenticatedUserId,
+    MultipartForm(form): MultipartForm<ProjectFormUpsert>,
+) -> Result<HttpResponse, HttpError> {
+    let data = form.data.into_inner();
+    data.validate()
+        .map_err(|e| HttpError::bad_request(e.to_string()))?;
+    if form.new_files.len() + data.existing_images.len() > MAX_IMAGES {
+        return Err(HttpError::bad_request(format!(
+            "Maximum {} files allowed",
+            MAX_IMAGES
+        )));
+    }
+    let res = app_state
+        .user_service
+        .upsert_user_project(user_id.to_string(), data, form.new_files)
+        .await;
+    match res {
+        Ok(_) => Ok(HttpResponse::Ok().json(Response {
+            status: "succes",
+            message: "project updated successfully".to_string(),
+        })),
+        Err(e) => match e {
+            ErrorMessage::FileSizeTooBig(_)
+            | ErrorMessage::TooManyFiles(_)
+            | ErrorMessage::FileInvalidFormat(_)
+            | ErrorMessage::FileInvalidName => Err(HttpError::bad_request(e.to_string())),
+            _ => Err(HttpError::server_error(e.to_string())),
+        },
+    }
 }
