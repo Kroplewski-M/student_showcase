@@ -13,6 +13,8 @@ use crate::{
     errors::{ErrorMessage, HttpError},
     middleware::auth::{AuthenticatedUserId, RequireAuth},
     models::file::FormFile,
+    service::user_service::MAX_IMAGES,
+    utils::images::DEFAULT_MAX_IMAGE_SIZE,
 };
 
 pub fn user_handler() -> impl HttpServiceFactory {
@@ -137,7 +139,12 @@ pub async fn post_user_project_form(
     let data = form.data.into_inner();
     data.validate()
         .map_err(|e| HttpError::bad_request(e.to_string()))?;
-
+    if form.new_files.len() + data.existing_images.len() > MAX_IMAGES {
+        return Err(HttpError::bad_request(format!(
+            "Maximum {} files allowed",
+            MAX_IMAGES
+        )));
+    }
     app_state
         .user_service
         .upsert_user_project(user_id.to_string(), data, form.new_files)

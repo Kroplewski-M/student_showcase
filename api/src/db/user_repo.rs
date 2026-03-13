@@ -722,12 +722,9 @@ impl UserRepoTrait for UserRepo {
                 )
                 .execute(tx.as_mut())
                 .await?;
-                sqlx::query!(
-                    "DELETE FROM files WHERE id = ANY($1)",
-                    &stale_file_ids,
-                )
-                .execute(tx.as_mut())
-                .await?;
+                sqlx::query!("DELETE FROM files WHERE id = ANY($1)", &stale_file_ids,)
+                    .execute(tx.as_mut())
+                    .await?;
             }
         }
 
@@ -743,7 +740,7 @@ impl UserRepoTrait for UserRepo {
                 img.new_name,
                 img.file_type,
                 img.length,
-                img.extenstion,
+                img.extension,
             )
             .fetch_one(tx.as_mut())
             .await?;

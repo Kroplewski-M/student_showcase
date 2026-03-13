@@ -25,6 +25,7 @@ use crate::{
     },
 };
 
+pub static MAX_IMAGES: usize = 5;
 #[derive(Clone)]
 pub struct UserService {
     user_repo: Arc<dyn UserRepoTrait>,
@@ -205,7 +206,6 @@ impl UserService {
         new_images: Vec<TempFile>,
     ) -> Result<(), ErrorMessage> {
         //max images
-        const MAX_IMAGES: usize = 5;
         if data.existing_images.len() + new_images.len() > MAX_IMAGES {
             return Err(ErrorMessage::TooManyFiles(MAX_IMAGES));
         }
@@ -248,10 +248,11 @@ impl UserService {
         for file in validated_images {
             let new_name = file.generate_new_filename();
             let disk_filename = file.full_name(&new_name);
-            if let Err(_) = self
+            if self
                 .project_file_storage
                 .write(disk_filename.as_str(), file.bytes())
                 .await
+                .is_err()
             {
                 for f in &uploaded_images {
                     let name = format!("{}.{}", f.new_name, f.extension);
@@ -272,7 +273,6 @@ impl UserService {
                 extension: file.format().extension().to_string(),
             });
         }
-        info!("uploaded images: {:?}", uploaded_images);
 
         // Disk names of newly uploaded files — needed for rollback if DB fails
         let uploaded_disk_names: Vec<String> = uploaded_images
