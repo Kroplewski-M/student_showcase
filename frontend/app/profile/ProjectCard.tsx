@@ -26,7 +26,7 @@ export default function ProjectCard({ project, canEdit }: Props) {
   const images = project.images;
   const hasImages = images.length > 0;
   const hasMultiple = images.length > 1;
-
+  const safeLinks = project.links.filter((l) => isSafeLink(l.url));
   function prev() {
     setSlideIndex((i) => (i - 1 + images.length) % images.length);
   }
@@ -150,28 +150,26 @@ export default function ProjectCard({ project, canEdit }: Props) {
       )}
 
       {/* Links */}
-      {project.links.length > 0 && (
+      {safeLinks.length > 0 && (
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-secondary/50">
             Links
           </p>
           <div className="flex flex-wrap gap-2">
-            {project.links
-              .filter((l) => isSafeLink(l.url))
-              .map((link, i) => (
-                <a
-                  key={i}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title={link.linkType}
-                  aria-label={`Open ${link.linkType} link`}
-                  className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg border border-secondary/15 bg-secondary/5 text-secondary/60 text-xs transition-all hover:border-secondary/30 hover:bg-secondary/10 hover:text-secondary"
-                >
-                  <FontAwesomeIcon icon={getLinkIcon(link.linkType)} />
-                  {link.name ?? link.linkType}
-                </a>
-              ))}
+            {safeLinks.map((link, i) => (
+              <a
+                key={i}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={link.linkType}
+                aria-label={`Open ${link.linkType} link`}
+                className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg border border-secondary/15 bg-secondary/5 text-secondary/60 text-xs transition-all hover:border-secondary/30 hover:bg-secondary/10 hover:text-secondary"
+              >
+                <FontAwesomeIcon icon={getLinkIcon(link.linkType)} />
+                {link.name ?? link.linkType}
+              </a>
+            ))}
           </div>
         </div>
       )}
