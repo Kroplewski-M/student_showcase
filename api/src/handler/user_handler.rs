@@ -152,8 +152,10 @@ pub async fn post_user_project_form(
             message: "project updated successfully".to_string(),
         })),
         Err(e) => match e {
-            ErrorMessage::FileSizeTooBig(_) => Err(HttpError::bad_request(e.to_string())),
-            ErrorMessage::TooManyFiles(_) => Err(HttpError::bad_request(e.to_string())),
+            ErrorMessage::FileSizeTooBig(_)
+            | ErrorMessage::TooManyFiles(_)
+            | ErrorMessage::FileInvalidFormat(_)
+            | ErrorMessage::FileInvalidName => Err(HttpError::bad_request(e.to_string())),
             _ => Err(HttpError::server_error(e.to_string())),
         },
     }
