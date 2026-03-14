@@ -25,6 +25,7 @@ pub struct UserProfileRowView {
     pub personal_email: Option<String>,
     pub course_name: Option<String>,
     pub description: Option<String>,
+    pub featured_project_id: Option<Uuid>,
 }
 
 #[derive(sqlx::FromRow, Debug)]

@@ -1,7 +1,4 @@
-use actix_multipart::{
-    Multipart,
-    form::{MultipartForm, json},
-};
+use actix_multipart::{Multipart, form::MultipartForm};
 use actix_web::{HttpResponse, dev::HttpServiceFactory, web};
 use uuid::Uuid;
 use validator::Validate;
@@ -34,6 +31,10 @@ pub fn user_handler() -> impl HttpServiceFactory {
                 .route(
                     "/delete_project/{project_id}",
                     web::delete().to(delete_user_project),
+                )
+                .route(
+                    "/feature_project/{project_id}",
+                    web::post().to(feature_user_project),
                 ),
         )
 }
@@ -181,5 +182,20 @@ pub async fn delete_user_project(
     Ok(HttpResponse::Ok().json(Response {
         status: "success",
         message: "project deleted successfully".to_string(),
+    }))
+}
+pub async fn feature_user_project(
+    app_state: web::Data<AppState>,
+    user_id: AuthenticatedUserId,
+    project_id: web::Path<Uuid>,
+) -> Result<HttpResponse, HttpError> {
+    app_state
+        .user_service
+        .feature_project(user_id.to_string(), project_id.to_owned())
+        .await
+        .map_err(HttpError::server_error)?;
+    Ok(HttpResponse::Ok().json(Response {
+        status: "success",
+        message: "project updated successfully".to_string(),
     }))
 }

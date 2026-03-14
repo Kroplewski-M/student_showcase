@@ -58,6 +58,7 @@ pub trait UserRepoTrait: Send + Sync {
     async fn get_project_files(&self, project_id: &Uuid) -> Result<Vec<File>, sqlx::Error>;
     async fn upsert_project(&self, params: UpsertProjectParams) -> Result<Uuid, sqlx::Error>;
     async fn delete_project(&self, user_id: &str, project_id: Uuid) -> Result<(), sqlx::Error>;
+    async fn feature_project(&self, user_id: &str, project_id: Uuid) -> Result<(), sqlx::Error>;
 }
 
 #[async_trait]
@@ -181,10 +182,12 @@ impl UserRepoTrait for UserRepo {
                     u.last_name AS "last_name?",
                     u.personal_email AS "personal_email?", 
                     c.name AS "course_name?",
-                    u.description AS "description?"
+                    u.description AS "description?",
+                    p.id AS "featured_project_id?"
                 FROM users u
                 LEFT JOIN courses c ON u.course_id = c.id
                 LEFT JOIN files f ON u.image_id = f.id
+                LEFT JOIN projects p ON p.user_id = u.id AND p.featured = true
                 WHERE u.id = $1 
                 AND u.verified = true
             "#,
@@ -605,8 +608,10 @@ impl UserRepoTrait for UserRepo {
         } else {
             sqlx::query_scalar!(
                 r#"
-                INSERT INTO projects (id, user_id, name, description, live_link, embedding)
-                VALUES (gen_random_uuid(), $1, $2, $3, $4, $5)
+                INSERT INTO projects (id, user_id, name, description, live_link, embedding, featured)
+                VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, 
+                NOT EXISTS (SELECT 1 FROM projects WHERE user_id = $6)
+                )
                 RETURNING id
                 "#,
                 params.user_id,
@@ -614,6 +619,7 @@ impl UserRepoTrait for UserRepo {
                 params.description,
                 params.live_link,
                 params.embedding as Vector,
+                params.user_id
             )
             .fetch_one(tx.as_mut())
             .await?
@@ -796,16 +802,65 @@ impl UserRepoTrait for UserRepo {
         .execute(tx.as_mut())
         .await?;
         // 6. Remove project
-        sqlx::query!(
+        let was_featured = sqlx::query_scalar!(
             r#"
             DELETE FROM projects
             WHERE id = $1
+            RETURNING featured
         "#,
             project_id
+        )
+        .fetch_one(tx.as_mut())
+        .await?;
+
+        if was_featured {
+            sqlx::query!(
+                r#"
+            UPDATE projects
+            SET featured = true
+            WHERE id = (
+                SELECT id FROM projects
+                WHERE user_id = $1
+                ORDER BY created_at ASC
+                LIMIT 1
+            )
+            "#,
+                user_id
+            )
+            .execute(tx.as_mut())
+            .await?;
+        }
+        tx.commit().await?;
+        Ok(())
+    }
+    async fn feature_project(&self, user_id: &str, project_id: Uuid) -> Result<(), sqlx::Error> {
+        let mut tx = self.pool.begin().await?;
+        sqlx::query!(
+            r#"
+                UPDATE projects
+                SET featured = false
+                WHERE user_id = $1
+                "#,
+            user_id
         )
         .execute(tx.as_mut())
         .await?;
 
+        let result = sqlx::query!(
+            r#"
+                UPDATE projects
+                SET featured = true 
+                WHERE user_id = $1
+                AND id = $2
+                "#,
+            user_id,
+            project_id
+        )
+        .execute(tx.as_mut())
+        .await?;
+        if result.rows_affected() == 0 {
+            return Err(sqlx::Error::RowNotFound);
+        }
         tx.commit().await?;
         Ok(())
     }
@@ -849,6 +904,7 @@ pub mod mocks {
             async fn get_project_files(&self, project_id: &Uuid) -> Result<Vec<File>, sqlx::Error>;
             async fn upsert_project(&self, params: UpsertProjectParams) -> Result<Uuid, sqlx::Error>;
             async fn delete_project(&self, user_id: &str, project_id: Uuid) -> Result<(), sqlx::Error>;
+            async fn feature_project(&self, user_id: &str, project_id: Uuid) -> Result<(), sqlx::Error>;
         }
     }
 }
