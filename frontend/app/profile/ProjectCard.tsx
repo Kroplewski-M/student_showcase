@@ -22,10 +22,14 @@ import ConfirmModal from "../components/ConfirmModal";
 interface Props {
   project: Project;
   canEdit: boolean;
-  is_featured: boolean;
+  isFeatured: boolean;
 }
 
-export default function ProjectCard({ project, canEdit, is_featured }: Props) {
+export default function ProjectCard({
+  project,
+  canEdit,
+  isFeatured: isFeatured,
+}: Props) {
   const [editOpen, setEditOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [slideIndex, setSlideIndex] = useState(0);
@@ -53,8 +57,7 @@ export default function ProjectCard({ project, canEdit, is_featured }: Props) {
       } else {
         setFeaturedError("Failed to set featured project. Please try again.");
       }
-    } catch (e) {
-      console.log(e);
+    } catch {
       setFeaturedError("Something went wrong. Please try again.");
     } finally {
       setFeaturedLoading(false);
@@ -75,8 +78,7 @@ export default function ProjectCard({ project, canEdit, is_featured }: Props) {
       } else {
         setDeleteError("Failed to delete project. Please try again.");
       }
-    } catch (e) {
-      console.log(e);
+    } catch {
       setDeleteError("Something went wrong. Please try again.");
     } finally {
       setDeleteLoading(false);
@@ -166,15 +168,16 @@ export default function ProjectCard({ project, canEdit, is_featured }: Props) {
             {canEdit && (
               <button
                 type="button"
+                disabled={isFeatured}
                 onClick={() => {
-                  if (!is_featured) setFeaturedConfirm(true);
+                  if (!isFeatured) setFeaturedConfirm(true);
                 }}
                 aria-label={
-                  is_featured ? "Featured project" : "Set as featured project"
+                  isFeatured ? "Featured project" : "Set as featured project"
                 }
-                className={`shrink-0 transition-colors ${is_featured ? "text-yellow-400 cursor-default" : "text-secondary/30 hover:text-yellow-400 cursor-pointer"}`}
+                className={`shrink-0 transition-colors ${isFeatured ? "text-yellow-400 cursor-default" : "text-secondary/30 hover:text-yellow-400 cursor-pointer"}`}
               >
-                <FontAwesomeIcon icon={is_featured ? faStar : faStarOutline} />
+                <FontAwesomeIcon icon={isFeatured ? faStar : faStarOutline} />
               </button>
             )}
             <h3 className="text-base font-semibold text-white truncate">

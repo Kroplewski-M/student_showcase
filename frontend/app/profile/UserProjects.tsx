@@ -9,13 +9,13 @@ const MAX_PROJECTS = 5;
 interface UserProjectProps {
   projects: Project[];
   canEdit: boolean;
-  featured_project_id: string | null;
+  featuredProjectId: string | null;
 }
 
 export default function UserProjects({
   projects,
   canEdit,
-  featured_project_id,
+  featuredProjectId: featuredProjectId,
 }: UserProjectProps) {
   const [addOpen, setAddOpen] = useState(false);
 
@@ -49,7 +49,7 @@ export default function UserProjects({
               key={project.id}
               project={project}
               canEdit={canEdit}
-              is_featured={featured_project_id === project.id}
+              isFeatured={featuredProjectId === project.id}
             />
           ))}
         </div>
