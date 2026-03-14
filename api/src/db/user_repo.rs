@@ -835,7 +835,7 @@ impl UserRepoTrait for UserRepo {
     }
     async fn feature_project(&self, user_id: &str, project_id: Uuid) -> Result<(), sqlx::Error> {
         let mut tx = self.pool.begin().await?;
-        let result = sqlx::query!(
+        sqlx::query!(
             r#"
                 UPDATE projects
                 SET featured = false
@@ -845,10 +845,8 @@ impl UserRepoTrait for UserRepo {
         )
         .execute(tx.as_mut())
         .await?;
-        if result.rows_affected() == 0 {
-            return Err(sqlx::Error::RowNotFound);
-        }
-        sqlx::query!(
+
+        let result = sqlx::query!(
             r#"
                 UPDATE projects
                 SET featured = true 
@@ -860,6 +858,9 @@ impl UserRepoTrait for UserRepo {
         )
         .execute(tx.as_mut())
         .await?;
+        if result.rows_affected() == 0 {
+            return Err(sqlx::Error::RowNotFound);
+        }
         tx.commit().await?;
         Ok(())
     }
