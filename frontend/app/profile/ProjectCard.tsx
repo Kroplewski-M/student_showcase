@@ -43,7 +43,7 @@ export default function ProjectCard({ project, canEdit, is_featured }: Props) {
     setFeaturedLoading(true);
     setFeaturedError(null);
     try {
-      const res = await fetch(`/api/user/set_featured_project/${project.id}`, {
+      const res = await fetch(`/api/user/feature_project/${project.id}`, {
         method: "POST",
         cache: "no-store",
       });
