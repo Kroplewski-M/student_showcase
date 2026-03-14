@@ -149,6 +149,8 @@ export default function ProjectCard({ project, canEdit }: Props) {
                       setEditOpen(true);
                     }}
                     className="w-full text-left px-4 py-2 text-xs text-secondary/70 hover:bg-secondary/10 hover:text-secondary transition-colors cursor-pointer"
+                    aria-haspopup="menu"
+                    aria-expanded={menuOpen}
                   >
                     Edit
                   </button>

@@ -21,14 +21,26 @@ export default function ConfirmModal({
   disableConfirm,
 }: ConfirmModalProps) {
   return createPortal(
-    <div className="fixed z-[1000] h-screen w-screen left-0 top-0 bg-primary/85 backdrop-blur-[8px] p-5 animate-[fadeIn_0.3s_ease] flex items-center justify-center">
+    <div
+      className="fixed z-[1000] h-screen w-screen left-0 top-0 bg-primary/85 backdrop-blur-[8px] p-5 animate-[fadeIn_0.3s_ease] flex items-center justify-center"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="confirm-modal-title"
+      aria-describedby="confirm-modal-description"
+    >
       <div className="w-full max-w-[420px] flex flex-col rounded-2xl border border-secondary/12 bg-primary/35 backdrop-blur-[20px]">
         {/* Header */}
         <div className="flex items-center justify-between px-8 pt-7 pb-5 border-b border-secondary/10">
-          <h2 className="text-[22px] font-bold text-white">{title}</h2>
+          <h2
+            id="confirm-modal-title"
+            className="text-[22px] font-bold text-white"
+          >
+            {title}
+          </h2>
           <button
             type="button"
             onClick={onClose}
+            aria-label="close confirmation dialog"
             className="flex h-8 w-8 items-center justify-center rounded-lg text-secondary/50 transition-colors hover:bg-secondary/10 hover:text-secondary cursor-pointer"
           >
             <Close />
@@ -37,7 +49,10 @@ export default function ConfirmModal({
 
         {/* Body */}
         <div className="px-8 py-6">
-          <p className="text-sm leading-relaxed text-secondary/70">
+          <p
+            className="text-sm leading-relaxed text-secondary/70"
+            id="confirm-modal-description"
+          >
             {description}
           </p>
         </div>
@@ -46,6 +61,7 @@ export default function ConfirmModal({
         <div className="flex justify-end gap-3  px-8 py-5">
           <button
             type="button"
+            aria-label="close confirmation dialog"
             onClick={onClose}
             className="inline-flex cursor-pointer items-center gap-2 rounded-[10px] border border-secondary/20 bg-secondary/8 px-5 py-2.5 font-[Poppins] text-sm font-semibold text-secondary transition-all duration-250 ease-in-out hover:bg-secondary/15"
           >
