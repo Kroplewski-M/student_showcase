@@ -42,6 +42,7 @@ export default function ProjectCard({ project, canEdit }: Props) {
         cache: "no-store",
       });
       if (res.ok) {
+        setDeleteProjectConfirm(false);
         router.refresh();
       } else {
         setDeleteError("Failed to delete project. Please try again.");
@@ -258,7 +259,11 @@ export default function ProjectCard({ project, canEdit }: Props) {
           confirmButtonClass="bg-danger text-light"
           confirmButtonText="delete"
           confirmFunction={deleteProject}
-          onClose={() => { setDeleteProjectConfirm(false); setDeleteError(null); }}
+          onClose={() => {
+            if (deleteLoading) return;
+            setDeleteProjectConfirm(false);
+            setDeleteError(null);
+          }}
           disableConfirm={deleteLoading}
           error={deleteError}
         />
