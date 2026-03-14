@@ -8,8 +8,8 @@ use uuid::Uuid;
 use crate::{
     dtos::user::{
         ProjImageRow, ProjLinkRow, ProjToolRow, ProjectFormData, ProjectImageView,
-        ProjectProfileView, ProjectProfileViewBase, UpdateUserInfo, UpsertLinkPayload,
-        UpsertProjectParams, UserFormData, UserLinkView, UserProfileRowView, UserProfileView,
+        ProjectProfileView, ProjectProfileViewBase, UpdateUserInfo, UpsertProjectParams,
+        UserFormData, UserLinkView, UserProfileRowView, UserProfileView,
     },
     models::{
         file::File,
@@ -57,6 +57,7 @@ pub trait UserRepoTrait: Send + Sync {
     ) -> Result<(), sqlx::Error>;
     async fn get_project_files(&self, project_id: &Uuid) -> Result<Vec<File>, sqlx::Error>;
     async fn upsert_project(&self, params: UpsertProjectParams) -> Result<Uuid, sqlx::Error>;
+    async fn delete_project(&self, user_id: &str, project_id: Uuid) -> Result<(), sqlx::Error>;
 }
 
 #[async_trait]
@@ -731,6 +732,78 @@ impl UserRepoTrait for UserRepo {
         tx.commit().await?;
         Ok(id)
     }
+    async fn delete_project(&self, user_id: &str, project_id: Uuid) -> Result<(), sqlx::Error> {
+        let mut tx = self.pool.begin().await?;
+
+        // 1. Check if project exists
+        sqlx::query_scalar!(
+            r#"
+            SELECT EXISTS (
+            SELECT 1
+            FROM projects 
+            WHERE id = $1
+            AND user_id = $2 
+        )
+        "#,
+            project_id,
+            user_id,
+        )
+        .fetch_one(tx.as_mut())
+        .await?;
+        // 2. Remove project tools
+        sqlx::query_scalar!(
+            r#"
+                DELETE FROM project_tools
+                where project_id = $1
+            "#,
+            project_id
+        )
+        .execute(tx.as_mut())
+        .await?;
+        // 3. Remove project links
+        sqlx::query_scalar!(
+            r#"
+                DELETE FROM project_links 
+                where project_id = $1
+            "#,
+            project_id
+        )
+        .execute(tx.as_mut())
+        .await?;
+        // 4. Remove project_files (join table)
+        let removed_files = sqlx::query_scalar!(
+            r#"
+            DELETE FROM project_files
+            where project_id = $1
+            RETURNING file_id
+        "#,
+            project_id
+        )
+        .fetch_all(tx.as_mut())
+        .await?;
+        // 5. Remove files
+        sqlx::query_scalar!(
+            r#"
+            DELETE FROM files WHERE id = ANY($1)
+        "#,
+            &removed_files as &[Uuid],
+        )
+        .execute(tx.as_mut())
+        .await?;
+        // 6. Remove project
+        sqlx::query_scalar!(
+            r#"
+            DELETE FROM projects
+            WHERE id = $1
+        "#,
+            project_id
+        )
+        .execute(tx.as_mut())
+        .await?;
+
+        tx.commit().await?;
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -770,7 +843,7 @@ pub mod mocks {
             ) -> Result<ProjectFormData, sqlx::Error>;
             async fn get_project_files(&self, project_id: &Uuid) -> Result<Vec<File>, sqlx::Error>;
             async fn upsert_project(&self, params: UpsertProjectParams) -> Result<Uuid, sqlx::Error>;
-
+            async fn delete_project(&self, user_id: &str, project_id: Uuid) -> Result<(), sqlx::Error>;
         }
     }
 }

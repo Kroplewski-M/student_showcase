@@ -320,6 +320,38 @@ impl UserService {
 
         Ok(())
     }
+    pub async fn delete_project(
+        &self,
+        user_id: String,
+        project_id: Uuid,
+    ) -> Result<(), ErrorMessage> {
+        //get current project images
+        let current_images = self
+            .user_repo
+            .get_project_files(&project_id)
+            .await
+            .map_err(|_| ErrorMessage::ServerError)?;
+        //delte project
+        self.user_repo
+            .delete_project(&user_id, project_id)
+            .await
+            .map_err(|_| ErrorMessage::ServerError)?;
+        //remove files from storage
+        for file in current_images {
+            if let Err(e) = self
+                .project_file_storage
+                .delete(&file.get_full_name())
+                .await
+            {
+                error!(
+                    "Failed to delete project image {}: {}",
+                    file.get_full_name(),
+                    e
+                );
+            }
+        }
+        Ok(())
+    }
 }
 
 #[cfg(test)]
