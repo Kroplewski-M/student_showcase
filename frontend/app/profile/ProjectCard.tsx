@@ -135,6 +135,8 @@ export default function ProjectCard({ project, canEdit }: Props) {
                 type="button"
                 onClick={() => setMenuOpen((o) => !o)}
                 aria-label="Project options"
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
                 className="flex cursor-pointer items-center justify-center h-8 w-8 rounded-lg border border-secondary/20 bg-secondary/5 text-secondary/70 transition-all hover:border-secondary/35 hover:bg-secondary/10 hover:text-secondary"
               >
                 <FontAwesomeIcon icon={faEllipsisVertical} />
@@ -149,8 +151,6 @@ export default function ProjectCard({ project, canEdit }: Props) {
                       setEditOpen(true);
                     }}
                     className="w-full text-left px-4 py-2 text-xs text-secondary/70 hover:bg-secondary/10 hover:text-secondary transition-colors cursor-pointer"
-                    aria-haspopup="menu"
-                    aria-expanded={menuOpen}
                   >
                     Edit
                   </button>
