@@ -8,6 +8,7 @@ interface ConfirmModalProps {
   confirmButtonClass: string;
   confirmFunction: () => void;
   onClose: () => void;
+  disableConfirm: boolean;
 }
 
 export default function ConfirmModal({
@@ -17,6 +18,7 @@ export default function ConfirmModal({
   confirmButtonClass,
   confirmFunction,
   onClose,
+  disableConfirm,
 }: ConfirmModalProps) {
   return createPortal(
     <div className="fixed z-[1000] h-screen w-screen left-0 top-0 bg-primary/85 backdrop-blur-[8px] p-5 animate-[fadeIn_0.3s_ease] flex items-center justify-center">
@@ -51,6 +53,7 @@ export default function ConfirmModal({
           </button>
           <button
             type="button"
+            disabled={disableConfirm}
             onClick={confirmFunction}
             className={`inline-flex cursor-pointer items-center gap-2 rounded-[10px] border-none px-5 py-2.5 font-[Poppins] text-sm font-semibold transition-all duration-250 ease-in-out ${confirmButtonClass}`}
           >
