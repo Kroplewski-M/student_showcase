@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -9,6 +10,7 @@ import {
   faChevronRight,
   faEllipsisVertical,
   faStar,
+  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { faStar as faStarOutline } from "@fortawesome/free-regular-svg-icons";
 import GlassCard from "../components/GlassCard";
@@ -33,6 +35,16 @@ export default function ProjectCard({
   const [editOpen, setEditOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [slideIndex, setSlideIndex] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setLightboxOpen(false);
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [lightboxOpen]);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const router = useRouter();
@@ -100,6 +112,9 @@ export default function ProjectCard({
 
   useEffect(() => {
     setSlideIndex(0);
+    if (images.length === 0) {
+      setLightboxOpen(false);
+    }
   }, [images.length]);
   const hasMultiple = images.length > 1;
   const safeLinks = project.links.filter((l) => isSafeLink(l.url));
@@ -118,7 +133,10 @@ export default function ProjectCard({
         {/* Slideshow */}
         {hasImages && (
           <div className="relative -mx-6 -mt-6 rounded-t-2xl overflow-hidden">
-            <div className="relative h-48 w-full bg-secondary/5">
+            <div
+              className="relative h-72 w-full bg-secondary/5 cursor-zoom-in"
+              onClick={() => setLightboxOpen(true)}
+            >
               <Image
                 src={getProjectImgUrl(images[slideIndex].fileName)}
                 alt={project.name}
@@ -333,6 +351,35 @@ export default function ProjectCard({
           error={deleteError}
         />
       )}
+      {lightboxOpen &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/90 backdrop-blur-sm animate-[fadeIn_0.2s_ease]"
+            onClick={() => setLightboxOpen(false)}
+          >
+            <button
+              type="button"
+              onClick={() => setLightboxOpen(false)}
+              aria-label="Close fullscreen image"
+              className="absolute top-4 right-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+            >
+              <FontAwesomeIcon icon={faXmark} />
+            </button>
+            <div
+              className="relative max-h-[90vh] max-w-[90vw] w-full h-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Image
+                src={getProjectImgUrl(images[slideIndex].fileName)}
+                alt={project.name}
+                fill
+                className="object-contain"
+                unoptimized
+              />
+            </div>
+          </div>,
+          document.body,
+        )}
     </>
   );
 }
