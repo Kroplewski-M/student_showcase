@@ -1,5 +1,6 @@
 import { createPortal } from "react-dom";
 import Close from "../SVGS/Close";
+import ErrorDisplay from "./ErrorDisplay";
 
 interface ConfirmModalProps {
   title: string;
@@ -9,6 +10,7 @@ interface ConfirmModalProps {
   confirmFunction: () => void;
   onClose: () => void;
   disableConfirm: boolean;
+  error?: string | null;
 }
 
 export default function ConfirmModal({
@@ -19,6 +21,7 @@ export default function ConfirmModal({
   confirmFunction,
   onClose,
   disableConfirm,
+  error,
 }: ConfirmModalProps) {
   return createPortal(
     <div
@@ -58,7 +61,9 @@ export default function ConfirmModal({
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3  px-8 py-5">
+        <div className="flex flex-col gap-3 px-8 py-5">
+          <ErrorDisplay text={error ?? null} />
+          <div className="flex justify-end gap-3">
           <button
             type="button"
             aria-label="close confirmation dialog"
@@ -75,6 +80,7 @@ export default function ConfirmModal({
           >
             {confirmButtonText}
           </button>
+          </div>
         </div>
       </div>
     </div>,

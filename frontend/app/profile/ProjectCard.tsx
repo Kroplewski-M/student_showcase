@@ -31,19 +31,24 @@ export default function ProjectCard({ project, canEdit }: Props) {
   const router = useRouter();
   const [deleteProjectConfirm, setDeleteProjectConfirm] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   async function deleteProject() {
     if (!canEdit) return;
     setDeleteLoading(true);
+    setDeleteError(null);
     try {
-      const res = await fetch(`api/user/delete_project/${project.id}`, {
+      const res = await fetch(`/api/user/delete_project/${project.id}`, {
         method: "delete",
         cache: "no-store",
       });
       if (res.ok) {
         router.refresh();
+      } else {
+        setDeleteError("Failed to delete project. Please try again.");
       }
     } catch (e) {
       console.log(e);
+      setDeleteError("Something went wrong. Please try again.");
     } finally {
       setDeleteLoading(false);
     }
@@ -253,8 +258,9 @@ export default function ProjectCard({ project, canEdit }: Props) {
           confirmButtonClass="bg-danger text-light"
           confirmButtonText="delete"
           confirmFunction={deleteProject}
-          onClose={() => setDeleteProjectConfirm(false)}
+          onClose={() => { setDeleteProjectConfirm(false); setDeleteError(null); }}
           disableConfirm={deleteLoading}
+          error={deleteError}
         />
       )}
     </>
