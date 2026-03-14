@@ -605,8 +605,10 @@ impl UserRepoTrait for UserRepo {
         } else {
             sqlx::query_scalar!(
                 r#"
-                INSERT INTO projects (id, user_id, name, description, live_link, embedding)
-                VALUES (gen_random_uuid(), $1, $2, $3, $4, $5)
+                INSERT INTO projects (id, user_id, name, description, live_link, embedding, featured)
+                VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, 
+                NOT EXISTS (SELECT 1 FROM projects WHERE user_id = $6)
+                )
                 RETURNING id
                 "#,
                 params.user_id,
@@ -614,6 +616,7 @@ impl UserRepoTrait for UserRepo {
                 params.description,
                 params.live_link,
                 params.embedding as Vector,
+                params.user_id
             )
             .fetch_one(tx.as_mut())
             .await?
