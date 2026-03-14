@@ -11,8 +11,8 @@ use crate::{
         auth::validate_student_id,
         reference::FileInfo,
         user::{
-            ProjectForm, ProjectFormData, ProjectUpsertData, UpdateUserInfo, UserFormData,
-            UserProfileView,
+            ProjectForm, ProjectFormData, ProjectUpsertData, UpdateUserInfo, UpsertProjectParams,
+            UserFormData, UserProfileView,
         },
     },
     errors::ErrorMessage,
@@ -286,22 +286,19 @@ impl UserService {
             .filter(|f| !data.existing_images.contains(&f.get_full_name()))
             .map(|f| f.get_full_name())
             .collect();
-
-        let res = self
-            .user_repo
-            .upsert_project(
-                &user_id,
-                data.id,
-                &data.name,
-                &data.description,
-                data.live_link,
-                data.selected_tools,
-                data.links,
-                uploaded_images,
-                data.existing_images,
-                vector,
-            )
-            .await;
+        let params = UpsertProjectParams {
+            user_id,
+            project_id: data.id,
+            name: data.name,
+            description: data.description,
+            live_link: data.live_link,
+            selected_tools: data.selected_tools,
+            links: data.links,
+            new_images: uploaded_images,
+            existing_images: data.existing_images,
+            embedding: vector,
+        };
+        let res = self.user_repo.upsert_project(params).await;
 
         match res {
             Ok(_) => {
@@ -321,6 +318,38 @@ impl UserService {
             }
         }
 
+        Ok(())
+    }
+    pub async fn delete_project(
+        &self,
+        user_id: String,
+        project_id: Uuid,
+    ) -> Result<(), ErrorMessage> {
+        //get current project images
+        let current_images = self
+            .user_repo
+            .get_project_files(&project_id)
+            .await
+            .map_err(|_| ErrorMessage::ServerError)?;
+        //delte project
+        self.user_repo
+            .delete_project(&user_id, project_id)
+            .await
+            .map_err(|_| ErrorMessage::ServerError)?;
+        //remove files from storage
+        for file in current_images {
+            if let Err(e) = self
+                .project_file_storage
+                .delete(&file.get_full_name())
+                .await
+            {
+                error!(
+                    "Failed to delete project image {}: {}",
+                    file.get_full_name(),
+                    e
+                );
+            }
+        }
         Ok(())
     }
 }
