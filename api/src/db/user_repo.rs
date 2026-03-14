@@ -735,21 +735,26 @@ impl UserRepoTrait for UserRepo {
     async fn delete_project(&self, user_id: &str, project_id: Uuid) -> Result<(), sqlx::Error> {
         let mut tx = self.pool.begin().await?;
 
-        // 1. Check if project exists
-        sqlx::query_scalar!(
+        // 1. Check if project exists and belongs to user
+        let exists: bool = sqlx::query_scalar!(
             r#"
             SELECT EXISTS (
             SELECT 1
-            FROM projects 
+            FROM projects
             WHERE id = $1
-            AND user_id = $2 
+            AND user_id = $2
         )
         "#,
             project_id,
             user_id,
         )
         .fetch_one(tx.as_mut())
-        .await?;
+        .await?
+        .unwrap_or(false);
+
+        if !exists {
+            return Err(sqlx::Error::RowNotFound);
+        }
         // 2. Remove project tools
         sqlx::query_scalar!(
             r#"
