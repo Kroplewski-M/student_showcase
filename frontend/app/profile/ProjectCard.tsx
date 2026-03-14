@@ -97,6 +97,10 @@ export default function ProjectCard({
 
   const images = project.images;
   const hasImages = images.length > 0;
+
+  useEffect(() => {
+    setSlideIndex(0);
+  }, [images.length]);
   const hasMultiple = images.length > 1;
   const safeLinks = project.links.filter((l) => isSafeLink(l.url));
   function prev() {
