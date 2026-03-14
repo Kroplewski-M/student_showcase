@@ -9,9 +9,14 @@ const MAX_PROJECTS = 5;
 interface UserProjectProps {
   projects: Project[];
   canEdit: boolean;
+  featuredProjectId: string | null;
 }
 
-export default function UserProjects({ projects, canEdit }: UserProjectProps) {
+export default function UserProjects({
+  projects,
+  canEdit,
+  featuredProjectId: featuredProjectId,
+}: UserProjectProps) {
   const [addOpen, setAddOpen] = useState(false);
 
   return (
@@ -31,14 +36,21 @@ export default function UserProjects({ projects, canEdit }: UserProjectProps) {
             >
               Add Project
             </button>
-            {addOpen && <UpsertProjectModal onClose={() => setAddOpen(false)} />}
+            {addOpen && (
+              <UpsertProjectModal onClose={() => setAddOpen(false)} />
+            )}
           </>
         )}
       </div>
       {projects.length > 0 ? (
         <div className="flex flex-col gap-4">
           {projects.map((project) => (
-            <ProjectCard key={project.id} project={project} canEdit={canEdit} />
+            <ProjectCard
+              key={project.id}
+              project={project}
+              canEdit={canEdit}
+              isFeatured={featuredProjectId === project.id}
+            />
           ))}
         </div>
       ) : (

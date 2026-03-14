@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                UPDATE projects\n                SET featured = true \n                WHERE user_id = $1\n                AND id = $2\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Uuid"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2dcf63aff749cd0e01c3e87584edddc355b05aa19bc93312d1942da98d2ec9ba"
+}

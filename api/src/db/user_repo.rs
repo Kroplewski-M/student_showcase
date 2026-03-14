@@ -244,7 +244,7 @@ impl UserRepoTrait for UserRepo {
                 p.featured_image_id as "featured_img_id?"
             FROM projects p
             WHERE p.user_id = $1
-            ORDER BY p.created_at
+            ORDER BY p.featured DESC, p.created_at ASC
         "#,
             user_id
         )

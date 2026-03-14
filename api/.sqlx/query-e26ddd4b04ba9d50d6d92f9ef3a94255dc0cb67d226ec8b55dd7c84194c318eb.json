@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE projects\n            SET featured = true\n            WHERE id = (\n                SELECT id FROM projects\n                WHERE user_id = $1\n                ORDER BY created_at ASC\n                LIMIT 1\n            )\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e26ddd4b04ba9d50d6d92f9ef3a94255dc0cb67d226ec8b55dd7c84194c318eb"
+}

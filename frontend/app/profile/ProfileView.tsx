@@ -9,7 +9,6 @@ import ProfileInfo from "./ProfileInfo";
 import Edit from "../SVGS/Edit";
 import EditProfileForm from "./EditProfileForm";
 import UserProjects from "./UserProjects";
-import ConfirmModal from "../components/ConfirmModal";
 
 interface Props {
   profile: UserProfile;
@@ -75,7 +74,11 @@ export default function ProfileView({ profile, canEdit = false }: Props) {
               <ProfileInfo user={profile} />
             </div>
           </GlassCard>
-          <UserProjects projects={profile.projects} canEdit={canEdit} />
+          <UserProjects
+            projects={profile.projects}
+            canEdit={canEdit}
+            featuredProjectId={profile.featuredProjectId}
+          />
         </motion.div>
       </div>
     </>

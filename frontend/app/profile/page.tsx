@@ -53,7 +53,6 @@ export default async function ProfilePage() {
         res.status === 404
           ? "Profile not found."
           : "Something went wrong loading your profile.";
-      console.log(res);
     } else {
       profile = await res.json();
     }

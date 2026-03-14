@@ -8,7 +8,9 @@ import {
   faChevronLeft,
   faChevronRight,
   faEllipsisVertical,
+  faStar,
 } from "@fortawesome/free-solid-svg-icons";
+import { faStar as faStarOutline } from "@fortawesome/free-regular-svg-icons";
 import GlassCard from "../components/GlassCard";
 import { getLinkIcon } from "../components/LinkIcon";
 import { getProjectImgUrl, isSafeLink } from "../lib/helpers";
@@ -20,9 +22,14 @@ import ConfirmModal from "../components/ConfirmModal";
 interface Props {
   project: Project;
   canEdit: boolean;
+  isFeatured: boolean;
 }
 
-export default function ProjectCard({ project, canEdit }: Props) {
+export default function ProjectCard({
+  project,
+  canEdit,
+  isFeatured: isFeatured,
+}: Props) {
   const [editOpen, setEditOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [slideIndex, setSlideIndex] = useState(0);
@@ -32,6 +39,30 @@ export default function ProjectCard({ project, canEdit }: Props) {
   const [deleteProjectConfirm, setDeleteProjectConfirm] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [featuredConfirm, setFeaturedConfirm] = useState(false);
+  const [featuredLoading, setFeaturedLoading] = useState(false);
+  const [featuredError, setFeaturedError] = useState<string | null>(null);
+
+  async function setFeatured() {
+    setFeaturedLoading(true);
+    setFeaturedError(null);
+    try {
+      const res = await fetch(`/api/user/feature_project/${project.id}`, {
+        method: "POST",
+        cache: "no-store",
+      });
+      if (res.ok) {
+        setFeaturedConfirm(false);
+        router.refresh();
+      } else {
+        setFeaturedError("Failed to set featured project. Please try again.");
+      }
+    } catch {
+      setFeaturedError("Something went wrong. Please try again.");
+    } finally {
+      setFeaturedLoading(false);
+    }
+  }
   async function deleteProject() {
     if (!canEdit) return;
     setDeleteLoading(true);
@@ -47,8 +78,7 @@ export default function ProjectCard({ project, canEdit }: Props) {
       } else {
         setDeleteError("Failed to delete project. Please try again.");
       }
-    } catch (e) {
-      console.log(e);
+    } catch {
       setDeleteError("Something went wrong. Please try again.");
     } finally {
       setDeleteLoading(false);
@@ -134,15 +164,25 @@ export default function ProjectCard({ project, canEdit }: Props) {
 
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
+          <div className="min-w-0 flex items-center gap-2">
+            {canEdit && (
+              <button
+                type="button"
+                disabled={isFeatured}
+                onClick={() => {
+                  if (!isFeatured) setFeaturedConfirm(true);
+                }}
+                aria-label={
+                  isFeatured ? "Featured project" : "Set as featured project"
+                }
+                className={`shrink-0 transition-colors ${isFeatured ? "text-yellow-400 cursor-default" : "text-secondary/30 hover:text-yellow-400 cursor-pointer"}`}
+              >
+                <FontAwesomeIcon icon={isFeatured ? faStar : faStarOutline} />
+              </button>
+            )}
             <h3 className="text-base font-semibold text-white truncate">
               {project.name}
             </h3>
-            {project.description && (
-              <p className="mt-1 text-sm leading-relaxed text-secondary/60 line-clamp-2">
-                {project.description}
-              </p>
-            )}
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {project.liveLink && isSafeLink(project.liveLink) && (
@@ -208,6 +248,11 @@ export default function ProjectCard({ project, canEdit }: Props) {
             )}
           </div>
         </div>
+        {project.description && (
+          <p className="mt-1 text-sm leading-relaxed text-secondary/60 line-clamp-2">
+            {project.description}
+          </p>
+        )}
         {/* Tools */}
         {project.tools.length > 0 && (
           <div>
@@ -252,6 +297,22 @@ export default function ProjectCard({ project, canEdit }: Props) {
           </div>
         )}
       </GlassCard>
+      {canEdit && featuredConfirm && (
+        <ConfirmModal
+          title="Set Featured Project"
+          description={`Set "${project.name}" as your featured project? This will replace your current featured project.`}
+          confirmButtonClass="bg-[linear-gradient(135deg,var(--color-secondary),var(--color-support))] text-primary"
+          confirmButtonText="Set as Featured"
+          confirmFunction={setFeatured}
+          onClose={() => {
+            if (featuredLoading) return;
+            setFeaturedConfirm(false);
+            setFeaturedError(null);
+          }}
+          disableConfirm={featuredLoading}
+          error={featuredError}
+        />
+      )}
       {canEdit && deleteProjectConfirm && (
         <ConfirmModal
           title={`Delete Project ${project.name}`}
