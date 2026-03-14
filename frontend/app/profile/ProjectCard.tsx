@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowUpRightFromSquare,
   faChevronLeft,
   faChevronRight,
+  faEllipsisVertical,
 } from "@fortawesome/free-solid-svg-icons";
 import GlassCard from "../components/GlassCard";
 import { getLinkIcon } from "../components/LinkIcon";
@@ -21,7 +22,20 @@ interface Props {
 
 export default function ProjectCard({ project, canEdit }: Props) {
   const [editOpen, setEditOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [slideIndex, setSlideIndex] = useState(0);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [menuOpen]);
 
   const images = project.images;
   const hasImages = images.length > 0;
@@ -35,7 +49,7 @@ export default function ProjectCard({ project, canEdit }: Props) {
   }
 
   return (
-    <GlassCard className="flex flex-col gap-5 p-6">
+    <GlassCard className={`flex flex-col gap-5 p-6 ${menuOpen ? "z-10" : ""}`}>
       {/* Slideshow */}
       {hasImages && (
         <div className="relative -mx-6 -mt-6 rounded-t-2xl overflow-hidden">
@@ -116,20 +130,47 @@ export default function ProjectCard({ project, canEdit }: Props) {
             </a>
           )}
           {canEdit && (
-            <>
+            <div className="relative" ref={menuRef}>
               <button
-                onClick={() => setEditOpen(true)}
-                className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-secondary/20 bg-secondary/5 px-3 py-1.5 text-xs font-medium text-secondary/70 transition-all hover:border-secondary/35 hover:bg-secondary/10 hover:text-secondary"
+                type="button"
+                onClick={() => setMenuOpen((o) => !o)}
+                aria-label="Project options"
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                className="flex cursor-pointer items-center justify-center h-8 w-8 rounded-lg border border-secondary/20 bg-secondary/5 text-secondary/70 transition-all hover:border-secondary/35 hover:bg-secondary/10 hover:text-secondary"
               >
-                Edit
+                <FontAwesomeIcon icon={faEllipsisVertical} />
               </button>
+
+              {menuOpen && (
+                <div className="absolute right-0 top-full mt-1 z-50 min-w-[120px] rounded-lg border border-secondary/15 bg-primary/80 backdrop-blur-md py-1 shadow-lg">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setEditOpen(true);
+                    }}
+                    className="w-full text-left px-4 py-2 text-xs text-secondary/70 hover:bg-secondary/10 hover:text-secondary transition-colors cursor-pointer"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMenuOpen(false)}
+                    className="w-full text-left px-4 py-2 text-xs text-red-400/70 hover:bg-secondary/10 hover:text-red-400 transition-colors cursor-pointer"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
+
               {editOpen && (
                 <UpsertProjectModal
                   project={project}
                   onClose={() => setEditOpen(false)}
                 />
               )}
-            </>
+            </div>
           )}
         </div>
       </div>

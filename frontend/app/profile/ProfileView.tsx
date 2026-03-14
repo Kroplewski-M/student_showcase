@@ -9,6 +9,7 @@ import ProfileInfo from "./ProfileInfo";
 import Edit from "../SVGS/Edit";
 import EditProfileForm from "./EditProfileForm";
 import UserProjects from "./UserProjects";
+import ConfirmModal from "../components/ConfirmModal";
 
 interface Props {
   profile: UserProfile;
@@ -49,7 +50,7 @@ export default function ProfileView({ profile, canEdit = false }: Props) {
             ease: [0.16, 1, 0.3, 1],
           }}
         >
-          <div className="flex flex-wrap items-start justify-between ">
+          <div className="flex flex-wrap items-start justify-between">
             <h1 className="mb-5 text-2xl font-bold text-white">Profile</h1>
             {canEdit && (
               <>
