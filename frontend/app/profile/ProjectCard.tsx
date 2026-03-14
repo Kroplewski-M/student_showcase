@@ -112,6 +112,9 @@ export default function ProjectCard({
 
   useEffect(() => {
     setSlideIndex(0);
+    if (images.length === 0) {
+      setLightboxOpen(false);
+    }
   }, [images.length]);
   const hasMultiple = images.length > 1;
   const safeLinks = project.links.filter((l) => isSafeLink(l.url));
