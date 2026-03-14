@@ -1,9 +1,10 @@
 use actix_multipart::form::{MultipartForm, json::Json, tempfile::TempFile};
+use pgvector::Vector;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use validator::Validate;
 
-use crate::dtos::reference::{Course, LinkType, SoftwareTool};
+use crate::dtos::reference::{Course, FileInfo, LinkType, SoftwareTool};
 
 #[derive(Debug, Deserialize, Serialize, sqlx::FromRow, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -264,4 +265,16 @@ pub struct ProjectFormUpsert {
 #[derive(Deserialize)]
 pub struct UpsertProjectQuery {
     pub project_id: Option<Uuid>,
+}
+pub struct UpsertProjectParams {
+    pub user_id: String,
+    pub project_id: Option<Uuid>,
+    pub name: String,
+    pub description: String,
+    pub live_link: Option<String>,
+    pub selected_tools: Vec<Uuid>,
+    pub links: Vec<UpsertLinkPayload>,
+    pub new_images: Vec<FileInfo>,
+    pub existing_images: Vec<String>,
+    pub embedding: Vector,
 }
