@@ -610,8 +610,8 @@ impl UserRepoTrait for UserRepo {
                 RETURNING id
                 "#,
                 params.user_id,
-                params.description,
                 params.name,
+                params.description,
                 params.live_link,
                 params.embedding as Vector,
             )
@@ -756,7 +756,7 @@ impl UserRepoTrait for UserRepo {
             return Err(sqlx::Error::RowNotFound);
         }
         // 2. Remove project tools
-        sqlx::query_scalar!(
+        sqlx::query!(
             r#"
                 DELETE FROM project_tools
                 where project_id = $1
@@ -766,7 +766,7 @@ impl UserRepoTrait for UserRepo {
         .execute(tx.as_mut())
         .await?;
         // 3. Remove project links
-        sqlx::query_scalar!(
+        sqlx::query!(
             r#"
                 DELETE FROM project_links 
                 where project_id = $1
@@ -787,7 +787,7 @@ impl UserRepoTrait for UserRepo {
         .fetch_all(tx.as_mut())
         .await?;
         // 5. Remove files
-        sqlx::query_scalar!(
+        sqlx::query!(
             r#"
             DELETE FROM files WHERE id = ANY($1)
         "#,
@@ -796,7 +796,7 @@ impl UserRepoTrait for UserRepo {
         .execute(tx.as_mut())
         .await?;
         // 6. Remove project
-        sqlx::query_scalar!(
+        sqlx::query!(
             r#"
             DELETE FROM projects
             WHERE id = $1
