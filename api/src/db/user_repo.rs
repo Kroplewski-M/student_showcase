@@ -58,6 +58,7 @@ pub trait UserRepoTrait: Send + Sync {
     async fn get_project_files(&self, project_id: &Uuid) -> Result<Vec<File>, sqlx::Error>;
     async fn upsert_project(&self, params: UpsertProjectParams) -> Result<Uuid, sqlx::Error>;
     async fn delete_project(&self, user_id: &str, project_id: Uuid) -> Result<(), sqlx::Error>;
+    async fn feature_project(&self, user_id: &str, project_id: Uuid) -> Result<(), sqlx::Error>;
 }
 
 #[async_trait]
@@ -832,6 +833,34 @@ impl UserRepoTrait for UserRepo {
         tx.commit().await?;
         Ok(())
     }
+    async fn feature_project(&self, user_id: &str, project_id: Uuid) -> Result<(), sqlx::Error> {
+        let mut tx = self.pool.begin().await?;
+        sqlx::query!(
+            r#"
+                UPDATE projects
+                SET featured = false
+                WHERE user_id = $1
+                "#,
+            user_id
+        )
+        .execute(tx.as_mut())
+        .await?;
+
+        sqlx::query!(
+            r#"
+                UPDATE projects
+                SET featured = true 
+                WHERE user_id = $1
+                AND id = $2
+                "#,
+            user_id,
+            project_id
+        )
+        .execute(tx.as_mut())
+        .await?;
+        tx.commit().await?;
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -872,6 +901,7 @@ pub mod mocks {
             async fn get_project_files(&self, project_id: &Uuid) -> Result<Vec<File>, sqlx::Error>;
             async fn upsert_project(&self, params: UpsertProjectParams) -> Result<Uuid, sqlx::Error>;
             async fn delete_project(&self, user_id: &str, project_id: Uuid) -> Result<(), sqlx::Error>;
+            async fn feature_project(&self, user_id: &str, project_id: Uuid) -> Result<(), sqlx::Error>;
         }
     }
 }

@@ -352,6 +352,16 @@ impl UserService {
         }
         Ok(())
     }
+    pub async fn feature_project(
+        &self,
+        user_id: String,
+        project_id: Uuid,
+    ) -> Result<(), ErrorMessage> {
+        self.user_repo
+            .feature_project(&user_id, project_id)
+            .await
+            .map_err(|_| ErrorMessage::ServerError)
+    }
 }
 
 #[cfg(test)]
@@ -520,6 +530,7 @@ mod tests {
                     personal_email: None,
                     course_name: None,
                     description: None,
+                    featured_project_id: None,
                 },
                 certificates: vec![],
                 tools: vec![],
