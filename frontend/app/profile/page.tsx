@@ -31,6 +31,7 @@ export interface UserProfile {
   links: Links[] | null;
   tools: string[] | null;
   projects: Project[];
+  featuredProjectId: string | null;
 }
 
 export default async function ProfilePage() {
@@ -52,6 +53,7 @@ export default async function ProfilePage() {
         res.status === 404
           ? "Profile not found."
           : "Something went wrong loading your profile.";
+      console.log(res);
     } else {
       profile = await res.json();
     }

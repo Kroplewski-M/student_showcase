@@ -181,10 +181,12 @@ impl UserRepoTrait for UserRepo {
                     u.last_name AS "last_name?",
                     u.personal_email AS "personal_email?", 
                     c.name AS "course_name?",
-                    u.description AS "description?"
+                    u.description AS "description?",
+                    p.id AS "featured_project_id?"
                 FROM users u
                 LEFT JOIN courses c ON u.course_id = c.id
                 LEFT JOIN files f ON u.image_id = f.id
+                LEFT JOIN projects p ON p.user_id = u.id AND p.featured = true
                 WHERE u.id = $1 
                 AND u.verified = true
             "#,
@@ -799,16 +801,34 @@ impl UserRepoTrait for UserRepo {
         .execute(tx.as_mut())
         .await?;
         // 6. Remove project
-        sqlx::query!(
+        let was_featured = sqlx::query_scalar!(
             r#"
             DELETE FROM projects
             WHERE id = $1
+            RETURNING featured
         "#,
             project_id
         )
-        .execute(tx.as_mut())
+        .fetch_one(tx.as_mut())
         .await?;
 
+        if was_featured {
+            sqlx::query!(
+                r#"
+            UPDATE projects
+            SET featured = true
+            WHERE id = (
+                SELECT id FROM projects
+                WHERE user_id = $1
+                ORDER BY created_at ASC
+                LIMIT 1
+            )
+            "#,
+                user_id
+            )
+            .execute(tx.as_mut())
+            .await?;
+        }
         tx.commit().await?;
         Ok(())
     }
