@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n            (SELECT COUNT(*) FROM users WHERE verified = true) AS student_count,\n            (SELECT COUNT(*) FROM projects) AS project_count\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "student_count",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "project_count",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "33ddc4a652bf05eca4cfe9e8fd43a8a6155cd65b1482a52ca8663464d7178f80"
+}
