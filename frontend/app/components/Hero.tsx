@@ -4,8 +4,12 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import HeroVisuals from "./ParticleNetwork";
 import GridBackground from "./GridBackground";
+import { siteInfoDto } from "../lib/dtos";
 
-export default function Hero() {
+interface heroProps {
+  siteInfo: siteInfoDto | null;
+}
+export default function Hero({ siteInfo }: heroProps) {
   return (
     <section className="sticky top-0 flex min-h-screen items-start pt-32 px-4 sm:px-8">
       <GridBackground />
@@ -116,7 +120,11 @@ export default function Hero() {
             <div className="flex gap-8">
               <div>
                 <p className="text-2xl font-extrabold tracking-tight text-light sm:text-3xl">
-                  &mdash;
+                  {siteInfo?.studentCount != null ? (
+                    <>{siteInfo.studentCount}</>
+                  ) : (
+                    <>&mdash;</>
+                  )}
                 </p>
                 <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-support/40">
                   Students
@@ -125,7 +133,11 @@ export default function Hero() {
               <div className="w-px bg-third/30" />
               <div>
                 <p className="text-2xl font-extrabold tracking-tight text-light sm:text-3xl">
-                  &mdash;
+                  {siteInfo?.projectCount != null ? (
+                    <>{siteInfo.projectCount}</>
+                  ) : (
+                    <>&mdash;</>
+                  )}
                 </p>
                 <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-support/40">
                   Projects
