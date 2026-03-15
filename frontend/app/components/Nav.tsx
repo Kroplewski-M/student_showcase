@@ -40,6 +40,7 @@ export default function Nav() {
             <>
               <Link
                 href="https://www.eventbrite.co.uk/e/school-of-computing-and-engineering-futures-2026-student-showcase-tickets-1983441764711"
+                target="_blank"
                 className="rounded-xl bg-secondary px-5 py-2 text-sm font-bold text-primary transition-all hover:bg-secondary/85 hover:shadow-lg hover:shadow-secondary/20 active:scale-[0.985]"
               >
                 Book Your Place

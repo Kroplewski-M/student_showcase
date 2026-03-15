@@ -215,7 +215,7 @@ export default function HeroVisuals() {
   return (
     <motion.div
       style={{ opacity }}
-      className="relative h-[50vh] w-full sm:-mt-24 sm:h-[55vh] overflow-hidden"
+      className="relative h-[50vh] w-full sm:-mt-24 sm:h-[55vh] overflow-hidden pointer-events-none"
     >
       {/* Particle network background */}
       <motion.div style={{ y: yNetwork }} className="absolute inset-0">
