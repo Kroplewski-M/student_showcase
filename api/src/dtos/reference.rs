@@ -27,3 +27,9 @@ pub struct FileInfo {
     pub length: i64,
     pub file_type: String,
 }
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct StudentInfo {
+    pub student_count: i64,
+    pub project_count: i64,
+}

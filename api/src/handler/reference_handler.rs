@@ -7,6 +7,7 @@ pub fn reference_handler() -> impl HttpServiceFactory {
         .route("/link_types", web::get().to(get_link_types))
         .route("/courses", web::get().to(get_courses))
         .route("/tools", web::get().to(get_tools))
+        .route("/site_info", web::get().to(get_site_info))
 }
 
 async fn get_link_types(app_state: web::Data<AppState>) -> Result<HttpResponse, HttpError> {
@@ -31,6 +32,15 @@ async fn get_tools(app_state: web::Data<AppState>) -> Result<HttpResponse, HttpE
     let res = app_state
         .reference_service
         .get_tools()
+        .await
+        .map_err(HttpError::server_error)?;
+
+    Ok(HttpResponse::Ok().json(res))
+}
+async fn get_site_info(app_state: web::Data<AppState>) -> Result<HttpResponse, HttpError> {
+    let res = app_state
+        .reference_service
+        .get_site_info()
         .await
         .map_err(HttpError::server_error)?;
 
