@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::{
     db::reference_repo::ReferenceRepoTrait,
-    dtos::reference::{Course, LinkType, SoftwareTool, StudentInfo},
+    dtos::reference::{Course, LinkType, SiteInfo, SoftwareTool},
     errors::ErrorMessage,
     utils::generic::MemoryCache,
 };
@@ -55,7 +55,7 @@ impl ReferenceService {
             })
             .await
     }
-    pub async fn get_site_info(&self) -> Result<StudentInfo, ErrorMessage> {
+    pub async fn get_site_info(&self) -> Result<SiteInfo, ErrorMessage> {
         self.reference_repo
             .get_site_info()
             .await

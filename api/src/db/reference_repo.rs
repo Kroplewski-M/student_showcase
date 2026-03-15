@@ -1,11 +1,11 @@
 use async_trait::async_trait;
 use sqlx::{Pool, Postgres};
 
-use crate::dtos::reference::{Course, LinkType, SoftwareTool, StudentInfo};
+use crate::dtos::reference::{Course, LinkType, SiteInfo, SoftwareTool};
 
 #[cfg(test)]
 pub mod mocks {
-    use crate::dtos::reference::StudentInfo;
+    use crate::dtos::reference::SiteInfo;
 
     use super::*;
     use mockall::mock;
@@ -18,7 +18,7 @@ pub mod mocks {
             async fn get_link_types(&self) -> Result<Vec<LinkType>, sqlx::Error>;
             async fn get_courses(&self) -> Result<Vec<Course>, sqlx::Error>;
             async fn get_tools(&self) -> Result<Vec<SoftwareTool>, sqlx::Error>;
-            async fn get_site_info(&self) -> Result<StudentInfo, sqlx::Error>;
+            async fn get_site_info(&self) -> Result<SiteInfo, sqlx::Error>;
         }
     }
 }
@@ -39,7 +39,7 @@ pub trait ReferenceRepoTrait: Send + Sync {
     async fn get_link_types(&self) -> Result<Vec<LinkType>, sqlx::Error>;
     async fn get_courses(&self) -> Result<Vec<Course>, sqlx::Error>;
     async fn get_tools(&self) -> Result<Vec<SoftwareTool>, sqlx::Error>;
-    async fn get_site_info(&self) -> Result<StudentInfo, sqlx::Error>;
+    async fn get_site_info(&self) -> Result<SiteInfo, sqlx::Error>;
 }
 
 #[async_trait]
@@ -78,7 +78,7 @@ impl ReferenceRepoTrait for ReferenceRepo {
         .fetch_all(&self.pool)
         .await
     }
-    async fn get_site_info(&self) -> Result<StudentInfo, sqlx::Error> {
+    async fn get_site_info(&self) -> Result<SiteInfo, sqlx::Error> {
         let info = sqlx::query!(
             r#"
             SELECT
@@ -88,7 +88,7 @@ impl ReferenceRepoTrait for ReferenceRepo {
         )
         .fetch_one(&self.pool)
         .await?;
-        Ok(StudentInfo {
+        Ok(SiteInfo {
             student_count: info.student_count.unwrap_or(0),
             project_count: info.project_count.unwrap_or(0),
         })
