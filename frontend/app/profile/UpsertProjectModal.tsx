@@ -103,7 +103,7 @@ export default function UpsertProjectModal({ project, onClose }: Props) {
           data: {
             name: data.name ?? "",
             description: data.description ?? "",
-            liveLink: data.live_link ?? "",
+            liveLink: data.liveLink ?? "",
             selectedTools: Array.isArray(data.selectedTools)
               ? data.selectedTools
               : [],
