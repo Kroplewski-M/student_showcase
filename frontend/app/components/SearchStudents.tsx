@@ -9,6 +9,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import StudentsSearchFallback from "./StudentsSearchFallback";
+import GridBackground from "./GridBackground";
 
 interface SearchStudentsProps {
   query: string | undefined;
@@ -53,6 +54,7 @@ export default function SearchStudents({
       style={{ rotate, transformOrigin: "bottom center" }}
       className="relative z-30 bg-primary shadow-[0_-40px_80px_rgba(0,0,0,0.5)] min-h-screen pb-16"
     >
+      <GridBackground />
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-secondary/40 to-transparent" />
 
       {/* Page fold — top-right corner */}
