@@ -9,6 +9,9 @@
   --color-dark: #333333;
   --color-danger: #bf2417;
 }
+html {
+  scroll-behavior: smooth;
+}
 body {
   background: var(--color-primary);
   font-family: "Poppins", sans-serif;
