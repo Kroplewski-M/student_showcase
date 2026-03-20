@@ -7,8 +7,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { useRef, useState, useTransition } from "react";
-import StudentsSearchFallback from "./StudentsSearchFallback";
+import { useRef, useState } from "react";
 import GridBackground from "./GridBackground";
 
 interface SearchStudentsProps {
@@ -24,7 +23,6 @@ export default function SearchStudents({
   const router = useRouter();
   const [input, setInput] = useState(query ?? "");
   const [focused, setFocused] = useState(false);
-  const [isPending, startTransition] = useTransition();
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -34,13 +32,11 @@ export default function SearchStudents({
   const rotate = useTransform(scrollYProgress, [0, 1], [-5, 0]);
   function submitSearch() {
     const trimmed = input.trim();
-    startTransition(() => {
-      if (trimmed) {
-        router.push(`?query=${encodeURIComponent(trimmed)}#students`);
-      } else {
-        router.push(`/#students`);
-      }
-    });
+    if (trimmed) {
+      router.push(`?query=${encodeURIComponent(trimmed)}#students`);
+    } else {
+      router.push(`/#students`);
+    }
   }
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -218,12 +214,9 @@ export default function SearchStudents({
         </motion.div>
       </div>
 
-      {/* Results */}
-      {(isPending || children) && (
-        <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-8 sm:px-8">
-          {isPending ? <StudentsSearchFallback /> : children}
-        </div>
-      )}
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pb-8 sm:px-8">
+        {children}
+      </div>
 
       {/* Bottom corner accent */}
       <div className="pointer-events-none">

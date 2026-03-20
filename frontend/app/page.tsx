@@ -1,9 +1,7 @@
-import { Suspense } from "react";
 import About from "./components/About";
 import Hero from "./components/Hero";
 import SearchStudents from "./components/SearchStudents";
 import StudentsResult from "./components/StudentsResult";
-import StudentsSearchFallback from "./components/StudentsSearchFallback";
 import { siteInfoDto } from "./lib/dtos";
 
 export default async function Home({
@@ -28,11 +26,7 @@ export default async function Home({
         <About />
       </div>
       <SearchStudents query={query}>
-        {query && (
-          <Suspense fallback={<StudentsSearchFallback />}>
-            <StudentsResult query={query} />
-          </Suspense>
-        )}
+        {query && <StudentsResult query={query} />}
       </SearchStudents>
     </div>
   );
