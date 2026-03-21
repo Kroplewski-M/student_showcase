@@ -11,8 +11,8 @@ use crate::{
         auth::validate_student_id,
         reference::FileInfo,
         user::{
-            ProjectForm, ProjectFormData, ProjectUpsertData, UpdateUserInfo, UpsertProjectParams,
-            UserFormData, UserProfileView,
+            ProjectForm, ProjectFormData, ProjectUpsertData, SearchStudentsQuery, StudentSearchDto,
+            UpdateUserInfo, UpsertProjectParams, UserFormData, UserProfileView,
         },
     },
     errors::ErrorMessage,
@@ -361,6 +361,15 @@ impl UserService {
             .feature_project(&user_id, project_id)
             .await
             .map_err(|_| ErrorMessage::ServerError)
+    }
+    pub async fn search_students(&self, query: String) -> Result<StudentSearchDto, ErrorMessage> {
+        let vector = pgvector::Vector::from(self.embedding.embed_document(query).await?);
+        let data = self
+            .user_repo
+            .search_students(vector)
+            .await
+            .map_err(|_| ErrorMessage::ServerError)?;
+        Ok(StudentSearchDto { students: data })
     }
 }
 

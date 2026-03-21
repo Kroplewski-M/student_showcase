@@ -7,7 +7,10 @@ use crate::{
     AppState,
     dtos::{
         Response,
-        user::{ProjectFormUpsert, UpdateUserInfo, UpsertProjectQuery, UserProfileForm},
+        user::{
+            ProjectFormUpsert, SearchStudentsQuery, UpdateUserInfo, UpsertProjectQuery,
+            UserProfileForm,
+        },
     },
     errors::{ErrorMessage, HttpError},
     middleware::auth::{AuthenticatedUserId, RequireAuth},
@@ -19,6 +22,7 @@ pub fn user_handler() -> impl HttpServiceFactory {
     web::scope("/user")
         // Public routes (no auth)
         .route("/info/{id}", web::get().to(get_user_profile))
+        .route("/search", web::get().to(search_sudents))
         // Protected routes wrapped in their own scope
         .service(
             web::scope("")
@@ -198,4 +202,15 @@ pub async fn feature_user_project(
         status: "success",
         message: "project updated successfully".to_string(),
     }))
+}
+pub async fn search_sudents(
+    app_state: web::Data<AppState>,
+    data: web::Query<SearchStudentsQuery>,
+) -> Result<HttpResponse, HttpError> {
+    let data = app_state
+        .user_service
+        .search_students(data.query.clone())
+        .await
+        .map_err(HttpError::server_error)?;
+    Ok(HttpResponse::Ok().json(data))
 }
