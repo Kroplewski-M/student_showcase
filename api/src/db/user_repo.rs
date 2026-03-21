@@ -1014,6 +1014,7 @@ impl UserRepoTrait for UserRepo {
                         .unwrap_or_default(),
                 };
                 UserCardInfo {
+                    id: b.user_id.clone(),
                     first_name: b.first_name.unwrap_or_default(),
                     last_name: b.last_name.unwrap_or_default(),
                     profile_image: b.image_name,
