@@ -7,7 +7,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import GridBackground from "./GridBackground";
 
 interface SearchStudentsProps {
@@ -23,6 +23,19 @@ export default function SearchStudents({
   const router = useRouter();
   const [input, setInput] = useState(query ?? "");
   const [focused, setFocused] = useState(false);
+
+  useEffect(() => {
+    const saved = sessionStorage.getItem("studentsScroll");
+    if (saved === null) return;
+    sessionStorage.removeItem("studentsScroll");
+    const y = Number(saved);
+    // Retry a few times to win against hydration / framer-motion layout shifts
+    const attempts = [0, 100, 300];
+    const ids = attempts.map((delay) =>
+      setTimeout(() => window.scrollTo({ top: y, behavior: "instant" }), delay),
+    );
+    return () => ids.forEach(clearTimeout);
+  }, []);
 
   const { scrollYProgress } = useScroll({
     target: sectionRef,
