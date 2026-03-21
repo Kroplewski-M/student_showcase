@@ -291,6 +291,7 @@ pub struct FeaturedProjectCard {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UserCardInfo {
+    pub id: String,
     pub first_name: String,
     pub last_name: String,
     pub profile_image: Option<String>,

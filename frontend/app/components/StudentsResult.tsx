@@ -1,13 +1,5 @@
 "use client";
-import { useEffect } from "react";
 
-interface StudentsResultProps {
-  query: string;
-}
-
-export default function StudentsResult({ query }: StudentsResultProps) {
-  useEffect(() => {
-    console.log(query);
-  }, [query]);
+export default function StudentsResult() {
   return <div className=""></div>;
 }
