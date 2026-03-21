@@ -7,9 +7,10 @@ use uuid::Uuid;
 
 use crate::{
     dtos::user::{
-        ProjImageRow, ProjLinkRow, ProjToolRow, ProjectFormData, ProjectImageView,
-        ProjectProfileView, ProjectProfileViewBase, UpdateUserInfo, UpsertProjectParams,
-        UserFormData, UserLinkView, UserProfileRowView, UserProfileView,
+        FeaturedProjectCard, ProjImageRow, ProjLinkRow, ProjToolRow, ProjectFormData,
+        ProjectImageView, ProjectProfileView, ProjectProfileViewBase, UpdateUserInfo,
+        UpsertProjectParams, UserCardInfo, UserFormData, UserLinkView, UserProfileRowView,
+        UserProfileView,
     },
     models::{
         file::File,
@@ -59,6 +60,7 @@ pub trait UserRepoTrait: Send + Sync {
     async fn upsert_project(&self, params: UpsertProjectParams) -> Result<Uuid, sqlx::Error>;
     async fn delete_project(&self, user_id: &str, project_id: Uuid) -> Result<(), sqlx::Error>;
     async fn feature_project(&self, user_id: &str, project_id: Uuid) -> Result<(), sqlx::Error>;
+    async fn search_students(&self, embedding: Vector) -> Result<Vec<UserCardInfo>, sqlx::Error>;
 }
 
 #[async_trait]
@@ -864,6 +866,167 @@ impl UserRepoTrait for UserRepo {
         tx.commit().await?;
         Ok(())
     }
+
+    async fn search_students(&self, embedding: Vector) -> Result<Vec<UserCardInfo>, sqlx::Error> {
+        struct StudentBaseRow {
+            user_id: String,
+            first_name: Option<String>,
+            image_name: Option<String>,
+            last_name: Option<String>,
+            description: Option<String>,
+            course: Option<String>,
+            featured_project_id: Option<Uuid>,
+            featured_project_name: Option<String>,
+            featured_project_description: Option<String>,
+        }
+        //inner joining on projects as we dont want to return students without any projects
+        let bases = sqlx::query_as!(
+            StudentBaseRow,
+            r#"
+            WITH
+            search_vec AS (
+                SELECT $1::vector AS vec
+            ),
+            best_project_dist AS (
+                SELECT p.user_id, MIN(p.embedding <=> sv.vec) AS min_dist
+                FROM projects p
+                CROSS JOIN search_vec sv
+                WHERE p.embedding IS NOT NULL
+                GROUP BY p.user_id
+            )
+            SELECT
+                u.id AS "user_id!",
+                u.first_name,
+                u.last_name,
+                f.new_file_name || '.' || f.extension AS image_name,
+                u.description,
+                c.name AS "course",
+                fp.id AS "featured_project_id?",
+                fp.name AS "featured_project_name?",
+                fp.description AS "featured_project_description?"
+            FROM users u
+            CROSS JOIN search_vec sv
+            LEFT JOIN courses c ON u.course_id = c.id
+            INNER JOIN projects fp ON fp.user_id = u.id AND fp.featured = true
+            LEFT JOIN best_project_dist bpd ON bpd.user_id = u.id
+            LEFT JOIN files f ON f.id = u.image_id 
+            WHERE u.verified = true
+            AND (
+                (u.embedding IS NOT NULL AND u.embedding <=> sv.vec <= 0.7)
+                OR bpd.min_dist <= 0.7
+            )
+            ORDER BY LEAST(
+                COALESCE(u.embedding <=> sv.vec, 1.0),
+                COALESCE(bpd.min_dist, 1.0)
+            ) ASC
+            "#,
+            embedding as Vector
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        if bases.is_empty() {
+            return Ok(vec![]);
+        }
+
+        let user_ids: Vec<String> = bases.iter().map(|b| b.user_id.clone()).collect();
+        let project_ids: Vec<Uuid> = bases.iter().filter_map(|b| b.featured_project_id).collect();
+
+        let all_user_tools = sqlx::query!(
+            r#"
+            SELECT ut.user_id AS "user_id!", st.name AS "name!"
+            FROM user_tools ut
+            JOIN software_tools st ON st.id = ut.software_tool_id
+            WHERE ut.user_id = ANY($1)
+            ORDER BY st.name
+            "#,
+            &user_ids as &[String]
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        let all_project_tools = sqlx::query_as!(
+            ProjToolRow,
+            r#"
+            SELECT pt.project_id AS "project_id!", st.name AS "name!"
+            FROM project_tools pt
+            JOIN software_tools st ON st.id = pt.tool_id
+            WHERE pt.project_id = ANY($1)
+            ORDER BY st.name
+            "#,
+            &project_ids as &[Uuid]
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        let all_project_images = sqlx::query_as!(
+            ProjImageRow,
+            r#"
+            SELECT pf.project_id AS "project_id!", f.id AS "file_id!",
+                   f.new_file_name || '.' || f.extension AS "file_name!"
+            FROM project_files pf
+            JOIN files f ON f.id = pf.file_id
+            WHERE pf.project_id = ANY($1)
+            ORDER BY f.created_at
+            "#,
+            &project_ids as &[Uuid]
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        let mut user_tools_map: HashMap<String, Vec<String>> = HashMap::new();
+        for row in all_user_tools {
+            user_tools_map
+                .entry(row.user_id)
+                .or_default()
+                .push(row.name);
+        }
+
+        let mut project_tools_map: HashMap<Uuid, Vec<String>> = HashMap::new();
+        for row in all_project_tools {
+            project_tools_map
+                .entry(row.project_id)
+                .or_default()
+                .push(row.name);
+        }
+
+        let mut project_images_map: HashMap<Uuid, Vec<String>> = HashMap::new();
+        for row in all_project_images {
+            project_images_map
+                .entry(row.project_id)
+                .or_default()
+                .push(row.file_name);
+        }
+
+        let results = bases
+            .into_iter()
+            .map(|b| {
+                let featured_project = FeaturedProjectCard {
+                    name: b.featured_project_name.unwrap_or_default(),
+                    description: b.featured_project_description.unwrap_or_default(),
+                    tools: b
+                        .featured_project_id
+                        .and_then(|id| project_tools_map.remove(&id))
+                        .unwrap_or_default(),
+                    images: b
+                        .featured_project_id
+                        .and_then(|id| project_images_map.remove(&id))
+                        .unwrap_or_default(),
+                };
+                UserCardInfo {
+                    first_name: b.first_name.unwrap_or_default(),
+                    last_name: b.last_name.unwrap_or_default(),
+                    profile_image: b.image_name,
+                    description: b.description.unwrap_or_default(),
+                    course: b.course.unwrap_or_default(),
+                    tools: user_tools_map.remove(&b.user_id).unwrap_or_default(),
+                    featured_project,
+                }
+            })
+            .collect();
+
+        Ok(results)
+    }
 }
 
 #[cfg(test)]
@@ -905,6 +1068,7 @@ pub mod mocks {
             async fn upsert_project(&self, params: UpsertProjectParams) -> Result<Uuid, sqlx::Error>;
             async fn delete_project(&self, user_id: &str, project_id: Uuid) -> Result<(), sqlx::Error>;
             async fn feature_project(&self, user_id: &str, project_id: Uuid) -> Result<(), sqlx::Error>;
+            async fn search_students(&self, embedding: Vector) -> Result<Vec<UserCardInfo>, sqlx::Error>;
         }
     }
 }

@@ -279,3 +279,33 @@ pub struct UpsertProjectParams {
     pub existing_images: Vec<String>,
     pub embedding: Vector,
 }
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FeaturedProjectCard {
+    pub name: String,
+    pub description: String,
+    pub tools: Vec<String>,
+    pub images: Vec<String>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UserCardInfo {
+    pub first_name: String,
+    pub last_name: String,
+    pub profile_image: Option<String>,
+    pub description: String,
+    pub course: String,
+    pub tools: Vec<String>,
+    pub featured_project: FeaturedProjectCard,
+}
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StudentSearchDto {
+    pub students: Vec<UserCardInfo>,
+}
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SearchStudentsQuery {
+    pub query: String,
+}
