@@ -12,7 +12,6 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { getProfileImgUrl, getProjectImgUrl } from "../lib/helpers";
 import GlassCard from "./GlassCard";
-import SearchStudents from "./SearchStudents";
 import SearchStudentsLoading from "./SearchStudentsLoading";
 
 interface FeaturedProject {
