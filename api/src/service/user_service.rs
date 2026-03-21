@@ -11,8 +11,8 @@ use crate::{
         auth::validate_student_id,
         reference::FileInfo,
         user::{
-            ProjectForm, ProjectFormData, ProjectUpsertData, SearchStudentsQuery, StudentSearchDto,
-            UpdateUserInfo, UpsertProjectParams, UserFormData, UserProfileView,
+            ProjectForm, ProjectFormData, ProjectUpsertData, StudentSearchDto, UpdateUserInfo,
+            UpsertProjectParams, UserFormData, UserProfileView,
         },
     },
     errors::ErrorMessage,
