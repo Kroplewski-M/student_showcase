@@ -223,10 +223,15 @@ export default function StudentsResult({ query }: Props) {
       setLoading(true);
       setError(false);
       try {
-        const [res] = await Promise.all([
-          fetch(`/api/user/search?query=${encodeURIComponent(query)}`),
-          new Promise((resolve) => setTimeout(resolve, 1000)),
-        ]);
+        const res = await fetch(
+          `/api/user/search?query=${encodeURIComponent(query)}`,
+          {
+            next: {
+              revalidate: 60, //one minute
+            },
+          },
+        );
+
         if (!res.ok) throw new Error();
         const data = await res.json();
         if (!cancelled) setStudents(data.students ?? []);
@@ -264,10 +269,11 @@ export default function StudentsResult({ query }: Props) {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="columns-1 gap-5 sm:columns-2 lg:columns-3">
       {students.map((student, i) => (
         <motion.div
           key={student.id}
+          className="break-inside-avoid mb-5"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{
