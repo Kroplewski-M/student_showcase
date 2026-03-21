@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT ut.user_id AS \"user_id!\", st.name AS \"name!\"\n            FROM user_tools ut\n            JOIN software_tools st ON st.id = ut.software_tool_id\n            WHERE ut.user_id = ANY($1)\n            ORDER BY st.name\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "name!",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "694b675e34db04c28ffec9899a04ed61c066e4901332fb6dc1457e5d89cfa612"
+}
