@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 
 // ── Particle Network Canvas ──
@@ -22,8 +22,9 @@ function ParticleNetwork() {
       r: number;
     }[] = [];
 
-    const PARTICLE_COUNT = 60;
-    const CONNECTION_DIST = 150;
+    const isMobile = window.innerWidth < 768;
+    const PARTICLE_COUNT = isMobile ? 25 : 60;
+    const CONNECTION_DIST = isMobile ? 100 : 150;
     const ACCENT = { r: 161, g: 233, b: 240 }; // secondary colour
 
     function resize() {
@@ -211,19 +212,30 @@ export default function HeroVisuals() {
   const yCards = useTransform(scrollY, [0, 600], [0, -60]);
   const yNetwork = useTransform(scrollY, [0, 600], [0, -30]);
   const opacity = useTransform(scrollY, [600, 800], [1, 0.5]);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    setIsDesktop(window.innerWidth >= 768);
+  }, []);
 
   return (
     <motion.div
       style={{ opacity }}
       className="relative h-[50vh] w-full sm:-mt-24 sm:h-[55vh] overflow-hidden pointer-events-none"
     >
-      {/* Particle network background */}
-      <motion.div style={{ y: yNetwork }} className="absolute inset-0">
+      {/* Particle network background — no parallax on mobile */}
+      <motion.div
+        style={{ y: isDesktop ? yNetwork : 0 }}
+        className="absolute inset-0"
+      >
         <ParticleNetwork />
       </motion.div>
 
-      {/* Floating cards */}
-      <motion.div style={{ y: yCards }} className="absolute inset-0">
+      {/* Floating cards — no parallax on mobile */}
+      <motion.div
+        style={{ y: isDesktop ? yCards : 0 }}
+        className="absolute inset-0"
+      >
         {CARDS.map((card, i) => (
           <motion.div
             key={card.title}
@@ -234,7 +246,7 @@ export default function HeroVisuals() {
               delay: 0.8 + card.delay,
               ease: [0.16, 1, 0.3, 1],
             }}
-            className="absolute"
+            className={`absolute ${i >= 5 ? "hidden sm:block" : ""}`}
             style={{
               left: card.x,
               top: card.y,
@@ -254,7 +266,7 @@ export default function HeroVisuals() {
                 repeat: Infinity,
                 ease: "easeInOut",
               }}
-              className={`rounded-xl border  backdrop-blur-md ${card.color} ${card.borderColor} px-4 py-3 shadow-lg shadow-primary/20 sm:px-5 sm:py-4`}
+              className={`rounded-xl border sm:backdrop-blur-md ${card.color} ${card.borderColor} px-4 py-3 shadow-lg shadow-primary/20 sm:px-5 sm:py-4`}
               style={{ rotate: card.rotation }}
             >
               <p className="text-xs font-bold text-light sm:text-sm">

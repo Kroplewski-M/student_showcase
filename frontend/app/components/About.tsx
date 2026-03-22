@@ -46,7 +46,7 @@ export default function About() {
     offset: ["start end", "start 0.5"],
   });
 
-  const rotate = useTransform(scrollYProgress, [0, 1], [5, 0]);
+  const rotate = useTransform(scrollYProgress, [0, 1], [3, 0]);
 
   return (
     <motion.section

@@ -42,7 +42,7 @@ export default function SearchStudents({
     offset: ["start end", "start 0.5"],
   });
 
-  const rotate = useTransform(scrollYProgress, [0, 1], [-5, 0]);
+  const rotate = useTransform(scrollYProgress, [0, 1], [-3, 0]);
   function submitSearch() {
     const trimmed = input.trim();
     if (trimmed) {
