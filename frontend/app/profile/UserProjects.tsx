@@ -42,6 +42,15 @@ export default function UserProjects({
           </>
         )}
       </div>
+      {projects.length == 0 ? (
+        <div className="w-full bg-amber-200 rounded-lg p-5 mb-2">
+          <p className="font-bold text-center text-black">
+            To appear in search results, you must upload at least one project
+          </p>
+        </div>
+      ) : (
+        <></>
+      )}
       {projects.length > 0 ? (
         <div className="flex flex-col gap-4">
           {projects.map((project) => (
