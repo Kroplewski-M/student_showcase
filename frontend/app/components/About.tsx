@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, useScroll, useTransform } from "framer-motion";
+import Image from "next/image";
 import Link from "next/link";
 import { useRef } from "react";
 import Calendar from "../SVGS/Calendar";
@@ -147,6 +148,42 @@ export default function About() {
             </motion.div>
           ))}
         </div>
+
+        {/* ── Photo strip ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="mt-16 grid grid-cols-3 gap-3 overflow-hidden rounded-2xl sm:gap-4"
+        >
+          {[
+            {
+              src: "/event-poster.jpg",
+              alt: "Student presenting project at the showcase",
+            },
+            {
+              src: "/event-discussion.jpg",
+              alt: "Student and industry professional discussing a project",
+            },
+            { src: "/event-kiosks.jpg", alt: "Students at showcase kiosks" },
+          ].map((photo) => (
+            <div
+              key={photo.src}
+              className="relative aspect-[4/3] overflow-hidden rounded-xl"
+            >
+              <Image
+                src={photo.src}
+                alt={photo.alt}
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 33vw, 25vw"
+              />
+              {/* teal tint overlay */}
+              <div className="absolute inset-0 bg-primary mix-blend-color opacity-85" />
+            </div>
+          ))}
+        </motion.div>
 
         {/* ── Why attend + Schedule ── */}
         <div className="mt-20 grid gap-12 lg:grid-cols-[1fr_1fr] lg:gap-16">
