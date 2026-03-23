@@ -110,7 +110,7 @@ function StudentCardItem({ student }: { student: StudentCard }) {
         sessionStorage.setItem("studentsScroll", String(window.scrollY))
       }
     >
-      <GlassCard className="flex h-full flex-col overflow-hidden transition-all duration-300 group-hover:border-secondary/25 group-hover:shadow-[0_0_30px_rgba(161,233,240,0.06)]">
+      <GlassCard className="flex h-full flex-col hover:border-secondary/25 hover:shadow-[0_0_30px_rgba(161,233,240,0.06)]">
         {/* Header — avatar + name + course + tools */}
         <div className="flex items-start gap-4 p-5">
           {/* Avatar */}
