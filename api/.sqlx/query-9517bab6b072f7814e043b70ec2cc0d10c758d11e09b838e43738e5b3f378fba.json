@@ -1,11 +1,11 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT tool_id AS \"tools_id!\" FROM project_tools WHERE project_id = $1",
+  "query": "SELECT tool_id AS \"tool_id!\" FROM project_tools WHERE project_id = $1",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "tools_id!",
+        "name": "tool_id!",
         "type_info": "Uuid"
       }
     ],
@@ -18,5 +18,5 @@
       false
     ]
   },
-  "hash": "41f5064a69f10f3c8fb870deb77bca36ba06e844c2ad173d3b6e9ae279f66510"
+  "hash": "9517bab6b072f7814e043b70ec2cc0d10c758d11e09b838e43738e5b3f378fba"
 }
