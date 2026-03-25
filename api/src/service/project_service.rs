@@ -1,5 +1,27 @@
-use crate::db::project_repo::ProjectRepoTrait;
+use std::sync::Arc;
 
+use actix_multipart::form::tempfile::TempFile;
+use futures_util::future::try_join_all;
+use tracing::error;
+use uuid::Uuid;
+
+use crate::{
+    db::project_repo::ProjectRepoTrait,
+    dtos::{
+        reference::FileInfo,
+        user::{ProjectForm, ProjectFormData, ProjectUpsertData, UpsertProjectParams},
+    },
+    errors::ErrorMessage,
+    models::file::File,
+    service::reference_service::ReferenceService,
+    utils::{
+        embedding::Embedding,
+        file_storage::FileStorageTrait,
+        images::{DEFAULT_MAX_IMAGE_SIZE, ValidatedImage},
+    },
+};
+
+#[derive(Clone)]
 pub struct ProjectService {
     project_repo: Arc<dyn ProjectRepoTrait>,
     project_file_storage: Arc<dyn FileStorageTrait>,
@@ -9,6 +31,19 @@ pub struct ProjectService {
 
 pub static MAX_IMAGES: usize = 5;
 impl ProjectService {
+    pub fn new(
+        project_repo: Arc<dyn ProjectRepoTrait>,
+        project_file_storage: Arc<dyn FileStorageTrait>,
+        embedding: Arc<Embedding>,
+        reference_service: ReferenceService,
+    ) -> Self {
+        Self {
+            project_repo,
+            project_file_storage,
+            embedding,
+            reference_service,
+        }
+    }
     pub async fn get_user_project_form_data(
         &self,
         user_id: String,

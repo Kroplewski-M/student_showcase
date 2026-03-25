@@ -204,7 +204,6 @@ mod tests {
         UserService::new(
             Arc::new(repo),
             Arc::new(user_storage),
-            Arc::new(MockFileStorage::new()),
             embedding,
             make_reference_service(),
         )

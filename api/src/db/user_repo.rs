@@ -7,15 +7,11 @@ use uuid::Uuid;
 
 use crate::{
     dtos::user::{
-        FeaturedProjectCard, ProjImageRow, ProjLinkRow, ProjToolRow, ProjectFormData,
-        ProjectImageView, ProjectProfileView, ProjectProfileViewBase, UpdateUserInfo,
-        UpsertProjectParams, UserCardInfo, UserFormData, UserLinkView, UserProfileRowView,
-        UserProfileView,
+        FeaturedProjectCard, ProjImageRow, ProjLinkRow, ProjToolRow, ProjectImageView,
+        ProjectProfileView, ProjectProfileViewBase, UpdateUserInfo, UserCardInfo, UserFormData,
+        UserLinkView, UserProfileRowView, UserProfileView,
     },
-    models::{
-        file::File,
-        user::{ProjectBaseRow, User},
-    },
+    models::{file::File, user::User},
 };
 
 #[derive(Debug, Clone)]

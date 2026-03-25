@@ -20,7 +20,8 @@ impl Embedding {
     pub fn new(cpu_count: usize) -> Result<Self, ErrorMessage> {
         // Use half the cores as pool size — ONNX Runtime uses multiple threads
         // per inference internally, so fewer instances avoids over-subscribing the CPU
-        let pool_size = (cpu_count / 2).max(1);
+        // added max of 4 to not have too many
+        let pool_size = (cpu_count / 2).max(4);
 
         let pool = (0..pool_size)
             .map(|_| {

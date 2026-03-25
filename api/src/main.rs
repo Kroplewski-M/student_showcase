@@ -1,6 +1,7 @@
 mod config;
 use crate::config::Config;
 use crate::db::DbClient;
+use crate::service::project_service::ProjectService;
 use crate::service::reference_service::ReferenceService;
 use crate::service::{auth_service::AuthService, user_service::UserService};
 use crate::utils::email::EmailService;
@@ -29,6 +30,7 @@ pub struct AppState {
     pub config: Config,
     pub auth_service: AuthService,
     pub user_service: UserService,
+    pub project_service: ProjectService,
     pub reference_service: ReferenceService,
 }
 
@@ -79,8 +81,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         user_service: UserService::new(
             Arc::new(db_client.user.clone()),
             Arc::new(FileStorageType::UserImage),
+            embedding.clone(),
+            ref_service.clone(),
+        ),
+        project_service: ProjectService::new(
+            Arc::new(db_client.project.clone()),
             Arc::new(FileStorageType::ProjectImage),
-            embedding,
+            embedding.clone(),
             ref_service.clone(),
         ),
         reference_service: ref_service.clone(),
@@ -93,6 +100,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .app_data(web::Data::new(app_state.clone()))
             .service(handler::auth_handler::auth_handler())
             .service(handler::user_handler::user_handler())
+            .service(handler::project_handler::project_handler())
             .service(handler::reference_handler::reference_handler())
     })
     .bind(("0.0.0.0", config.port))?
