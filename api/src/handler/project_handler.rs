@@ -6,7 +6,6 @@ use crate::{
     },
     errors::{ErrorMessage, HttpError},
     middleware::auth::{AuthenticatedUserId, RequireAuth},
-    service::project_service::MAX_IMAGES,
 };
 use actix_multipart::form::MultipartForm;
 use actix_web::{HttpResponse, dev::HttpServiceFactory, web};
@@ -52,19 +51,14 @@ pub async fn post_user_project_form(
     let data = form.data.into_inner();
     data.validate()
         .map_err(|e| HttpError::bad_request(e.to_string()))?;
-    if form.new_files.len() + data.existing_images.len() > MAX_IMAGES {
-        return Err(HttpError::bad_request(format!(
-            "Maximum {} files allowed",
-            MAX_IMAGES
-        )));
-    }
+
     let res = app_state
         .project_service
         .upsert_user_project(user_id.to_string(), data, form.new_files)
         .await;
     match res {
         Ok(_) => Ok(HttpResponse::Ok().json(Response {
-            status: "succes",
+            status: "success",
             message: "project updated successfully".to_string(),
         })),
         Err(e) => match e {

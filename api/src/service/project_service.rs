@@ -105,7 +105,7 @@ impl ProjectService {
         //upload new images to storage
         let validated_images: Vec<ValidatedImage> =
             try_join_all(new_images.into_iter().map(|f| async move {
-                let file_name = f.file_name.unwrap_or_default();
+                let file_name = f.file_name.unwrap_or_else(|| "default".to_string());
                 let bytes = tokio::fs::read(f.file.path())
                     .await
                     .map_err(|_| ErrorMessage::ServerError)?;

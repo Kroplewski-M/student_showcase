@@ -54,7 +54,7 @@ impl ProjectRepoTrait for ProjectRepo {
         .ok_or(sqlx::Error::RowNotFound)?;
 
         let selected_tools = sqlx::query_scalar!(
-            r#"SELECT tool_id AS "tools_id!" FROM project_tools WHERE project_id = $1"#,
+            r#"SELECT tool_id AS "tool_id!" FROM project_tools WHERE project_id = $1"#,
             project_id,
         )
         .fetch_all(&self.pool)
