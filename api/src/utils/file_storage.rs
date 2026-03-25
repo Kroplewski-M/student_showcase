@@ -21,6 +21,7 @@ pub trait FileStorageTrait: Send + Sync {
 pub enum FileStorageType {
     UserImage,
     ProjectImage,
+    UserCv,
 }
 
 impl FileStorageType {
@@ -28,6 +29,7 @@ impl FileStorageType {
         let sub = match self {
             Self::UserImage => "user_images",
             Self::ProjectImage => "project_images",
+            Self::UserCv => "user_cvs",
         };
         PathBuf::from(BASE_PATH).join(sub)
     }
