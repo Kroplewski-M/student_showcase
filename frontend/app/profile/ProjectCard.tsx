@@ -80,7 +80,7 @@ export default function ProjectCard({
     setDeleteLoading(true);
     setDeleteError(null);
     try {
-      const res = await fetch(`/api/user/delete_project/${project.id}`, {
+      const res = await fetch(`/api/project/delete_project/${project.id}`, {
         method: "delete",
         cache: "no-store",
       });
