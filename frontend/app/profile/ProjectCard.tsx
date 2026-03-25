@@ -59,7 +59,7 @@ export default function ProjectCard({
     setFeaturedLoading(true);
     setFeaturedError(null);
     try {
-      const res = await fetch(`/api/user/feature_project/${project.id}`, {
+      const res = await fetch(`/api/project/feature_project/${project.id}`, {
         method: "POST",
         cache: "no-store",
       });
