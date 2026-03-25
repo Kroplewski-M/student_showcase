@@ -21,8 +21,10 @@ impl Embedding {
         // Use half the cores as pool size — ONNX Runtime uses multiple threads
         // per inference internally, so fewer instances avoids over-subscribing the CPU
         // added max of 4 to not have too many
-        let pool_size = (cpu_count / 2).max(4);
-
+        let mut pool_size = (cpu_count / 2).max(1);
+        if pool_size > 4 {
+            pool_size = 4;
+        }
         let pool = (0..pool_size)
             .map(|_| {
                 TextEmbedding::try_new(InitOptions::new(EmbeddingModel::AllMiniLML6V2))
