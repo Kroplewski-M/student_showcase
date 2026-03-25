@@ -88,8 +88,8 @@ export default function UpsertProjectModal({ project, onClose }: Props) {
 
   useEffect(() => {
     const url = isEdit
-      ? `/api/user/upsert_project?project_id=${project.id}`
-      : "/api/user/upsert_project";
+      ? `/api/project/upsert_project?project_id=${project.id}`
+      : "/api/project/upsert_project";
 
     fetch(url, { credentials: "include" })
       .then((res) => {
@@ -343,7 +343,7 @@ export default function UpsertProjectModal({ project, onClose }: Props) {
         body.append("new_files", file);
       }
 
-      const res = await fetch("/api/user/upsert_project", {
+      const res = await fetch("/api/project/upsert_project", {
         method: "POST",
         credentials: "include",
         body,
