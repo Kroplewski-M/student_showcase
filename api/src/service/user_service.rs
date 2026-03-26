@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use futures_util::TryFutureExt;
 use tracing::error;
+use uuid::Uuid;
 
 use crate::{
     db::user_repo::UserRepoTrait,
@@ -49,6 +50,30 @@ impl UserService {
             .exists_verified(&user_id)
             .await
             .map_err(|_| ErrorMessage::ServerError)
+    }
+    pub async fn update_user_cv(
+        &self,
+        user_id: String,
+        file: Vec<u8>,
+        file_name: String,
+    ) -> Result<(), ErrorMessage> {
+        if file.len() > DEFAULT_MAX_IMAGE_SIZE {
+            return Err(ErrorMessage::FileSizeTooBig(DEFAULT_MAX_IMAGE_SIZE));
+        }
+        //check if file is a pdf
+        const PDF_MAGIC: &[u8] = b"%PDF-";
+        if file.len() < PDF_MAGIC.len() || !file.starts_with(PDF_MAGIC) {
+            return Err(ErrorMessage::FileInvalidFormat(Some(vec![
+                "PDF".to_string(),
+            ])));
+        }
+        let new_name = Uuid::new_v4();
+
+        //write new file to disk
+        //retrieve current pdf name
+        //update file
+        //delete old file
+        Ok(())
     }
     pub async fn update_user_image(
         &self,

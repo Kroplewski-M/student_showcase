@@ -23,6 +23,7 @@ pub fn user_handler() -> impl HttpServiceFactory {
             web::scope("")
                 .wrap(RequireAuth)
                 .route("/update_image", web::post().to(update_user_image))
+                .route("/update_cv", web::post().to(update_user_cv))
                 .route("/update_profile", web::get().to(get_user_profile_form))
                 .route("/update_profile", web::patch().to(patch_user_profile)),
         )
@@ -66,7 +67,29 @@ pub async fn update_user_image(
         message: "user updated profile image".to_string(),
     }))
 }
+pub async fn update_user_cv(
+    app_state: web::Data<AppState>,
+    user_id: AuthenticatedUserId,
+    payload: Multipart,
+) -> Result<HttpResponse, HttpError> {
+    let file_data = FormFile::new_from_form_multi_part(payload)
+        .await
+        .map_err(HttpError::bad_request)?;
 
+    app_state
+        .user_service
+        .update_user_cv(user_id.to_string(), file_data.bytes, file_data.name)
+        .await
+        .map_err(|e| match e {
+            ErrorMessage::ServerError => HttpError::server_error(e),
+            _ => HttpError::bad_request(e),
+        })?;
+
+    Ok(HttpResponse::Ok().json(Response {
+        status: "success",
+        message: "user updated cv".to_string(),
+    }))
+}
 pub async fn get_user_profile_form(
     app_state: web::Data<AppState>,
     user_id: AuthenticatedUserId,
