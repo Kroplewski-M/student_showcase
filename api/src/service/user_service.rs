@@ -22,7 +22,8 @@ use crate::{
 #[derive(Clone)]
 pub struct UserService {
     user_repo: Arc<dyn UserRepoTrait>,
-    user_file_storage: Arc<dyn FileStorageTrait>,
+    user_image_storage: Arc<dyn FileStorageTrait>,
+    user_cv_storage: Arc<dyn FileStorageTrait>,
     embedding: Arc<Embedding>,
     reference_service: ReferenceService,
 }
@@ -30,13 +31,15 @@ pub struct UserService {
 impl UserService {
     pub fn new(
         user_repo: Arc<dyn UserRepoTrait>,
-        user_file_storage: Arc<dyn FileStorageTrait>,
+        user_image_storage: Arc<dyn FileStorageTrait>,
+        user_cv_storage: Arc<dyn FileStorageTrait>,
         embedding: Arc<Embedding>,
         reference_service: ReferenceService,
     ) -> Self {
         Self {
             user_repo,
-            user_file_storage,
+            user_image_storage,
+            user_cv_storage,
             embedding,
             reference_service,
         }
@@ -70,7 +73,16 @@ impl UserService {
         let new_name = Uuid::new_v4();
 
         //write new file to disk
+        self.user_cv_storage
+            .write(new_name.to_string().as_str(), &file)
+            .await
+            .map_err(|_| ErrorMessage::ServerError)?;
         //retrieve current pdf name
+        let curr_cv = self
+            .user_repo
+            .get_user_current_cv(&user_id)
+            .await
+            .map_err(|_| ErrorMessage::ServerError)?;
         //update file
         //delete old file
         Ok(())
@@ -87,17 +99,21 @@ impl UserService {
         let disk_filename = validated_img.full_name(&new_stored_name);
 
         //write new file into storage
-        self.user_file_storage
+        self.user_image_storage
             .write(disk_filename.as_str(), validated_img.bytes())
             .await
             .map_err(|_| ErrorMessage::ServerError)?;
 
         //retrieve current image
-        let current_image = match self.user_repo.get_user_image(user_id.as_str()).await {
+        let current_image = match self
+            .user_repo
+            .get_user_current_image(user_id.as_str())
+            .await
+        {
             Ok(img) => img,
             Err(e) => {
                 error!("Error fetching current image: {}", e);
-                let _ = self.user_file_storage.delete(&disk_filename).await;
+                let _ = self.user_image_storage.delete(&disk_filename).await;
                 return Err(ErrorMessage::ServerError);
             }
         };
@@ -116,12 +132,12 @@ impl UserService {
         {
             error!("Error updating user image: {}", e);
             // Compensate: remove the file we just wrote
-            let _ = self.user_file_storage.delete(&disk_filename).await;
+            let _ = self.user_image_storage.delete(&disk_filename).await;
             return Err(ErrorMessage::ServerError);
         }
 
         if let Some(img) = current_image
-            && let Err(e) = self.user_file_storage.delete(&img.get_full_name()).await
+            && let Err(e) = self.user_image_storage.delete(&img.get_full_name()).await
         {
             error!("Failed to delete old image: {}", e);
         }

@@ -38,7 +38,17 @@ pub trait UserRepoTrait: Send + Sync {
         new_name: &str,
         extension: &str,
     ) -> Result<(), sqlx::Error>;
-    async fn get_user_image(&self, user_id: &str) -> Result<Option<File>, sqlx::Error>;
+    async fn update_user_cv(
+        &self,
+        user_id: &str,
+        file_size: i64,
+        image_type: &str,
+        old_name: &str,
+        new_name: &str,
+        extension: &str,
+    ) -> Result<(), sqlx::Error>;
+    async fn get_user_current_image(&self, user_id: &str) -> Result<Option<File>, sqlx::Error>;
+    async fn get_user_current_cv(&self, user_id: &str) -> Result<Option<File>, sqlx::Error>;
     async fn get_user_profile(&self, user_id: &str) -> Result<UserProfileView, sqlx::Error>;
     async fn get_user_form_data(&self, user_id: &str) -> Result<UserFormData, sqlx::Error>;
     async fn update_user(
@@ -87,6 +97,68 @@ impl UserRepoTrait for UserRepo {
         .fetch_optional(&self.pool)
         .await
     }
+    async fn update_user_cv(
+        &self,
+        user_id: &str,
+        file_size: i64,
+        image_type: &str,
+        old_name: &str,
+        new_name: &str,
+        extension: &str,
+    ) -> Result<(), sqlx::Error> {
+        let mut tx = self.pool.begin().await?;
+        //delete old image if it exists
+        let old_id = sqlx::query_scalar!(
+            r#"
+            WITH old AS (
+                SELECT cv_file_id FROM users WHERE id = $1
+            )
+            UPDATE users
+            SET cv_file_id = NULL
+            WHERE id = $1
+            RETURNING (SELECT cv_file_id FROM old)
+            "#,
+            user_id,
+        )
+        .fetch_optional(tx.as_mut())
+        .await?;
+
+        if let Some(id) = old_id {
+            sqlx::query!("DELETE FROM files WHERE id = $1", id)
+                .execute(tx.as_mut())
+                .await?;
+        }
+        // add new cv to files table
+        let new_id = sqlx::query_scalar!(
+            r#"INSERT INTO files (id, old_file_name, new_file_name, file_type, size_bytes, extension)
+                     VALUES (gen_random_uuid(),$1,$2,$3,$4,$5)
+                     RETURNING id"#,
+            old_name,
+            new_name,
+            image_type,
+            file_size,
+            extension
+        )
+        .fetch_one(tx.as_mut())
+        .await?;
+        // link image to user
+        let result = sqlx::query!(
+            "UPDATE users SET cv_file_id = $1 WHERE id = $2",
+            new_id,
+            user_id
+        )
+        .execute(tx.as_mut())
+        .await?;
+
+        if result.rows_affected() == 0 {
+            return Err(sqlx::Error::RowNotFound);
+        }
+
+        tx.commit().await?;
+
+        Ok(())
+    }
+
     async fn update_user_image(
         &self,
         user_id: &str,
@@ -147,12 +219,21 @@ impl UserRepoTrait for UserRepo {
         tx.commit().await?;
         Ok(())
     }
-    async fn get_user_image(&self, user_id: &str) -> Result<Option<File>, sqlx::Error> {
+    async fn get_user_current_image(&self, user_id: &str) -> Result<Option<File>, sqlx::Error> {
         sqlx::query_as!(
             File,
             r#"
             SELECT * from files WHERE Id = (SELECT image_id FROM users WHERE id = $1)
         "#,
+            user_id
+        )
+        .fetch_optional(&self.pool)
+        .await
+    }
+    async fn get_user_current_cv(&self, user_id: &str) -> Result<Option<File>, sqlx::Error> {
+        sqlx::query_as!(
+            File,
+            r#"SELECT * FROM files WHERE Id = (SELECT cv_file_id FROM users WHERE id = $1)"#,
             user_id
         )
         .fetch_optional(&self.pool)
@@ -678,7 +759,7 @@ pub mod mocks {
                 new_name: &str,
                 extension: &str,
             ) -> Result<(), sqlx::Error>;
-            async fn get_user_image(&self, user_id: &str) -> Result<Option<File>, sqlx::Error>;
+            async fn get_user_current_image(&self, user_id: &str) -> Result<Option<File>, sqlx::Error>;
             async fn get_user_profile(&self, user_id: &str) -> Result<UserProfileView, sqlx::Error>;
             async fn get_user_form_data(&self, user_id: &str) -> Result<UserFormData, sqlx::Error>;
             async fn update_user(
@@ -688,6 +769,17 @@ pub mod mocks {
                 embedding: Vector,
             ) -> Result<(), sqlx::Error>;
            async fn search_students(&self, embedding: Vector) -> Result<Vec<UserCardInfo>, sqlx::Error>;
+           async fn get_user_current_cv(&self, user_id: &str) -> Result<Option<File>, sqlx::Error>;
+           async fn update_user_cv(
+                    &self,
+                    user_id: &str,
+                    file_size: i64,
+                    image_type: &str,
+                    old_name: &str,
+                    new_name: &str,
+                    extension: &str,
+          ) -> Result<(), sqlx::Error>;
+
         }
     }
 }
