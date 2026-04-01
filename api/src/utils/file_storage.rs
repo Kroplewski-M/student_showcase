@@ -46,9 +46,12 @@ impl FileStorageTrait for FileStorageType {
         {
             return Err(ErrorMessage::FileInvalidName);
         }
-
-        // Strip metadata by re-encoding the image
-        let clean_data = self.strip_metadata(name, data)?;
+        let is_pdf = name.to_lowercase().ends_with(".pdf");
+        let clean_data: Vec<u8> = if is_pdf {
+            data.to_vec()
+        } else {
+            self.strip_metadata(name, data)?
+        };
 
         let dir = self.directory_path();
 
