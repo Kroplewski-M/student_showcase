@@ -1,7 +1,8 @@
 use std::sync::Arc;
 
 use futures_util::TryFutureExt;
-use tracing::error;
+use tracing::{error, info};
+use uuid::Uuid;
 
 use crate::{
     db::user_repo::UserRepoTrait,
@@ -21,7 +22,8 @@ use crate::{
 #[derive(Clone)]
 pub struct UserService {
     user_repo: Arc<dyn UserRepoTrait>,
-    user_file_storage: Arc<dyn FileStorageTrait>,
+    user_image_storage: Arc<dyn FileStorageTrait>,
+    user_cv_storage: Arc<dyn FileStorageTrait>,
     embedding: Arc<Embedding>,
     reference_service: ReferenceService,
 }
@@ -29,13 +31,15 @@ pub struct UserService {
 impl UserService {
     pub fn new(
         user_repo: Arc<dyn UserRepoTrait>,
-        user_file_storage: Arc<dyn FileStorageTrait>,
+        user_image_storage: Arc<dyn FileStorageTrait>,
+        user_cv_storage: Arc<dyn FileStorageTrait>,
         embedding: Arc<Embedding>,
         reference_service: ReferenceService,
     ) -> Self {
         Self {
             user_repo,
-            user_file_storage,
+            user_image_storage,
+            user_cv_storage,
             embedding,
             reference_service,
         }
@@ -50,6 +54,65 @@ impl UserService {
             .await
             .map_err(|_| ErrorMessage::ServerError)
     }
+    pub async fn update_user_cv(
+        &self,
+        user_id: String,
+        file: Vec<u8>,
+        file_name: String,
+    ) -> Result<(), ErrorMessage> {
+        if file.len() > DEFAULT_MAX_IMAGE_SIZE {
+            return Err(ErrorMessage::FileSizeTooBig(DEFAULT_MAX_IMAGE_SIZE));
+        }
+        //check if file is a pdf
+        const PDF_MAGIC: &[u8] = b"%PDF-";
+        if file.len() < PDF_MAGIC.len() || !file.starts_with(PDF_MAGIC) {
+            return Err(ErrorMessage::FileInvalidFormat(Some(vec![
+                "PDF".to_string(),
+            ])));
+        }
+
+        let new_name = Uuid::new_v4();
+        let disk_file_name = format!("{}.pdf", new_name);
+        //write new file to disk
+        self.user_cv_storage
+            .write(&disk_file_name, &file)
+            .await
+            .map_err(|_| ErrorMessage::ServerError)?;
+
+        //retrieve current pdf name
+        let curr_cv = match self.user_repo.get_user_current_cv(&user_id).await {
+            Ok(img) => img,
+            Err(e) => {
+                error!("Error fetching current cv for student: {}", e);
+                let _ = self.user_cv_storage.delete(&disk_file_name).await;
+                return Err(ErrorMessage::ServerError);
+            }
+        };
+        //update file
+        if let Err(e) = self
+            .user_repo
+            .update_user_cv(
+                user_id.as_str(),
+                file.len() as i64,
+                "application/pdf",
+                &file_name,
+                &new_name.to_string(),
+                "pdf",
+            )
+            .await
+        {
+            error!("Error saving cv for student: {}", e);
+            let _ = self.user_cv_storage.delete(&disk_file_name).await;
+            return Err(ErrorMessage::ServerError);
+        }
+        //delete old file
+        if let Some(file) = curr_cv
+            && let Err(e) = self.user_cv_storage.delete(&file.get_full_name()).await
+        {
+            error!("Failed to delete old student cv: {}", e);
+        }
+        Ok(())
+    }
     pub async fn update_user_image(
         &self,
         user_id: String,
@@ -62,17 +125,21 @@ impl UserService {
         let disk_filename = validated_img.full_name(&new_stored_name);
 
         //write new file into storage
-        self.user_file_storage
+        self.user_image_storage
             .write(disk_filename.as_str(), validated_img.bytes())
             .await
             .map_err(|_| ErrorMessage::ServerError)?;
 
         //retrieve current image
-        let current_image = match self.user_repo.get_user_image(user_id.as_str()).await {
+        let current_image = match self
+            .user_repo
+            .get_user_current_image(user_id.as_str())
+            .await
+        {
             Ok(img) => img,
             Err(e) => {
                 error!("Error fetching current image: {}", e);
-                let _ = self.user_file_storage.delete(&disk_filename).await;
+                let _ = self.user_image_storage.delete(&disk_filename).await;
                 return Err(ErrorMessage::ServerError);
             }
         };
@@ -91,12 +158,12 @@ impl UserService {
         {
             error!("Error updating user image: {}", e);
             // Compensate: remove the file we just wrote
-            let _ = self.user_file_storage.delete(&disk_filename).await;
+            let _ = self.user_image_storage.delete(&disk_filename).await;
             return Err(ErrorMessage::ServerError);
         }
 
         if let Some(img) = current_image
-            && let Err(e) = self.user_file_storage.delete(&img.get_full_name()).await
+            && let Err(e) = self.user_image_storage.delete(&img.get_full_name()).await
         {
             error!("Failed to delete old image: {}", e);
         }
@@ -199,11 +266,16 @@ mod tests {
         ReferenceService::new(Arc::new(mock_repo), cache)
     }
 
-    fn make_service(repo: MockUserRepo, user_storage: MockFileStorage) -> UserService {
+    fn make_service(
+        repo: MockUserRepo,
+        user_storage: MockFileStorage,
+        user_cv_storage: MockFileStorage,
+    ) -> UserService {
         let embedding = Arc::new(Embedding::new(1).expect("Failed to create embedding"));
         UserService::new(
             Arc::new(repo),
             Arc::new(user_storage),
+            Arc::new(user_cv_storage),
             embedding,
             make_reference_service(),
         )
@@ -221,7 +293,7 @@ mod tests {
     async fn update_user_image_invalid_format_returns_error() {
         let repo = MockUserRepo::new();
         let storage = MockFileStorage::new();
-        let service = make_service(repo, storage);
+        let service = make_service(repo, storage, MockFileStorage::new());
 
         let result = service
             .update_user_image("user1".into(), vec![0u8; 12], "photo.jpg".into())
@@ -234,7 +306,7 @@ mod tests {
     async fn update_user_image_too_large_returns_error() {
         let repo = MockUserRepo::new();
         let storage = MockFileStorage::new();
-        let service = make_service(repo, storage);
+        let service = make_service(repo, storage, MockFileStorage::new());
         let large_bytes = vec![0u8; DEFAULT_MAX_IMAGE_SIZE + 1];
 
         let result = service
@@ -250,11 +322,11 @@ mod tests {
         let mut storage = MockFileStorage::new();
 
         storage.expect_write().returning(|_, _| Ok(()));
-        repo.expect_get_user_image().returning(|_| Ok(None));
+        repo.expect_get_user_current_image().returning(|_| Ok(None));
         repo.expect_update_user_image()
             .returning(|_, _, _, _, _, _| Ok(()));
 
-        let service = make_service(repo, storage);
+        let service = make_service(repo, storage, MockFileStorage::new());
         let result = service
             .update_user_image("user1".into(), dummy_jpeg(), "photo.jpg".into())
             .await;
@@ -269,7 +341,7 @@ mod tests {
 
         storage.expect_write().returning(|_, _| Ok(()));
         storage.expect_delete().returning(|_| Ok(()));
-        repo.expect_get_user_image().returning(|_| {
+        repo.expect_get_user_current_image().returning(|_| {
             Ok(Some(File {
                 id: Uuid::new_v4(),
                 old_file_name: "old_photo".to_string(),
@@ -283,7 +355,7 @@ mod tests {
         repo.expect_update_user_image()
             .returning(|_, _, _, _, _, _| Ok(()));
 
-        let service = make_service(repo, storage);
+        let service = make_service(repo, storage, MockFileStorage::new());
         let result = service
             .update_user_image("user1".into(), dummy_jpeg(), "photo.jpg".into())
             .await;
@@ -298,10 +370,10 @@ mod tests {
 
         storage.expect_write().returning(|_, _| Ok(()));
         storage.expect_delete().returning(|_| Ok(()));
-        repo.expect_get_user_image()
+        repo.expect_get_user_current_image()
             .returning(|_| Err(sqlx::Error::RowNotFound));
 
-        let service = make_service(repo, storage);
+        let service = make_service(repo, storage, MockFileStorage::new());
         let result = service
             .update_user_image("user1".into(), dummy_jpeg(), "photo.jpg".into())
             .await;
@@ -316,11 +388,11 @@ mod tests {
 
         storage.expect_write().returning(|_, _| Ok(()));
         storage.expect_delete().returning(|_| Ok(()));
-        repo.expect_get_user_image().returning(|_| Ok(None));
+        repo.expect_get_user_current_image().returning(|_| Ok(None));
         repo.expect_update_user_image()
             .returning(|_, _, _, _, _, _| Err(sqlx::Error::RowNotFound));
 
-        let service = make_service(repo, storage);
+        let service = make_service(repo, storage, MockFileStorage::new());
         let result = service
             .update_user_image("user1".into(), dummy_jpeg(), "photo.jpg".into())
             .await;
@@ -349,7 +421,7 @@ mod tests {
                 projects: vec![],
             })
         });
-        let service = make_service(repo, storage);
+        let service = make_service(repo, storage, MockFileStorage::new());
         let result = service.get_user_profile("2272097".to_string()).await;
         assert!(result.is_ok());
     }
@@ -360,7 +432,7 @@ mod tests {
         let storage = MockFileStorage::new();
         repo.expect_get_user_profile()
             .returning(|_| Err(sqlx::Error::RowNotFound));
-        let service = make_service(repo, storage);
+        let service = make_service(repo, storage, MockFileStorage::new());
         let result = service.get_user_profile("2272097".to_string()).await;
         assert_eq!(result.unwrap_err(), ErrorMessage::UserNoLongerExists);
     }
@@ -371,7 +443,7 @@ mod tests {
         let storage = MockFileStorage::new();
         repo.expect_get_user_profile()
             .returning(|_| Err(sqlx::Error::PoolTimedOut));
-        let service = make_service(repo, storage);
+        let service = make_service(repo, storage, MockFileStorage::new());
         let result = service.get_user_profile("2272097".to_string()).await;
         assert_eq!(result.unwrap_err(), ErrorMessage::ServerError);
     }

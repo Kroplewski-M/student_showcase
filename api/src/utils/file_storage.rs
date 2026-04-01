@@ -1,6 +1,7 @@
 use crate::errors::ErrorMessage;
 use async_trait::async_trait;
 use image::{Frame, ImageFormat};
+use lopdf::{Dictionary, Document, Object};
 use std::path::PathBuf;
 use tokio::fs;
 
@@ -14,8 +15,9 @@ const BASE_PATH: &str = "./test_uploads";
 pub trait FileStorageTrait: Send + Sync {
     async fn write(&self, name: &str, data: &[u8]) -> Result<(), ErrorMessage>;
     async fn delete(&self, name: &str) -> Result<(), ErrorMessage>;
-    fn strip_metadata(&self, name: &str, data: &[u8]) -> Result<Vec<u8>, ErrorMessage>;
+    fn strip_image_metadata(&self, name: &str, data: &[u8]) -> Result<Vec<u8>, ErrorMessage>;
     fn strip_gif_metadata(&self, data: &[u8]) -> Result<Vec<u8>, ErrorMessage>;
+    fn strip_pdf_metadata(&self, data: &[u8]) -> Result<Vec<u8>, ErrorMessage>;
 }
 
 pub enum FileStorageType {
@@ -35,6 +37,53 @@ impl FileStorageType {
     }
 }
 
+/// Recursively removes dangerous PDF dictionary entries from an object.
+/// Targets: JavaScript actions, embedded files, and automatic trigger actions.
+fn sanitize_pdf_object(obj: &mut Object) {
+    match obj {
+        Object::Dictionary(dict) => sanitize_pdf_dict(dict),
+        Object::Stream(stream) => sanitize_pdf_dict(&mut stream.dict),
+        Object::Array(arr) => arr.iter_mut().for_each(sanitize_pdf_object),
+        _ => {}
+    }
+}
+
+fn sanitize_pdf_dict(dict: &mut Dictionary) {
+    // Remove JavaScript actions
+    dict.remove(b"JS");
+    dict.remove(b"JavaScript");
+
+    // Remove document-level open/additional actions that auto-execute
+    dict.remove(b"OpenAction");
+    dict.remove(b"AA");
+
+    // Remove embedded file references
+    dict.remove(b"EmbeddedFiles");
+    dict.remove(b"EmbeddedFile");
+
+    // Remove XMP metadata streams at the object level
+    dict.remove(b"Metadata");
+
+    // Sanitize the /Action subtype: if this dict IS an action, check its type
+    if let Ok(Object::Name(subtype)) = dict.get(b"S").map(|o| o.clone()) {
+        let dangerous = matches!(
+            subtype.as_slice(),
+            b"JavaScript" | b"Launch" | b"SubmitForm" | b"ImportData" | b"GoToR" | b"GoToE"
+        );
+        if dangerous {
+            // Neutralize by removing the action subtype and payload
+            dict.remove(b"S");
+            dict.remove(b"JS");
+            dict.remove(b"F");
+        }
+    }
+
+    // Recurse into nested dictionaries/arrays
+    for (_, val) in dict.iter_mut() {
+        sanitize_pdf_object(val);
+    }
+}
+
 #[async_trait]
 impl FileStorageTrait for FileStorageType {
     async fn write(&self, name: &str, data: &[u8]) -> Result<(), ErrorMessage> {
@@ -46,9 +95,12 @@ impl FileStorageTrait for FileStorageType {
         {
             return Err(ErrorMessage::FileInvalidName);
         }
-
-        // Strip metadata by re-encoding the image
-        let clean_data = self.strip_metadata(name, data)?;
+        let is_pdf = name.to_lowercase().ends_with(".pdf");
+        let clean_data: Vec<u8> = if is_pdf {
+            self.strip_pdf_metadata(data)?
+        } else {
+            self.strip_image_metadata(name, data)?
+        };
 
         let dir = self.directory_path();
 
@@ -80,7 +132,7 @@ impl FileStorageTrait for FileStorageType {
         }
     }
 
-    fn strip_metadata(&self, name: &str, data: &[u8]) -> Result<Vec<u8>, ErrorMessage> {
+    fn strip_image_metadata(&self, name: &str, data: &[u8]) -> Result<Vec<u8>, ErrorMessage> {
         let format =
             ImageFormat::from_path(name).map_err(|_| ErrorMessage::FileInvalidFormat(None))?;
         if format == ImageFormat::Gif {
@@ -97,6 +149,30 @@ impl FileStorageTrait for FileStorageType {
             .map_err(|_| ErrorMessage::ServerError)?;
         Ok(buf)
     }
+    fn strip_pdf_metadata(&self, data: &[u8]) -> Result<Vec<u8>, ErrorMessage> {
+        let mut doc =
+            Document::load_mem(data).map_err(|_| ErrorMessage::FileInvalidFormat(None))?;
+
+        // Remove document info dictionary (author, creator, producer, etc.)
+        doc.trailer.remove(b"Info");
+
+        // Remove XMP metadata stream
+        doc.trailer.remove(b"Metadata");
+
+        // Collect object IDs to remove or sanitize
+        let ids: Vec<_> = doc.objects.keys().copied().collect();
+        for id in ids {
+            if let Some(obj) = doc.objects.get_mut(&id) {
+                sanitize_pdf_object(obj);
+            }
+        }
+
+        let mut buf = Vec::new();
+        doc.save_to(&mut buf)
+            .map_err(|_| ErrorMessage::ServerError)?;
+        Ok(buf)
+    }
+
     fn strip_gif_metadata(&self, data: &[u8]) -> Result<Vec<u8>, ErrorMessage> {
         use image::AnimationDecoder;
         use image::codecs::gif::{GifDecoder, GifEncoder, Repeat};
@@ -134,8 +210,9 @@ pub mod mocks {
         impl FileStorageTrait for FileStorage {
             async fn write(&self, name: &str, data: &[u8]) -> Result<(), ErrorMessage>;
             async fn delete(&self, name: &str) -> Result<(), ErrorMessage>;
-            fn strip_metadata(&self, name: &str, data: &[u8]) -> Result<Vec<u8>, ErrorMessage>;
+            fn strip_image_metadata(&self, name: &str, data: &[u8]) -> Result<Vec<u8>, ErrorMessage>;
             fn strip_gif_metadata(&self, data: &[u8]) -> Result<Vec<u8>, ErrorMessage>;
+            fn strip_pdf_metadata(&self, data: &[u8]) -> Result<Vec<u8>, ErrorMessage>;
         }
     }
 }
@@ -278,7 +355,7 @@ mod tests {
         let storage = test_storage();
         let data = create_test_png();
 
-        let result = storage.strip_metadata("image.png", &data);
+        let result = storage.strip_image_metadata("image.png", &data);
         assert!(result.is_ok());
 
         // Verify the output is still a valid image
@@ -291,7 +368,7 @@ mod tests {
         let storage = test_storage();
         let data = create_test_jpeg();
 
-        let result = storage.strip_metadata("photo.jpg", &data);
+        let result = storage.strip_image_metadata("photo.jpg", &data);
         assert!(result.is_ok());
 
         let clean = result.unwrap();
@@ -301,14 +378,14 @@ mod tests {
     #[tokio::test]
     async fn strip_metadata_rejects_invalid_extension() {
         let storage = test_storage();
-        let result = storage.strip_metadata("file.xyz", b"not an image");
+        let result = storage.strip_image_metadata("file.xyz", b"not an image");
         assert!(matches!(result, Err(ErrorMessage::FileInvalidFormat(_))));
     }
 
     #[tokio::test]
     async fn strip_metadata_rejects_corrupt_data() {
         let storage = test_storage();
-        let result = storage.strip_metadata("image.png", b"not actually a png");
+        let result = storage.strip_image_metadata("image.png", b"not actually a png");
         assert!(matches!(result, Err(ErrorMessage::FileInvalidFormat(_))));
     }
 
@@ -317,7 +394,7 @@ mod tests {
         let storage = test_storage();
         let data = create_test_gif();
 
-        let result = storage.strip_metadata("animation.gif", &data);
+        let result = storage.strip_image_metadata("animation.gif", &data);
         assert!(result.is_ok());
     }
 
@@ -345,5 +422,132 @@ mod tests {
         let storage = test_storage();
         let result = storage.strip_gif_metadata(b"not a gif");
         assert!(matches!(result, Err(ErrorMessage::FileInvalidFormat(_))));
+    }
+
+    // --- strip_pdf_metadata tests ---
+
+    fn create_test_pdf() -> Vec<u8> {
+        use lopdf::{Document, Object, Stream, dictionary};
+        let mut doc = Document::with_version("1.5");
+        let pages_id = doc.new_object_id();
+        let page_id = doc.add_object(lopdf::Object::Dictionary(dictionary! {
+            "Type" => Object::Name(b"Page".to_vec()),
+            "Parent" => Object::Reference(pages_id),
+            "MediaBox" => Object::Array(vec![
+                Object::Integer(0),
+                Object::Integer(0),
+                Object::Integer(612),
+                Object::Integer(792),
+            ]),
+        }));
+        let pages = lopdf::Object::Dictionary(dictionary! {
+            "Type" => Object::Name(b"Pages".to_vec()),
+            "Kids" => Object::Array(vec![Object::Reference(page_id)]),
+            "Count" => Object::Integer(1),
+        });
+        doc.objects.insert(pages_id, pages);
+        let catalog_id = doc.add_object(lopdf::Object::Dictionary(dictionary! {
+            "Type" => Object::Name(b"Catalog".to_vec()),
+            "Pages" => Object::Reference(pages_id),
+        }));
+        doc.trailer.set("Root", Object::Reference(catalog_id));
+        let mut buf = Vec::new();
+        doc.save_to(&mut buf).unwrap();
+        buf
+    }
+
+    fn create_pdf_with_js() -> Vec<u8> {
+        use lopdf::{Document, Object, dictionary};
+        let mut doc = Document::with_version("1.5");
+        let pages_id = doc.new_object_id();
+        let page_id = doc.add_object(lopdf::Object::Dictionary(dictionary! {
+            "Type" => Object::Name(b"Page".to_vec()),
+            "Parent" => Object::Reference(pages_id),
+            "MediaBox" => Object::Array(vec![
+                Object::Integer(0), Object::Integer(0),
+                Object::Integer(612), Object::Integer(792),
+            ]),
+        }));
+        let pages = lopdf::Object::Dictionary(dictionary! {
+            "Type" => Object::Name(b"Pages".to_vec()),
+            "Kids" => Object::Array(vec![Object::Reference(page_id)]),
+            "Count" => Object::Integer(1),
+        });
+        doc.objects.insert(pages_id, pages);
+        // Add a JS action as OpenAction in the catalog
+        let js_action_id = doc.add_object(lopdf::Object::Dictionary(dictionary! {
+            "Type" => Object::Name(b"Action".to_vec()),
+            "S" => Object::Name(b"JavaScript".to_vec()),
+            "JS" => Object::String(b"app.alert('xss')".to_vec(), lopdf::StringFormat::Literal),
+        }));
+        let catalog_id = doc.add_object(lopdf::Object::Dictionary(dictionary! {
+            "Type" => Object::Name(b"Catalog".to_vec()),
+            "Pages" => Object::Reference(pages_id),
+            "OpenAction" => Object::Reference(js_action_id),
+        }));
+        doc.trailer.set("Root", Object::Reference(catalog_id));
+        let mut buf = Vec::new();
+        doc.save_to(&mut buf).unwrap();
+        buf
+    }
+
+    #[tokio::test]
+    async fn strip_pdf_metadata_accepts_valid_pdf() {
+        let storage = test_storage();
+        let data = create_test_pdf();
+        let result = storage.strip_pdf_metadata(&data);
+        assert!(result.is_ok());
+        // output must still be a parseable PDF
+        assert!(Document::load_mem(&result.unwrap()).is_ok());
+    }
+
+    #[tokio::test]
+    async fn strip_pdf_metadata_rejects_invalid_data() {
+        let storage = test_storage();
+        let result = storage.strip_pdf_metadata(b"not a pdf");
+        assert!(matches!(result, Err(ErrorMessage::FileInvalidFormat(_))));
+    }
+
+    #[tokio::test]
+    async fn strip_pdf_metadata_removes_info_dict() {
+        use lopdf::Document;
+        let storage = test_storage();
+        let data = create_test_pdf();
+        let clean = storage.strip_pdf_metadata(&data).unwrap();
+        let doc = Document::load_mem(&clean).unwrap();
+        assert!(
+            doc.trailer.get(b"Info").is_err(),
+            "Info dictionary should be removed"
+        );
+    }
+
+    #[tokio::test]
+    async fn strip_pdf_metadata_removes_open_action() {
+        use lopdf::Document;
+        let storage = test_storage();
+        let data = create_pdf_with_js();
+        let clean = storage.strip_pdf_metadata(&data).unwrap();
+        let doc = Document::load_mem(&clean).unwrap();
+        let catalog_id = doc.trailer.get(b"Root").unwrap().as_reference().unwrap();
+        let catalog = doc.get_object(catalog_id).unwrap().as_dict().unwrap();
+        assert!(
+            catalog.get(b"OpenAction").is_err(),
+            "OpenAction should be removed"
+        );
+    }
+
+    #[tokio::test]
+    async fn write_pdf_uses_strip_pdf_metadata() {
+        let storage = FileStorageType::UserCv;
+        let file_name = "test_cv.pdf";
+        let data = create_test_pdf();
+
+        let result = storage.write(file_name, &data).await;
+        assert!(result.is_ok());
+
+        let path = storage.directory_path().join(file_name);
+        assert!(fs::try_exists(&path).await.unwrap());
+
+        storage.delete(file_name).await.unwrap();
     }
 }
