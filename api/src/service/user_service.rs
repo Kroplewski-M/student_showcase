@@ -79,7 +79,6 @@ impl UserService {
             .await
             .map_err(|_| ErrorMessage::ServerError)?;
 
-        info!("forth");
         //retrieve current pdf name
         let curr_cv = match self.user_repo.get_user_current_cv(&user_id).await {
             Ok(img) => img,
@@ -95,7 +94,7 @@ impl UserService {
             .update_user_cv(
                 user_id.as_str(),
                 file.len() as i64,
-                "pdf",
+                "application/pdf",
                 &file_name,
                 &new_name.to_string(),
                 "pdf",
