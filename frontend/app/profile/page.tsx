@@ -22,6 +22,7 @@ export interface Project {
 export interface UserProfile {
   id: string;
   profileImageName: string | null;
+  profileCvName: string | null;
   firstName: string | null;
   lastName: string | null;
   description: string | null;

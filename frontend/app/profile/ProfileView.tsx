@@ -9,6 +9,7 @@ import ProfileInfo from "./ProfileInfo";
 import Edit from "../SVGS/Edit";
 import EditProfileForm from "./EditProfileForm";
 import UserProjects from "./UserProjects";
+import { getCvUrl } from "../lib/helpers";
 
 interface Props {
   profile: UserProfile;
@@ -70,7 +71,18 @@ export default function ProfileView({ profile, canEdit = false }: Props) {
           {/* Profile Card */}
           <GlassCard className="mb-8 animate-[slideUp_0.6s_ease_0.1s_both] p-8">
             <div className="flex flex-col md:flex-row flex-wrap items-start gap-7">
-              <Avatar image={profile.profileImageName} canEdit={canEdit} />
+              <div className="flex flex-col">
+                <Avatar image={profile.profileImageName} canEdit={canEdit} />
+                {profile.profileCvName != null && (
+                  <a
+                    href={getCvUrl(profile.profileCvName)}
+                    download
+                    className="mt-3 flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-secondary/20 bg-secondary/6 px-4 py-2 text-sm font-medium text-secondary/70 transition-all hover:border-secondary/35 hover:bg-secondary/10 hover:text-secondary"
+                  >
+                    Download CV
+                  </a>
+                )}
+              </div>
               <ProfileInfo user={profile} />
             </div>
           </GlassCard>

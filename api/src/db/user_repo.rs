@@ -248,6 +248,7 @@ impl UserRepoTrait for UserRepo {
                 SELECT 
                     u.id, 
                     f.new_file_name || '.' || f.extension AS "profile_image_name?",
+                    cv.new_file_name || '.' || cv.extension AS "profile_cv_name?",
                     u.first_name AS "first_name?", 
                     u.last_name AS "last_name?",
                     u.personal_email AS "personal_email?", 
@@ -257,6 +258,7 @@ impl UserRepoTrait for UserRepo {
                 FROM users u
                 LEFT JOIN courses c ON u.course_id = c.id
                 LEFT JOIN files f ON u.image_id = f.id
+                LEFT JOIN files cv ON u.cv_file_id = cv.id
                 LEFT JOIN projects p ON p.user_id = u.id AND p.featured = true
                 WHERE u.id = $1 
                 AND u.verified = true
