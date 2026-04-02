@@ -1,0 +1,70 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT \n                    u.id, \n                    f.new_file_name || '.' || f.extension AS \"profile_image_name?\",\n                    cv.new_file_name || '.' || cv.extension AS \"profile_cv_name?\",\n                    u.first_name AS \"first_name?\", \n                    u.last_name AS \"last_name?\",\n                    u.personal_email AS \"personal_email?\", \n                    c.name AS \"course_name?\",\n                    u.description AS \"description?\",\n                    p.id AS \"featured_project_id?\"\n                FROM users u\n                LEFT JOIN courses c ON u.course_id = c.id\n                LEFT JOIN files f ON u.image_id = f.id\n                LEFT JOIN files cv ON u.cv_file_id = cv.id\n                LEFT JOIN projects p ON p.user_id = u.id AND p.featured = true\n                WHERE u.id = $1 \n                AND u.verified = true\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "profile_image_name?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "profile_cv_name?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "first_name?",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "last_name?",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "personal_email?",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "course_name?",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 7,
+        "name": "description?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "featured_project_id?",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      null,
+      null,
+      true,
+      true,
+      true,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "aead28f9faf9f286fa09f7f809562ed97d32ceece4340f437c7aa940a52c9334"
+}

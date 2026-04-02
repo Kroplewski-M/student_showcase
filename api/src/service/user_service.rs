@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use futures_util::TryFutureExt;
-use tracing::{error, info};
+use tracing::error;
 use uuid::Uuid;
 
 use crate::{
