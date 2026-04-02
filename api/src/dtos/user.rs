@@ -20,6 +20,7 @@ pub struct UserLinkView {
 pub struct UserProfileRowView {
     pub id: String,
     pub profile_image_name: Option<String>,
+    pub profile_cv_name: Option<String>,
     pub first_name: Option<String>,
     pub last_name: Option<String>,
     pub personal_email: Option<String>,

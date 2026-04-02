@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use futures_util::TryFutureExt;
-use tracing::{error, info};
+use tracing::error;
 use uuid::Uuid;
 
 use crate::{
@@ -408,6 +408,7 @@ mod tests {
                 base: UserProfileRowView {
                     id: "test-id".to_string(),
                     profile_image_name: None,
+                    profile_cv_name: None,
                     first_name: None,
                     last_name: None,
                     personal_email: None,

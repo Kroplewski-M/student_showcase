@@ -65,7 +65,9 @@ export function getProfileImgUrl(img_name: string) {
 export function getProjectImgUrl(img_name: string) {
   return `/uploads/project_images/${encodeURIComponent(img_name)}`;
 }
-
+export function getCvUrl(cv_name: string) {
+  return `/uploads/user_cvs/${encodeURIComponent(cv_name)}`;
+}
 export function validateLinkUrl(linkType: string, url: string): string | null {
   let hostname: string;
   try {
@@ -87,8 +89,7 @@ export function validateLinkUrl(linkType: string, url: string): string | null {
         return "Must be a LinkedIn URL (linkedin.com)";
       break;
     case "gitlab":
-      if (hostname !== "gitlab.com")
-        return "Must be a GitLab URL (gitlab.com)";
+      if (hostname !== "gitlab.com") return "Must be a GitLab URL (gitlab.com)";
       break;
     case "bitbucket":
       if (hostname !== "bitbucket.org")
@@ -99,8 +100,7 @@ export function validateLinkUrl(linkType: string, url: string): string | null {
         return "Must be a Stack Overflow URL (stackoverflow.com)";
       break;
     case "figma":
-      if (hostname !== "figma.com")
-        return "Must be a Figma URL (figma.com)";
+      if (hostname !== "figma.com") return "Must be a Figma URL (figma.com)";
       break;
     // "live preview" and any unknown type: any safe URL is fine
   }

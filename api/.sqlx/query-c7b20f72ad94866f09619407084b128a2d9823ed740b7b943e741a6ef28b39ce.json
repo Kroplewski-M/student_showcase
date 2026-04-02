@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            WITH old AS (\n                SELECT cv_file_id FROM users WHERE id = $1\n            )\n            UPDATE users\n            SET cv_file_id = NULL\n            WHERE id = $1\n            RETURNING (SELECT cv_file_id FROM old)\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "cv_file_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "c7b20f72ad94866f09619407084b128a2d9823ed740b7b943e741a6ef28b39ce"
+}
