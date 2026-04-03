@@ -111,7 +111,7 @@ export default function UpdateCVForm({ onClose }: Props) {
           </span>
           <span className="text-xs text-secondary/35">PDF only</span>
           <span className="text-xs text-secondary/35 block">
-            max {MAX_CV_SIZE_MB} MB
+            max {MAX_CV_SIZE_MB} MiB
           </span>
         </div>
 
