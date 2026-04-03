@@ -10,6 +10,7 @@ import Edit from "../SVGS/Edit";
 import EditProfileForm from "./EditProfileForm";
 import UserProjects from "./UserProjects";
 import { getCvUrl } from "../lib/helpers";
+import UpdateCVForm from "./UpdateCVForm";
 
 interface Props {
   profile: UserProfile;
@@ -18,6 +19,7 @@ interface Props {
 
 export default function ProfileView({ profile, canEdit = false }: Props) {
   const [editOpen, setEditOpen] = useState(false);
+  const [cvFormOpen, setCvFormOpen] = useState(false);
 
   return (
     <>
@@ -81,6 +83,18 @@ export default function ProfileView({ profile, canEdit = false }: Props) {
                   >
                     Download CV
                   </a>
+                )}
+                {canEdit && (
+                  <button
+                    type="button"
+                    onClick={() => setCvFormOpen(true)}
+                    className="mt-2 flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-secondary/20 bg-secondary/6 px-4 py-2 text-sm font-medium text-secondary/70 transition-all hover:border-secondary/35 hover:bg-secondary/10 hover:text-secondary"
+                  >
+                    {profile.profileCvName != null ? "Update CV" : "Upload CV"}
+                  </button>
+                )}
+                {cvFormOpen && canEdit && (
+                  <UpdateCVForm onClose={() => setCvFormOpen(false)} />
                 )}
               </div>
               <ProfileInfo user={profile} />

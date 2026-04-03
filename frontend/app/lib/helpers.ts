@@ -1,4 +1,6 @@
 export const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MiB
+export const MAX_CV_SIZE_BYTES = 5 * 1024 * 1024; // 5 MiB
+export const MAX_CV_SIZE_MB = MAX_CV_SIZE_BYTES / (1024 * 1024);
 export const MAX_IMAGE_SIZE_MB = MAX_IMAGE_SIZE_BYTES / (1024 * 1024);
 export const ALLOWED_IMAGE_TYPES = [
   "image/jpeg",
