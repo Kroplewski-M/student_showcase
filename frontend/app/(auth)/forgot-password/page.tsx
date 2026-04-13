@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import validateStudentId from "@/app/lib/helpers";
 import ConfirmForgotPassword from "./ConfirmForgotPassword";
-import Loading from "@/app/SVGS/Loading";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 
 export default function ForgotPasswordPage() {
   const [studentId, setStudentId] = useState("");
@@ -156,7 +157,7 @@ export default function ForgotPasswordPage() {
               >
                 {loading ? (
                   <>
-                    <Loading />
+                    <FontAwesomeIcon icon={faSpinner} className="animate-spin w-[18px] h-[18px]" />
                     Sending…
                   </>
                 ) : (

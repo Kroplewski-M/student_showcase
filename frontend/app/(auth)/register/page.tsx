@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import EyeIcon from "@/app/SVGS/EyeIcon";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye, faEyeSlash, faSpinner } from "@fortawesome/free-solid-svg-icons";
 import ConfirmedRegister from "./ConfirmedRegister";
-import Loading from "@/app/SVGS/Loading";
 import validateStudentId, {
   getPasswordStrength,
   validatePassword,
@@ -263,7 +263,7 @@ export default function RegisterPage() {
                       showPassword ? "Hide password" : "Show password"
                     }
                   >
-                    <EyeIcon open={showPassword} />
+                    <FontAwesomeIcon icon={showPassword ? faEye : faEyeSlash} className="w-5 h-5" />
                   </button>
                 </div>
                 {form.password && <PasswordStrengthMeter strength={strength} />}
@@ -312,7 +312,7 @@ export default function RegisterPage() {
                     tabIndex={-1}
                     aria-label={showConfirm ? "Hide password" : "Show password"}
                   >
-                    <EyeIcon open={showConfirm} />
+                    <FontAwesomeIcon icon={showConfirm ? faEye : faEyeSlash} className="w-5 h-5" />
                   </button>
                 </div>
                 {touched.passwordConfirmation &&
@@ -349,7 +349,7 @@ export default function RegisterPage() {
               >
                 {loading ? (
                   <>
-                    <Loading />
+                    <FontAwesomeIcon icon={faSpinner} className="animate-spin w-[18px] h-[18px]" />
                     Creating account…
                   </>
                 ) : (

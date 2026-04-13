@@ -1,5 +1,6 @@
 import { createPortal } from "react-dom";
-import Close from "../SVGS/Close";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import ErrorDisplay from "./ErrorDisplay";
 
 interface ConfirmModalProps {
@@ -46,7 +47,7 @@ export default function ConfirmModal({
             aria-label="close confirmation dialog"
             className="flex h-8 w-8 items-center justify-center rounded-lg text-secondary/50 transition-colors hover:bg-secondary/10 hover:text-secondary cursor-pointer"
           >
-            <Close />
+            <FontAwesomeIcon icon={faXmark} className="h-3 w-3" />
           </button>
         </div>
 

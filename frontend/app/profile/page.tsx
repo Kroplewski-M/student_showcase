@@ -2,7 +2,8 @@ import { redirect } from "next/navigation";
 import { getUser } from "../lib/auth";
 import ProfileView from "./ProfileView";
 import Link from "next/link";
-import ErrorSVG from "../SVGS/ErrorSVG";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCircleXmark } from "@fortawesome/free-solid-svg-icons";
 
 export interface Links {
   linkType: string;
@@ -66,7 +67,7 @@ export default async function ProfilePage() {
       <div className="flex flex-col items-center justify-center gap-6 min-h-screen px-4">
         <div className="flex flex-col items-center gap-5 rounded-2xl border border-red-500/20 bg-red-500/5 px-10 py-10 backdrop-blur-sm max-w-md w-full text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-500/10 border border-red-500/20">
-            <ErrorSVG />
+            <FontAwesomeIcon icon={faCircleXmark} className="w-8 h-8 text-danger" />
           </div>
           <div className="flex flex-col gap-2">
             <h2 className="text-lg font-semibold text-light">

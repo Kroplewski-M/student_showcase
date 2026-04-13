@@ -10,9 +10,8 @@ import {
   MAX_IMAGE_SIZE_BYTES,
   MAX_IMAGE_SIZE_MB,
 } from "../lib/helpers";
-import Camera from "../SVGS/Camera";
-import Loading from "../SVGS/Loading";
-import ImageIcon from "../SVGS/ImageIcon";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCamera, faSpinner, faImage } from "@fortawesome/free-solid-svg-icons";
 import ErrorDisplay from "../components/ErrorDisplay";
 
 interface Props {
@@ -121,7 +120,7 @@ export default function UpdateImageForm({ onClose, currentImageName }: Props) {
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,var(--color-secondary)/0.2,var(--color-primary)/0.6)] text-secondary/40">
-                <Camera />
+                <FontAwesomeIcon icon={faCamera} className="w-[18px] h-[18px]" />
               </div>
             )}
           </div>
@@ -143,7 +142,7 @@ export default function UpdateImageForm({ onClose, currentImageName }: Props) {
           }`}
         >
           <div className="text-secondary/40">
-            <ImageIcon />
+            <FontAwesomeIcon icon={faImage} className="w-8 h-8" />
           </div>
           <span className="text-sm text-secondary/60">
             {file ? file.name : "Drop an image here or click to browse"}
@@ -187,7 +186,7 @@ export default function UpdateImageForm({ onClose, currentImageName }: Props) {
           >
             {loading ? (
               <>
-                <Loading />
+                <FontAwesomeIcon icon={faSpinner} className="animate-spin w-[18px] h-[18px]" />
                 Uploading…
               </>
             ) : (

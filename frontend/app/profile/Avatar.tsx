@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { getProfileImgUrl } from "../lib/helpers";
-import Camera from "../SVGS/Camera";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCamera } from "@fortawesome/free-solid-svg-icons";
 import Image from "next/image";
 import UpdateImageForm from "./UpdateImageForm";
 interface AvatarProps {
@@ -33,7 +34,7 @@ export default function Avatar({ image, canEdit = false }: AvatarProps) {
             title="Update profile picture"
             className="absolute -bottom-1 -right-1 flex h-[34px] w-[34px] cursor-pointer items-center justify-center rounded-full border-3 border-primary bg-[linear-gradient(135deg,var(--color-secondary),var(--color-support))] text-primary transition-transform duration-200 ease-in-out hover:scale-110"
           >
-            <Camera />
+            <FontAwesomeIcon icon={faCamera} className="w-[18px] h-[18px]" />
           </button>
         )}
       </div>
