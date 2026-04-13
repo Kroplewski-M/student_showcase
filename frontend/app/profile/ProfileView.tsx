@@ -6,7 +6,8 @@ import { motion } from "framer-motion";
 import GlassCard from "../components/GlassCard";
 import Avatar from "./Avatar";
 import ProfileInfo from "./ProfileInfo";
-import Edit from "../SVGS/Edit";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faDownload, faPenToSquare } from "@fortawesome/free-solid-svg-icons";
 import EditProfileForm from "./EditProfileForm";
 import UserProjects from "./UserProjects";
 import { getCvUrl } from "../lib/helpers";
@@ -61,7 +62,10 @@ export default function ProfileView({ profile, canEdit = false }: Props) {
                   onClick={() => setEditOpen(true)}
                   className="flex cursor-pointer items-center gap-2 rounded-lg border border-secondary/20 bg-secondary/6 px-4 py-2 text-sm font-medium text-secondary/70 transition-all hover:border-secondary/35 hover:bg-secondary/10 hover:text-secondary"
                 >
-                  <Edit />
+                  <FontAwesomeIcon
+                    icon={faPenToSquare}
+                    className="w-[13px] h-[13px]"
+                  />
                   Edit Profile
                 </button>
                 {editOpen && (
@@ -81,7 +85,7 @@ export default function ProfileView({ profile, canEdit = false }: Props) {
                     download
                     className="mt-3 flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-secondary/20 bg-secondary/6 px-4 py-2 text-sm font-medium text-secondary/70 transition-all hover:border-secondary/35 hover:bg-secondary/10 hover:text-secondary"
                   >
-                    Download CV
+                    <FontAwesomeIcon icon={faDownload} /> CV
                   </a>
                 )}
                 {canEdit && (

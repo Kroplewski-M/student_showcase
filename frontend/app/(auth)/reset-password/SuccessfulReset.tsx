@@ -1,4 +1,5 @@
-import CheckIcon from "@/app/SVGS/CheckIcon";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCircleCheck } from "@fortawesome/free-solid-svg-icons";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
@@ -12,7 +13,7 @@ export default function SuccessfulReset() {
       className="relative z-10 w-full max-w-md rounded-2xl border border-third/40 bg-third/20 p-8 text-center backdrop-blur-sm"
     >
       <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-secondary/15">
-        <CheckIcon />
+        <FontAwesomeIcon icon={faCircleCheck} className="w-8 h-8 text-secondary" />
       </div>
 
       <h1 className="mb-2 text-2xl font-extrabold tracking-tight text-light">

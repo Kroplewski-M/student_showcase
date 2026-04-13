@@ -1,5 +1,5 @@
-import CheckIcon from "@/app/SVGS/CheckIcon";
-import EmailIcon from "@/app/SVGS/EmailIcon";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCircleCheck, faEnvelope } from "@fortawesome/free-solid-svg-icons";
 import { motion } from "framer-motion";
 
 export default function ConfirmedRegister() {
@@ -14,7 +14,10 @@ export default function ConfirmedRegister() {
     >
       {/* Check icon */}
       <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-secondary/15">
-        <CheckIcon />
+        <FontAwesomeIcon
+          icon={faCircleCheck}
+          className="w-8 h-8 text-secondary"
+        />
       </div>
 
       <h1 className="text-2xl font-extrabold tracking-tight text-light mb-2">
@@ -26,14 +29,18 @@ export default function ConfirmedRegister() {
 
       {/* Email notice */}
       <div className="flex items-start gap-4 rounded-xl border border-third/40 bg-primary/40 p-5 text-left mb-5">
-        <EmailIcon />
+        <FontAwesomeIcon
+          icon={faEnvelope}
+          className="w-6 h-6 mt-0.5 shrink-0 text-secondary"
+        />
         <div>
           <p className="text-sm font-semibold text-light mb-1">
             Check your inbox
           </p>
           <p className="text-xs leading-relaxed text-support">
             We&rsquo;ve sent a verification link to your student email. Click
-            the link to activate your account.
+            the link to activate your account. (Emails may take upto 5 minutes
+            to be delivered)
           </p>
         </div>
       </div>

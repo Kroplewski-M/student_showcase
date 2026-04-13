@@ -4,9 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import ErrorDisplay from "../components/ErrorDisplay";
-import Loading from "../SVGS/Loading";
-import Search from "../SVGS/Search";
-import Close from "../SVGS/Close";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSpinner, faMagnifyingGlass, faXmark } from "@fortawesome/free-solid-svg-icons";
 import * as helpers from "../lib/helpers";
 
 interface Course {
@@ -346,7 +345,7 @@ export default function EditProfileForm({ onClose }: Props) {
             disabled={saving}
             className="flex h-8 w-8 items-center justify-center rounded-lg text-secondary/50 transition-colors hover:bg-secondary/10 hover:text-secondary cursor-pointer"
           >
-            <Close />
+            <FontAwesomeIcon icon={faXmark} className="h-3 w-3" />
           </button>
         </div>
 
@@ -354,7 +353,7 @@ export default function EditProfileForm({ onClose }: Props) {
         <div className="overflow-y-auto flex-1 px-8 py-6 space-y-7">
           {fetchLoading && (
             <div className="flex justify-center py-10 text-secondary/50">
-              <Loading />
+              <FontAwesomeIcon icon={faSpinner} className="animate-spin w-[18px] h-[18px]" />
             </div>
           )}
 
@@ -501,7 +500,7 @@ export default function EditProfileForm({ onClose }: Props) {
                             onClick={() => removeTool(id)}
                             className="text-secondary/50 transition-colors hover:text-secondary cursor-pointer"
                           >
-                            <Close />
+                            <FontAwesomeIcon icon={faXmark} className="h-3 w-3" />
                           </button>
                         </span>
                       );
@@ -510,7 +509,7 @@ export default function EditProfileForm({ onClose }: Props) {
                 )}
                 <div ref={toolsRef} className="relative">
                   <div className="flex items-center gap-2 rounded-xl border border-secondary/15 bg-secondary/5 px-4 py-2.5 transition-colors focus-within:border-secondary/35 focus-within:bg-secondary/8">
-                    <Search />
+                    <FontAwesomeIcon icon={faMagnifyingGlass} className="h-3.5 w-3.5 shrink-0 text-secondary/40" />
                     <input
                       value={toolSearch}
                       onChange={(e) => setToolSearch(e.target.value)}
@@ -592,7 +591,7 @@ export default function EditProfileForm({ onClose }: Props) {
                           }
                           className="text-secondary/40 hover:text-secondary/80 transition-colors"
                         >
-                          <Close />
+                          <FontAwesomeIcon icon={faXmark} className="h-3 w-3" />
                         </button>
                       </span>
                     ))}
@@ -655,18 +654,7 @@ export default function EditProfileForm({ onClose }: Props) {
                           onClick={() => removeLink(link._key)}
                           className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg text-secondary/30 transition-colors hover:bg-secondary/10 hover:text-secondary/70"
                         >
-                          <svg
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth={2}
-                            className="h-3.5 w-3.5"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              d="M6 6l12 12M18 6L6 18"
-                            />
-                          </svg>
+                          <FontAwesomeIcon icon={faXmark} className="h-3 w-3" />
                         </button>
                       </div>
                       <div className="flex flex-col gap-1">
@@ -757,7 +745,7 @@ export default function EditProfileForm({ onClose }: Props) {
               >
                 {saving ? (
                   <>
-                    <Loading />
+                    <FontAwesomeIcon icon={faSpinner} className="animate-spin w-[18px] h-[18px]" />
                     Saving…
                   </>
                 ) : (

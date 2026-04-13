@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import Award from "../SVGS/Award";
+import { faAward } from "@fortawesome/free-solid-svg-icons";
 import { UserProfile } from "./page";
 import { getLinkIcon } from "../components/LinkIcon";
 import { isSafeLink } from "../lib/helpers";
@@ -79,7 +79,7 @@ export default function ProfileInfo({ user }: Props) {
                     className="inline-flex items-center gap-1.5 rounded-lg border border-secondary/15 bg-secondary/5 px-3 py-1 text-xs font-medium text-secondary/80 transition-colors hover:border-secondary/30 hover:bg-secondary/10"
                     key={key}
                   >
-                    <Award />
+                    <FontAwesomeIcon icon={faAward} className="w-4 h-4" />
                     {certificate}
                   </span>
                 ))}

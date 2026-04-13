@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import EyeIcon from "@/app/SVGS/EyeIcon";
-import Loading from "@/app/SVGS/Loading";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye, faEyeSlash, faSpinner } from "@fortawesome/free-solid-svg-icons";
 import LogoWritten from "@/app/components/LogoWritten";
 import ErrorDisplay from "@/app/components/ErrorDisplay";
 
@@ -236,7 +236,7 @@ export default function LoginPage() {
                 tabIndex={-1}
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                <EyeIcon open={showPassword} />
+                <FontAwesomeIcon icon={showPassword ? faEye : faEyeSlash} className="w-5 h-5" />
               </button>
             </div>
             {touched.password && errors.password && (
@@ -272,7 +272,7 @@ export default function LoginPage() {
           >
             {loading ? (
               <>
-                <Loading />
+                <FontAwesomeIcon icon={faSpinner} className="animate-spin w-[18px] h-[18px]" />
                 Logging in…
               </>
             ) : (

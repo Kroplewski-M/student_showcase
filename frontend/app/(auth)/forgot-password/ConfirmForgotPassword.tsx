@@ -1,4 +1,5 @@
-import EmailIcon from "@/app/SVGS/EmailIcon";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEnvelope } from "@fortawesome/free-solid-svg-icons";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
@@ -13,7 +14,10 @@ export default function ConfirmForgotPassword() {
       className="relative z-10 w-full max-w-md rounded-2xl border border-third/40 bg-third/20 p-8 text-center backdrop-blur-sm"
     >
       <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-secondary/15">
-        <EmailIcon />
+        <FontAwesomeIcon
+          icon={faEnvelope}
+          className="w-6 h-6 mt-0.5 shrink-0 text-secondary"
+        />
       </div>
 
       <h1 className="mb-2 text-2xl font-extrabold tracking-tight text-light">
@@ -21,7 +25,8 @@ export default function ConfirmForgotPassword() {
       </h1>
       <p className="mb-7 text-sm text-support">
         If an account with that Student ID exists, we&rsquo;ve sent an email
-        with a link to reset your password.
+        with a link to reset your password. (Emails may take upto 5 minutes to
+        be delivered)
       </p>
 
       <Link

@@ -4,8 +4,8 @@ import { useState, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { MAX_CV_SIZE_BYTES, MAX_CV_SIZE_MB } from "../lib/helpers";
-import DocumentIcon from "../SVGS/DocumentIcon";
-import Loading from "../SVGS/Loading";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faFileLines, faSpinner } from "@fortawesome/free-solid-svg-icons";
 import ErrorDisplay from "../components/ErrorDisplay";
 
 interface Props {
@@ -104,7 +104,7 @@ export default function UpdateCVForm({ onClose }: Props) {
           }`}
         >
           <div className="text-secondary/40">
-            <DocumentIcon />
+            <FontAwesomeIcon icon={faFileLines} className="w-8 h-8" />
           </div>
           <span className="text-sm text-secondary/60">
             {file ? file.name : "Drop a PDF here or click to browse"}
@@ -146,7 +146,7 @@ export default function UpdateCVForm({ onClose }: Props) {
           >
             {loading ? (
               <>
-                <Loading />
+                <FontAwesomeIcon icon={faSpinner} className="animate-spin w-[18px] h-[18px]" />
                 Uploading…
               </>
             ) : (

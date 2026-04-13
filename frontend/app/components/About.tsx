@@ -4,7 +4,8 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useRef } from "react";
-import Calendar from "../SVGS/Calendar";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCalendarDays } from "@fortawesome/free-solid-svg-icons";
 
 const schedule = [
   { time: "12:00 – 13:00", activity: "Setup" },
@@ -95,7 +96,7 @@ export default function About() {
 
             {/* Calendar date card */}
             <div className="flex shrink-0 items-center gap-3 rounded-2xl border border-third/20 bg-third/[0.04] px-5 py-4 backdrop-blur-sm">
-              <Calendar date={19} />
+              <FontAwesomeIcon icon={faCalendarDays} className="h-12 w-11 shrink-0" />
               <div className="flex flex-col">
                 <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-secondary">
                   Friday

@@ -5,9 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { isValidUuid } from "@/app/lib/helpers";
-import CheckIcon from "@/app/SVGS/CheckIcon";
-import Loading from "@/app/SVGS/Loading";
-import ErrorSVG from "@/app/SVGS/ErrorSVG";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCircleCheck, faSpinner, faCircleXmark } from "@fortawesome/free-solid-svg-icons";
 
 type Status = "idle" | "loading" | "success" | "error";
 
@@ -74,7 +73,7 @@ export default function ValidateUserPage() {
           animate={{ opacity: 1 }}
           className="relative z-10 flex flex-col items-center gap-4"
         >
-          <Loading />
+          <FontAwesomeIcon icon={faSpinner} className="animate-spin w-[18px] h-[18px]" />
           <p className="text-sm text-support">Verifying your account…</p>
         </motion.div>
       )}
@@ -88,7 +87,7 @@ export default function ValidateUserPage() {
           className="relative z-10 w-full max-w-md rounded-2xl border border-third/40 bg-third/20 p-8 text-center backdrop-blur-sm"
         >
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-secondary/15">
-            <CheckIcon />
+            <FontAwesomeIcon icon={faCircleCheck} className="w-8 h-8 text-secondary" />
           </div>
 
           <h1 className="mb-2 text-2xl font-extrabold tracking-tight text-light">
@@ -117,7 +116,7 @@ export default function ValidateUserPage() {
           className="relative z-10 w-full max-w-md rounded-2xl border border-third/40 bg-third/20 p-8 text-center backdrop-blur-sm"
         >
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-danger/15">
-            <ErrorSVG />
+            <FontAwesomeIcon icon={faCircleXmark} className="w-8 h-8 text-danger" />
           </div>
 
           <h1 className="mb-2 text-2xl font-extrabold tracking-tight text-light">

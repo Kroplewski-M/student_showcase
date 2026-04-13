@@ -4,14 +4,13 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import EyeIcon from "@/app/SVGS/EyeIcon";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye, faEyeSlash, faSpinner, faCircleXmark } from "@fortawesome/free-solid-svg-icons";
 import {
   getPasswordStrength,
   isValidUuid,
   validatePassword,
 } from "@/app/lib/helpers";
-import Loading from "@/app/SVGS/Loading";
-import ErrorSVG from "@/app/SVGS/ErrorSVG";
 import SuccessfulReset from "../SuccessfulReset";
 import PasswordStrengthMeter from "@/app/components/PasswordStrengthMeter";
 import ErrorDisplay from "@/app/components/ErrorDisplay";
@@ -193,7 +192,7 @@ export default function ResetPasswordPage() {
           animate={{ opacity: 1 }}
           className="relative z-10 flex flex-col items-center gap-4"
         >
-          <Loading />
+          <FontAwesomeIcon icon={faSpinner} className="animate-spin w-[18px] h-[18px]" />
           <p className="text-sm text-support">Validating reset link…</p>
         </motion.div>
       )}
@@ -248,7 +247,7 @@ export default function ResetPasswordPage() {
                   tabIndex={-1}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  <EyeIcon open={showPassword} />
+                  <FontAwesomeIcon icon={showPassword ? faEye : faEyeSlash} className="w-5 h-5" />
                 </button>
               </div>
               {form.password && <PasswordStrengthMeter strength={strength} />}
@@ -296,7 +295,7 @@ export default function ResetPasswordPage() {
                   tabIndex={-1}
                   aria-label={showConfirm ? "Hide password" : "Show password"}
                 >
-                  <EyeIcon open={showConfirm} />
+                  <FontAwesomeIcon icon={showConfirm ? faEye : faEyeSlash} className="w-5 h-5" />
                 </button>
               </div>
               {touched.passwordConfirmation && errors.passwordConfirmation && (
@@ -332,7 +331,7 @@ export default function ResetPasswordPage() {
             >
               {loading ? (
                 <>
-                  <Loading />
+                  <FontAwesomeIcon icon={faSpinner} className="animate-spin w-[18px] h-[18px]" />
                   Resetting…
                 </>
               ) : (
@@ -356,7 +355,7 @@ export default function ResetPasswordPage() {
           className="relative z-10 w-full max-w-md rounded-2xl border border-third/40 bg-third/20 p-8 text-center backdrop-blur-sm"
         >
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-danger/15">
-            <ErrorSVG />
+            <FontAwesomeIcon icon={faCircleXmark} className="w-8 h-8 text-danger" />
           </div>
 
           <h1 className="mb-2 text-2xl font-extrabold tracking-tight text-light">
