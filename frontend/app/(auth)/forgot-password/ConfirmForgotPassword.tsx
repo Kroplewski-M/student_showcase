@@ -25,7 +25,7 @@ export default function ConfirmForgotPassword() {
       </h1>
       <p className="mb-7 text-sm text-support">
         If an account with that Student ID exists, we&rsquo;ve sent an email
-        with a link to reset your password. (Emails may take upto 5 minutes to
+        with a link to reset your password. (Emails may take up to 5 minutes to
         be delivered)
       </p>
 

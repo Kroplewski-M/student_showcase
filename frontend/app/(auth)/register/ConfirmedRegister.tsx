@@ -39,7 +39,7 @@ export default function ConfirmedRegister() {
           </p>
           <p className="text-xs leading-relaxed text-support">
             We&rsquo;ve sent a verification link to your student email. Click
-            the link to activate your account. (Emails may take upto 5 minutes
+            the link to activate your account. (Emails may take up to 5 minutes
             to be delivered)
           </p>
         </div>
