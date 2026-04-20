@@ -6,10 +6,10 @@ export default function ErrorDisplay({ text }: ErrorDisplayProps) {
     <>
       {text && (
         <div
-          className="px-4 py-3 text-sm leading-relaxed text-danger font-semibold bg-danger/10 border border-danger rounded-xl"
+          className="px-4 py-3 text-sm leading-relaxed font-semibold bg-danger/10 border border-danger rounded-xl"
           role="alert"
         >
-          {text}
+          <span className="text-white">{text}</span>
         </div>
       )}
     </>

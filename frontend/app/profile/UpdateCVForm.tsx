@@ -124,7 +124,11 @@ export default function UpdateCVForm({ onClose }: Props) {
         />
 
         {/* Error */}
-        {error && <ErrorDisplay text={error} />}
+        {error && (
+          <div className="mb-2">
+            <ErrorDisplay text={error} />{" "}
+          </div>
+        )}
 
         {/* Actions */}
         <div className="flex justify-end gap-3">
@@ -146,7 +150,10 @@ export default function UpdateCVForm({ onClose }: Props) {
           >
             {loading ? (
               <>
-                <FontAwesomeIcon icon={faSpinner} className="animate-spin w-[18px] h-[18px]" />
+                <FontAwesomeIcon
+                  icon={faSpinner}
+                  className="animate-spin w-[18px] h-[18px]"
+                />
                 Uploading…
               </>
             ) : (
