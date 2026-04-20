@@ -41,6 +41,9 @@ pub async fn get_user_profile(
             ErrorMessage::UserNoLongerExists => HttpError::not_found(e),
             _ => HttpError::server_error(e),
         })?;
+    if user.base.suspended {
+        return Err(HttpError::not_found("student account is suspended"));
+    }
     Ok(HttpResponse::Ok().json(user))
 }
 
