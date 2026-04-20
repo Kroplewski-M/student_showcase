@@ -254,7 +254,8 @@ impl UserRepoTrait for UserRepo {
                     u.personal_email AS "personal_email?", 
                     c.name AS "course_name?",
                     u.description AS "description?",
-                    p.id AS "featured_project_id?"
+                    p.id AS "featured_project_id?",
+                    u.suspended AS suspended
                 FROM users u
                 LEFT JOIN courses c ON u.course_id = c.id
                 LEFT JOIN files f ON u.image_id = f.id

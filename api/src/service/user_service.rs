@@ -415,6 +415,7 @@ mod tests {
                     course_name: None,
                     description: None,
                     featured_project_id: None,
+                    suspended: false,
                 },
                 certificates: vec![],
                 tools: vec![],

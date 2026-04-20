@@ -4,6 +4,7 @@ import ProfileView from "./ProfileView";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleXmark } from "@fortawesome/free-solid-svg-icons";
+import AccountSuspended from "../components/AccountSuspended";
 
 export interface Links {
   linkType: string;
@@ -34,6 +35,7 @@ export interface UserProfile {
   tools: string[] | null;
   projects: Project[];
   featuredProjectId: string | null;
+  suspended: boolean;
 }
 
 export default async function ProfilePage() {
@@ -42,7 +44,7 @@ export default async function ProfilePage() {
 
   let profile: UserProfile | null = null;
   let error: string | null = null;
-
+  let suspended: boolean = false;
   try {
     const res = await fetch(
       `${process.env.API_INTERNAL_URL}/user/info/${user.id}`,
@@ -57,6 +59,9 @@ export default async function ProfilePage() {
           : "Something went wrong loading your profile.";
     } else {
       profile = await res.json();
+      if (profile?.suspended) {
+        suspended = true;
+      }
     }
   } catch {
     error = "Unable to connect to the server. Please try again later.";
@@ -67,7 +72,10 @@ export default async function ProfilePage() {
       <div className="flex flex-col items-center justify-center gap-6 min-h-screen px-4">
         <div className="flex flex-col items-center gap-5 rounded-2xl border border-red-500/20 bg-red-500/5 px-10 py-10 backdrop-blur-sm max-w-md w-full text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-500/10 border border-red-500/20">
-            <FontAwesomeIcon icon={faCircleXmark} className="w-8 h-8 text-danger" />
+            <FontAwesomeIcon
+              icon={faCircleXmark}
+              className="w-8 h-8 text-danger"
+            />
           </div>
           <div className="flex flex-col gap-2">
             <h2 className="text-lg font-semibold text-light">
@@ -88,6 +96,8 @@ export default async function ProfilePage() {
       </div>
     );
   }
-
+  if (suspended) {
+    return <AccountSuspended></AccountSuspended>;
+  }
   return <ProfileView profile={profile} canEdit={true} />;
 }
