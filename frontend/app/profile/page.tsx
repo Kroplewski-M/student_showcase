@@ -44,7 +44,6 @@ export default async function ProfilePage() {
 
   let profile: UserProfile | null = null;
   let error: string | null = null;
-  let suspended: boolean = false;
   try {
     const res = await fetch(
       `${process.env.API_INTERNAL_URL}/user/info/${user.id}`,
@@ -59,9 +58,6 @@ export default async function ProfilePage() {
           : "Something went wrong loading your profile.";
     } else {
       profile = await res.json();
-      if (profile?.suspended) {
-        suspended = true;
-      }
     }
   } catch {
     error = "Unable to connect to the server. Please try again later.";
@@ -96,7 +92,7 @@ export default async function ProfilePage() {
       </div>
     );
   }
-  if (suspended) {
+  if (profile?.suspended) {
     return <AccountSuspended></AccountSuspended>;
   }
   return <ProfileView profile={profile} canEdit={true} />;
