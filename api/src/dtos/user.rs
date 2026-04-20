@@ -27,6 +27,7 @@ pub struct UserProfileRowView {
     pub course_name: Option<String>,
     pub description: Option<String>,
     pub featured_project_id: Option<Uuid>,
+    pub suspended: bool,
 }
 
 #[derive(sqlx::FromRow, Debug)]

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n                SELECT \n                    u.id, \n                    f.new_file_name || '.' || f.extension AS \"profile_image_name?\",\n                    cv.new_file_name || '.' || cv.extension AS \"profile_cv_name?\",\n                    u.first_name AS \"first_name?\", \n                    u.last_name AS \"last_name?\",\n                    u.personal_email AS \"personal_email?\", \n                    c.name AS \"course_name?\",\n                    u.description AS \"description?\",\n                    p.id AS \"featured_project_id?\"\n                FROM users u\n                LEFT JOIN courses c ON u.course_id = c.id\n                LEFT JOIN files f ON u.image_id = f.id\n                LEFT JOIN files cv ON u.cv_file_id = cv.id\n                LEFT JOIN projects p ON p.user_id = u.id AND p.featured = true\n                WHERE u.id = $1 \n                AND u.verified = true\n            ",
+  "query": "\n                SELECT \n                    u.id, \n                    f.new_file_name || '.' || f.extension AS \"profile_image_name?\",\n                    cv.new_file_name || '.' || cv.extension AS \"profile_cv_name?\",\n                    u.first_name AS \"first_name?\", \n                    u.last_name AS \"last_name?\",\n                    u.personal_email AS \"personal_email?\", \n                    c.name AS \"course_name?\",\n                    u.description AS \"description?\",\n                    p.id AS \"featured_project_id?\",\n                    u.suspended AS suspended\n                FROM users u\n                LEFT JOIN courses c ON u.course_id = c.id\n                LEFT JOIN files f ON u.image_id = f.id\n                LEFT JOIN files cv ON u.cv_file_id = cv.id\n                LEFT JOIN projects p ON p.user_id = u.id AND p.featured = true\n                WHERE u.id = $1 \n                AND u.verified = true\n            ",
   "describe": {
     "columns": [
       {
@@ -47,6 +47,11 @@
         "ordinal": 8,
         "name": "featured_project_id?",
         "type_info": "Uuid"
+      },
+      {
+        "ordinal": 9,
+        "name": "suspended",
+        "type_info": "Bool"
       }
     ],
     "parameters": {
@@ -63,8 +68,9 @@
       true,
       false,
       true,
+      false,
       false
     ]
   },
-  "hash": "aead28f9faf9f286fa09f7f809562ed97d32ceece4340f437c7aa940a52c9334"
+  "hash": "fdbbd8bae97af19846e28a80615fb1df4dd2f1ae9458869d9230ed0e9f392eb9"
 }

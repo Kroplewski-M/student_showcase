@@ -254,7 +254,8 @@ impl UserRepoTrait for UserRepo {
                     u.personal_email AS "personal_email?", 
                     c.name AS "course_name?",
                     u.description AS "description?",
-                    p.id AS "featured_project_id?"
+                    p.id AS "featured_project_id?",
+                    u.suspended AS suspended
                 FROM users u
                 LEFT JOIN courses c ON u.course_id = c.id
                 LEFT JOIN files f ON u.image_id = f.id
@@ -620,7 +621,9 @@ impl UserRepoTrait for UserRepo {
             INNER JOIN projects fp ON fp.user_id = u.id AND fp.featured = true
             LEFT JOIN best_project_dist bpd ON bpd.user_id = u.id
             LEFT JOIN files f ON f.id = u.image_id 
-            WHERE u.verified = true
+            WHERE 
+            u.verified = true
+            AND u.suspended = false
             AND (
                 (u.embedding IS NOT NULL AND u.embedding <=> sv.vec <= 0.7)
                 OR bpd.min_dist <= 0.7

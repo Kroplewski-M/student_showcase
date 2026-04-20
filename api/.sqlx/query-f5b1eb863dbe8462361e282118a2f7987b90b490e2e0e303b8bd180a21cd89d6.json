@@ -1,0 +1,75 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            WITH\n            search_vec AS (\n                SELECT $1::vector AS vec\n            ),\n            best_project_dist AS (\n                SELECT p.user_id, MIN(p.embedding <=> sv.vec) AS min_dist\n                FROM projects p\n                CROSS JOIN search_vec sv\n                WHERE p.embedding IS NOT NULL\n                GROUP BY p.user_id\n            )\n            SELECT\n                u.id AS \"user_id!\",\n                u.first_name,\n                u.last_name,\n                f.new_file_name || '.' || f.extension AS image_name,\n                u.description,\n                c.name AS \"course\",\n                fp.id AS \"featured_project_id?\",\n                fp.name AS \"featured_project_name?\",\n                fp.description AS \"featured_project_description?\"\n            FROM users u\n            CROSS JOIN search_vec sv\n            LEFT JOIN courses c ON u.course_id = c.id\n            INNER JOIN projects fp ON fp.user_id = u.id AND fp.featured = true\n            LEFT JOIN best_project_dist bpd ON bpd.user_id = u.id\n            LEFT JOIN files f ON f.id = u.image_id \n            WHERE \n            u.verified = true\n            AND u.suspended = false\n            AND (\n                (u.embedding IS NOT NULL AND u.embedding <=> sv.vec <= 0.7)\n                OR bpd.min_dist <= 0.7\n            )\n            ORDER BY LEAST(\n                COALESCE(u.embedding <=> sv.vec, 1.0),\n                COALESCE(bpd.min_dist, 1.0)\n            ) ASC\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id!",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "first_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "last_name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "image_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "description",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "course",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "featured_project_id?",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 7,
+        "name": "featured_project_name?",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 8,
+        "name": "featured_project_description?",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        {
+          "Custom": {
+            "name": "vector",
+            "kind": "Simple"
+          }
+        }
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      null,
+      true,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "f5b1eb863dbe8462361e282118a2f7987b90b490e2e0e303b8bd180a21cd89d6"
+}
