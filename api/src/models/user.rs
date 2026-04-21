@@ -13,6 +13,7 @@ pub struct User {
     pub updated_at: DateTime<Utc>,
     #[serde(skip)]
     pub password: Option<String>,
+    pub is_admin: bool,
 }
 #[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
 #[serde(rename_all = "camelCase")]

@@ -17,6 +17,7 @@ pub struct TokenClaims {
     pub sub: String,
     pub iat: i64,
     pub exp: i64,
+    pub is_admin: bool,
 }
 
 /// Creates a signed JWT for the given user.
@@ -35,6 +36,7 @@ pub fn create_token(
     user_id: &str,
     secret: &[u8],
     expires_in_minutes: i64,
+    is_admin: bool,
 ) -> Result<String, jsonwebtoken::errors::Error> {
     if user_id.is_empty() {
         return Err(jsonwebtoken::errors::ErrorKind::InvalidSubject.into());
@@ -49,6 +51,7 @@ pub fn create_token(
         sub: user_id.to_string(),
         iat,
         exp,
+        is_admin,
     };
 
     let key = &EncodingKey::from_secret(secret);
@@ -88,25 +91,25 @@ mod tests {
 
     #[test]
     fn create_token_success() {
-        let token = create_token("user123", SECRET, 10);
+        let token = create_token("user123", SECRET, 10, false);
         assert!(token.is_ok());
     }
     #[test]
     fn create_token_fails_with_emtpy_user_id() {
-        let token = create_token("", SECRET, 10);
+        let token = create_token("", SECRET, 10, false);
         assert!(token.is_err());
     }
     #[test]
     fn decode_token_success() {
         let user_id = "user123";
-        let token = create_token(user_id, SECRET, 10).unwrap();
+        let token = create_token(user_id, SECRET, 10, false).unwrap();
         let result = decode_token(&token, SECRET);
         assert!(result.is_ok());
         assert_eq!(result.unwrap().sub, user_id);
     }
     #[test]
     fn decode_token_fails_with_wrong_secret() {
-        let token = create_token("user123", SECRET, 10).unwrap();
+        let token = create_token("user123", SECRET, 10, false).unwrap();
         let wrong_secret = b"wrong-secret";
 
         let result = decode_token(token, wrong_secret);
@@ -124,6 +127,7 @@ mod tests {
             sub: "user123".to_string(),
             iat: now.timestamp(),
             exp: (now - Duration::minutes(2)).timestamp(),
+            is_admin: false,
         };
 
         let token = encode(

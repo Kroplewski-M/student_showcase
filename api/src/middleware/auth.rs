@@ -110,14 +110,20 @@ where
 
         async move {
             let user_id = token_info.sub.to_string();
-            let exists = cloned_app_state
+            let cur_user = cloned_app_state
                 .db_client
                 .user
-                .exists_verified(&user_id)
+                .get_user_by_id(&user_id)
                 .await
-                .map_err(|e| ErrorInternalServerError(HttpError::server_error(e.to_string())))?;
+                .map_err(|e| ErrorInternalServerError(HttpError::server_error(e.to_string())))?
+                .ok_or_else(|| {
+                    ErrorUnauthorized(ErrorResponse {
+                        status: "fail".into(),
+                        message: ErrorMessage::PermissionDenied.to_string(),
+                    })
+                })?;
 
-            if !exists {
+            if !cur_user.verified {
                 return Err(ErrorUnauthorized(ErrorResponse {
                     status: "fail".into(),
                     message: ErrorMessage::PermissionDenied.to_string(),
@@ -142,6 +148,7 @@ where
                     &user_id,
                     cloned_app_state.config.jwt_secret.as_bytes(),
                     cloned_app_state.config.jwt_max_age_mins,
+                    cur_user.is_admin,
                 )
                 .map_err(|e| ErrorInternalServerError(HttpError::server_error(e.to_string())))?;
 

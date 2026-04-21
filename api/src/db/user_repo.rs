@@ -90,7 +90,8 @@ impl UserRepoTrait for UserRepo {
             verified,
             created_at,
             updated_at,
-            password
+            password,
+            is_admin
             FROM users WHERE id = $1"#,
             student_id
         )
