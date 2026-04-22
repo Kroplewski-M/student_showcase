@@ -2,10 +2,10 @@
 
 import { createContext, ReactNode, useContext, useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { User } from "../lib/auth";
+import { AuthenticatedUser } from "../lib/dtos";
 
 interface AuthState {
-  user: User | null;
+  user: AuthenticatedUser | null;
   isAuthenticated: boolean;
 }
 
@@ -15,10 +15,10 @@ export function AuthProvider({
   initialUser,
   children,
 }: {
-  initialUser: User | null;
+  initialUser: AuthenticatedUser | null;
   children: ReactNode;
 }) {
-  const user: User | null = initialUser;
+  const user: AuthenticatedUser | null = initialUser;
   const pathname = usePathname();
   const router = useRouter();
 

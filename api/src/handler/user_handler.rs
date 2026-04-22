@@ -9,7 +9,7 @@ use crate::{
         user::{SearchStudentsQuery, UpdateUserInfo, UserProfileForm},
     },
     errors::{ErrorMessage, HttpError},
-    middleware::auth::{AuthenticatedUserId, RequireAuth},
+    middleware::auth::{AuthenticatedUser, RequireAuth},
     models::file::FormFile,
 };
 
@@ -49,7 +49,7 @@ pub async fn get_user_profile(
 
 pub async fn update_user_image(
     app_state: web::Data<AppState>,
-    user_id: AuthenticatedUserId,
+    user: AuthenticatedUser,
     payload: Multipart,
 ) -> Result<HttpResponse, HttpError> {
     let file_data = FormFile::new_from_form_multi_part(payload)
@@ -58,7 +58,7 @@ pub async fn update_user_image(
 
     app_state
         .user_service
-        .update_user_image(user_id.to_string(), file_data.bytes, file_data.name)
+        .update_user_image(user.id, file_data.bytes, file_data.name)
         .await
         .map_err(|e| match e {
             ErrorMessage::ServerError => HttpError::server_error(e),
@@ -72,7 +72,7 @@ pub async fn update_user_image(
 }
 pub async fn update_user_cv(
     app_state: web::Data<AppState>,
-    user_id: AuthenticatedUserId,
+    user: AuthenticatedUser,
     payload: Multipart,
 ) -> Result<HttpResponse, HttpError> {
     let file_data = FormFile::new_from_form_multi_part(payload)
@@ -81,7 +81,7 @@ pub async fn update_user_cv(
 
     app_state
         .user_service
-        .update_user_cv(user_id.to_string(), file_data.bytes, file_data.name)
+        .update_user_cv(user.id, file_data.bytes, file_data.name)
         .await
         .map_err(|e| match e {
             ErrorMessage::ServerError => HttpError::server_error(e),
@@ -95,12 +95,10 @@ pub async fn update_user_cv(
 }
 pub async fn get_user_profile_form(
     app_state: web::Data<AppState>,
-    user_id: AuthenticatedUserId,
+    user: AuthenticatedUser,
 ) -> Result<HttpResponse, HttpError> {
     let (form_data, courses, link_types, tools) = tokio::try_join!(
-        app_state
-            .user_service
-            .get_user_form_data(user_id.to_string()),
+        app_state.user_service.get_user_form_data(user.id),
         app_state.reference_service.get_courses(),
         app_state.reference_service.get_link_types(),
         app_state.reference_service.get_tools(),
@@ -119,14 +117,14 @@ pub async fn get_user_profile_form(
 }
 pub async fn patch_user_profile(
     app_state: web::Data<AppState>,
-    user_id: AuthenticatedUserId,
+    user: AuthenticatedUser,
     data: web::Json<UpdateUserInfo>,
 ) -> Result<HttpResponse, HttpError> {
     data.validate()
         .map_err(|e| HttpError::bad_request(e.to_string()))?;
     app_state
         .user_service
-        .update_user(user_id.to_string(), data.0)
+        .update_user(user.id, data.0)
         .await
         .map_err(|e| match e {
             ErrorMessage::UserNoLongerExists => HttpError::not_found("user not found"),

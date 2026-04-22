@@ -5,7 +5,7 @@ use crate::{
         user::{ProjectFormUpsert, UpsertProjectQuery},
     },
     errors::{ErrorMessage, HttpError},
-    middleware::auth::{AuthenticatedUserId, RequireAuth},
+    middleware::auth::{AuthenticatedUser, RequireAuth},
 };
 use actix_multipart::form::MultipartForm;
 use actix_web::{HttpResponse, dev::HttpServiceFactory, web};
@@ -30,12 +30,12 @@ pub fn project_handler() -> impl HttpServiceFactory {
 }
 pub async fn get_user_project_form(
     app_state: web::Data<AppState>,
-    user_id: AuthenticatedUserId,
+    user: AuthenticatedUser,
     query: web::Query<UpsertProjectQuery>,
 ) -> Result<HttpResponse, HttpError> {
     let data = app_state
         .project_service
-        .get_user_project_form_data(user_id.to_string(), query.project_id)
+        .get_user_project_form_data(user.id, query.project_id)
         .await
         .map_err(|e| match e {
             ErrorMessage::ProjectNotFound => HttpError::not_found(e),
@@ -45,7 +45,7 @@ pub async fn get_user_project_form(
 }
 pub async fn post_user_project_form(
     app_state: web::Data<AppState>,
-    user_id: AuthenticatedUserId,
+    user: AuthenticatedUser,
     MultipartForm(form): MultipartForm<ProjectFormUpsert>,
 ) -> Result<HttpResponse, HttpError> {
     let data = form.data.into_inner();
@@ -54,7 +54,7 @@ pub async fn post_user_project_form(
 
     let res = app_state
         .project_service
-        .upsert_user_project(user_id.to_string(), data, form.new_files)
+        .upsert_user_project(user.id, data, form.new_files)
         .await;
     match res {
         Ok(_) => Ok(HttpResponse::Ok().json(Response {
@@ -72,12 +72,12 @@ pub async fn post_user_project_form(
 }
 pub async fn delete_user_project(
     app_state: web::Data<AppState>,
-    user_id: AuthenticatedUserId,
+    user: AuthenticatedUser,
     project_id: web::Path<Uuid>,
 ) -> Result<HttpResponse, HttpError> {
     app_state
         .project_service
-        .delete_project(user_id.to_string(), project_id.to_owned())
+        .delete_project(user.id, project_id.to_owned())
         .await
         .map_err(HttpError::server_error)?;
     Ok(HttpResponse::Ok().json(Response {
@@ -87,12 +87,12 @@ pub async fn delete_user_project(
 }
 pub async fn feature_user_project(
     app_state: web::Data<AppState>,
-    user_id: AuthenticatedUserId,
+    user: AuthenticatedUser,
     project_id: web::Path<Uuid>,
 ) -> Result<HttpResponse, HttpError> {
     app_state
         .project_service
-        .feature_project(user_id.to_string(), project_id.to_owned())
+        .feature_project(user.id, project_id.to_owned())
         .await
         .map_err(HttpError::server_error)?;
     Ok(HttpResponse::Ok().json(Response {
