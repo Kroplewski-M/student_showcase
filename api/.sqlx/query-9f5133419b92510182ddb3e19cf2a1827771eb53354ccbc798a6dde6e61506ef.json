@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT\n            (SELECT COUNT(*) FROM users WHERE verified = true) AS student_count,\n            (SELECT COUNT(*) FROM projects) AS project_count\n        ",
+  "query": "\n            SELECT\n            (SELECT COUNT(*) FROM users WHERE verified = true AND id NOT LIKE '0%') AS student_count,\n            (SELECT COUNT(*) FROM projects) AS project_count\n        ",
   "describe": {
     "columns": [
       {
@@ -22,5 +22,5 @@
       null
     ]
   },
-  "hash": "33ddc4a652bf05eca4cfe9e8fd43a8a6155cd65b1482a52ca8663464d7178f80"
+  "hash": "9f5133419b92510182ddb3e19cf2a1827771eb53354ccbc798a6dde6e61506ef"
 }
