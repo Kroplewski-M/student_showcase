@@ -62,6 +62,7 @@ impl AuthService {
                 &user.id,
                 self.config.jwt_secret.as_bytes(),
                 self.config.jwt_max_age_mins,
+                user.is_admin,
             )
             .map_err(|_| ErrorMessage::ServerError)?;
             return Ok(token);
@@ -206,6 +207,7 @@ mod tests {
             created_at: Utc::now(),
             updated_at: Utc::now(),
             password: Some(hashed),
+            is_admin: false,
         }
     }
 

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT\n            id,\n            first_name,\n            last_name,\n            personal_email,\n            verified,\n            created_at,\n            updated_at,\n            password\n            FROM users WHERE id = $1",
+  "query": "SELECT\n            id,\n            first_name,\n            last_name,\n            personal_email,\n            verified,\n            created_at,\n            updated_at,\n            password,\n            is_admin\n            FROM users WHERE id = $1",
   "describe": {
     "columns": [
       {
@@ -42,6 +42,11 @@
         "ordinal": 7,
         "name": "password",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 8,
+        "name": "is_admin",
+        "type_info": "Bool"
       }
     ],
     "parameters": {
@@ -57,8 +62,9 @@
       false,
       false,
       false,
-      true
+      true,
+      false
     ]
   },
-  "hash": "85155e58ffe62ab4c63b51ccdd77bc15136d07227ce5acb087314bd3a70cda95"
+  "hash": "85962d59021671845fd9d9f15c7096eb77bbf988ad4fc82ec4383cbc114fddaa"
 }
