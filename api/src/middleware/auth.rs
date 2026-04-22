@@ -175,6 +175,7 @@ where
 
 /// Public middleware type used in route configuration:
 /// `.wrap(RequireAuth::default())` or `.wrap(RequireAuth::admin())`
+#[derive(Default)]
 pub struct RequireAuth {
     pub require_admin: bool,
 }
@@ -183,14 +184,6 @@ impl RequireAuth {
     pub fn admin() -> Self {
         Self {
             require_admin: true,
-        }
-    }
-}
-
-impl Default for RequireAuth {
-    fn default() -> Self {
-        Self {
-            require_admin: false,
         }
     }
 }
