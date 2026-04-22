@@ -113,7 +113,7 @@ where
             let cur_user = cloned_app_state
                 .db_client
                 .user
-                .get_user_by_id(&user_id)
+                .get_auth_user_by_id(&user_id)
                 .await
                 .map_err(|e| ErrorInternalServerError(HttpError::server_error(e.to_string())))?
                 .ok_or_else(|| {

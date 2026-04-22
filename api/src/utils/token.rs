@@ -26,6 +26,7 @@ pub struct TokenClaims {
 /// - `user_id` – Unique identifier of the user (stored as `sub`)
 /// - `secret` – HMAC secret used to sign the token
 /// - `expires_in_minutes` – Token lifetime in minutes
+/// - `is_admin` - is user admin
 ///
 /// # Errors
 /// Returns an error if:

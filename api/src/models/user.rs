@@ -15,6 +15,12 @@ pub struct User {
     pub password: Option<String>,
     pub is_admin: bool,
 }
+#[derive(Debug, Serialize, sqlx::FromRow, Clone)]
+pub struct AuthUser {
+    pub id: String,
+    pub verified: bool,
+    pub is_admin: bool,
+}
 #[derive(Debug, Serialize, Deserialize, Clone, sqlx::FromRow)]
 #[serde(rename_all = "camelCase")]
 pub struct ProjectBaseRow {

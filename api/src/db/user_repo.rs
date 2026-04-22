@@ -11,7 +11,10 @@ use crate::{
         ProjectProfileView, ProjectProfileViewBase, UpdateUserInfo, UserCardInfo, UserFormData,
         UserLinkView, UserProfileRowView, UserProfileView,
     },
-    models::{file::File, user::User},
+    models::{
+        file::File,
+        user::{AuthUser, User},
+    },
 };
 
 #[derive(Debug, Clone)]
@@ -29,6 +32,7 @@ impl UserRepo {
 pub trait UserRepoTrait: Send + Sync {
     async fn exists_verified(&self, student_id: &str) -> Result<bool, sqlx::Error>;
     async fn get_user_by_id(&self, student_id: &str) -> Result<Option<User>, sqlx::Error>;
+    async fn get_auth_user_by_id(&self, student_id: &str) -> Result<Option<AuthUser>, sqlx::Error>;
     async fn update_user_image(
         &self,
         user_id: &str,
@@ -78,6 +82,20 @@ impl UserRepoTrait for UserRepo {
         .await?;
 
         Ok(exists.unwrap_or(false))
+    }
+
+    async fn get_auth_user_by_id(&self, student_id: &str) -> Result<Option<AuthUser>, sqlx::Error> {
+        sqlx::query_as!(
+            AuthUser,
+            r#"SELECT
+            id,
+            verified,
+            is_admin
+            FROM users WHERE id = $1"#,
+            student_id
+        )
+        .fetch_optional(&self.pool)
+        .await
     }
     async fn get_user_by_id(&self, student_id: &str) -> Result<Option<User>, sqlx::Error> {
         sqlx::query_as!(
@@ -755,6 +773,7 @@ pub mod mocks {
         #[async_trait]
         impl UserRepoTrait for UserRepo {
             async fn exists_verified(&self, student_id: &str) -> Result<bool, sqlx::Error>;
+            async fn get_auth_user_by_id(&self, student_id: &str) -> Result<Option<AuthUser>, sqlx::Error>;
             async fn get_user_by_id(&self, student_id: &str) -> Result<Option<User>, sqlx::Error>;
             async fn update_user_image(
                 &self,
