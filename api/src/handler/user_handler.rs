@@ -21,7 +21,7 @@ pub fn user_handler() -> impl HttpServiceFactory {
         // Protected routes wrapped in their own scope
         .service(
             web::scope("")
-                .wrap(RequireAuth)
+                .wrap(RequireAuth::default())
                 .route("/update_image", web::post().to(update_user_image))
                 .route("/update_cv", web::post().to(update_user_cv))
                 .route("/update_profile", web::get().to(get_user_profile_form))

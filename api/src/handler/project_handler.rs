@@ -15,7 +15,7 @@ use validator::Validate;
 pub fn project_handler() -> impl HttpServiceFactory {
     web::scope("/project").service(
         web::scope("")
-            .wrap(RequireAuth)
+            .wrap(RequireAuth::default())
             .route("/upsert_project", web::get().to(get_user_project_form))
             .route("/upsert_project", web::post().to(post_user_project_form))
             .route(

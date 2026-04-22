@@ -51,6 +51,7 @@ impl FromRequest for AuthenticatedUserId {
 /// Wraps the inner service (next handler/middleware in the chain).
 pub struct AuthMiddleware<S> {
     service: Rc<S>,
+    require_admin: bool,
 }
 
 /// Implementation of the actual middleware logic.
@@ -107,6 +108,7 @@ where
         };
         let cloned_app_state = app_state.clone();
         let srv = Rc::clone(&self.service);
+        let require_admin = self.require_admin;
 
         async move {
             let user_id = token_info.sub.to_string();
@@ -123,7 +125,7 @@ where
                     })
                 })?;
 
-            if !cur_user.verified {
+            if !cur_user.verified || (require_admin && !cur_user.is_admin) {
                 return Err(ErrorUnauthorized(ErrorResponse {
                     status: "fail".into(),
                     message: ErrorMessage::PermissionDenied.to_string(),
@@ -172,8 +174,26 @@ where
 }
 
 /// Public middleware type used in route configuration:
-/// `.wrap(RequireAuth)`
-pub struct RequireAuth;
+/// `.wrap(RequireAuth::default())` or `.wrap(RequireAuth::admin())`
+pub struct RequireAuth {
+    pub require_admin: bool,
+}
+
+impl RequireAuth {
+    pub fn admin() -> Self {
+        Self {
+            require_admin: true,
+        }
+    }
+}
+
+impl Default for RequireAuth {
+    fn default() -> Self {
+        Self {
+            require_admin: false,
+        }
+    }
+}
 
 /// Factory that creates `AuthMiddleware` and wraps the inner service
 impl<S> actix_web::dev::Transform<S, ServiceRequest> for RequireAuth
@@ -193,6 +213,7 @@ where
     fn new_transform(&self, service: S) -> Self::Future {
         ready(Ok(AuthMiddleware {
             service: Rc::new(service),
+            require_admin: self.require_admin,
         }))
     }
 }

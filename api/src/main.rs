@@ -103,6 +103,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .service(handler::user_handler::user_handler())
             .service(handler::project_handler::project_handler())
             .service(handler::reference_handler::reference_handler())
+            .service(handler::admin_handler::admin_handler())
     })
     .bind(("0.0.0.0", config.port))?
     .run()
