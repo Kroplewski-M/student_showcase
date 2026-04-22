@@ -29,7 +29,7 @@ pub fn auth_handler() -> impl HttpServiceFactory {
         )
         .service(
             web::scope("")
-                .wrap(RequireAuth)
+                .wrap(RequireAuth::default())
                 .route("/logout", web::post().to(logout))
                 .route("/me", web::get().to(me)),
         )
