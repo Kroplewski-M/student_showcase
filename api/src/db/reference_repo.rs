@@ -82,8 +82,8 @@ impl ReferenceRepoTrait for ReferenceRepo {
         let info = sqlx::query!(
             r#"
             SELECT
-            (SELECT COUNT(*) FROM users WHERE verified = true) AS student_count,
-            (SELECT COUNT(*) FROM projects) AS project_count
+            (SELECT COUNT(*) FROM users WHERE verified = true AND id NOT LIKE '0%') AS student_count,
+            (SELECT COUNT(*) FROM projects WHERE user_id NOT LIKE '0%') AS project_count
         "#
         )
         .fetch_one(&self.pool)

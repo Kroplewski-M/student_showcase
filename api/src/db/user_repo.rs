@@ -640,9 +640,10 @@ impl UserRepoTrait for UserRepo {
             INNER JOIN projects fp ON fp.user_id = u.id AND fp.featured = true
             LEFT JOIN best_project_dist bpd ON bpd.user_id = u.id
             LEFT JOIN files f ON f.id = u.image_id 
-            WHERE 
+            WHERE
             u.verified = true
             AND u.suspended = false
+            AND u.id NOT LIKE '0%'
             AND (
                 (u.embedding IS NOT NULL AND u.embedding <=> sv.vec <= 0.7)
                 OR bpd.min_dist <= 0.7
