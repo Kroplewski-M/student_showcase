@@ -13,25 +13,19 @@ use actix_web::{
 use futures_util::FutureExt;
 use futures_util::future::{LocalBoxFuture, Ready, ready};
 use serde::Serialize;
-use std::ops::Deref;
 use std::rc::Rc;
 
 /// Newtype wrapper around a user ID that has already been authenticated.
 /// This is what handlers will extract once authentication succeeds.
 #[derive(Clone, Serialize)]
-pub struct AuthenticatedUserId(pub String);
-
-impl Deref for AuthenticatedUserId {
-    type Target = String;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+pub struct AuthenticatedUser {
+    pub id: String,
+    pub is_admin: bool,
 }
 
 /// Allows `AuthenticatedUserId` to be extracted in handlers like:
 /// `fn handler(user_id: AuthenticatedUserId) -> impl Responder`
-impl FromRequest for AuthenticatedUserId {
+impl FromRequest for AuthenticatedUser {
     type Error = actix_web::Error;
     type Future = Ready<Result<Self, Self::Error>>;
     fn from_request(
@@ -40,7 +34,7 @@ impl FromRequest for AuthenticatedUserId {
     ) -> Self::Future {
         ready(
             req.extensions()
-                .get::<AuthenticatedUserId>()
+                .get::<AuthenticatedUser>()
                 .cloned()
                 .ok_or_else(|| ErrorUnauthorized(HttpError::unauthorized("Authentication Error"))),
         )
@@ -132,8 +126,10 @@ where
                 }));
             }
 
-            req.extensions_mut()
-                .insert(AuthenticatedUserId(user_id.clone()));
+            req.extensions_mut().insert(AuthenticatedUser {
+                id: user_id.clone(),
+                is_admin: cur_user.is_admin,
+            });
             let mut response = srv.call(req).await?;
 
             //Refresh the token

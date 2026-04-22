@@ -1,10 +1,7 @@
 import { cookies } from "next/headers";
+import { AuthenticatedUser } from "./dtos";
 
-export interface User {
-  id: string;
-}
-
-export async function getUser(): Promise<User | null> {
+export async function getUser(): Promise<AuthenticatedUser | null> {
   const cookieStore = await cookies();
   const cookieName = process.env.COOKIE_NAME;
   if (cookieName === undefined) return null;
@@ -20,10 +17,8 @@ export async function getUser(): Promise<User | null> {
       cache: "no-store",
     });
     if (!res.ok) return null;
-    const data: { userId: string } = await res.json();
-    return {
-      id: data.userId,
-    };
+    const data: AuthenticatedUser | null = await res.json();
+    return data;
   } catch {
     return null;
   }
