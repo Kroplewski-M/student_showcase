@@ -41,9 +41,9 @@ export interface UserProfile {
 export default async function ProfilePage() {
   const user = await getUser();
   if (!user) redirect("/login");
-
   let profile: UserProfile | null = null;
   let error: string | null = null;
+  let suspended: boolean = false;
   try {
     const res = await fetch(
       `${process.env.API_INTERNAL_URL}/user/info/${user.id}`,
@@ -52,17 +52,24 @@ export default async function ProfilePage() {
       },
     );
     if (!res.ok) {
-      error =
-        res.status === 404
-          ? "Profile not found."
-          : "Something went wrong loading your profile.";
+      if (res.status === 404) {
+        if ((await res.json()).message.includes("suspended")) {
+          suspended = true;
+        } else {
+          error = "Profile not found";
+        }
+      } else {
+        error = "Something went wrong loading your profile.";
+      }
     } else {
       profile = await res.json();
     }
   } catch {
     error = "Unable to connect to the server. Please try again later.";
   }
-
+  if (suspended) {
+    return <AccountSuspended></AccountSuspended>;
+  }
   if (error || !profile) {
     return (
       <div className="flex flex-col items-center justify-center gap-6 min-h-screen px-4">
@@ -92,8 +99,6 @@ export default async function ProfilePage() {
       </div>
     );
   }
-  if (profile?.suspended) {
-    return <AccountSuspended></AccountSuspended>;
-  }
+
   return <ProfileView profile={profile} canEdit={true} />;
 }
