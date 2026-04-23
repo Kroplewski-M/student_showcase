@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE users\n            SET suspended = true\n            WHERE id = $1\n            AND is_admin = false\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5f25744363e78d239e7059d61b7bf83af5b414318d2c27815f1fbb3ddd809278"
+}
