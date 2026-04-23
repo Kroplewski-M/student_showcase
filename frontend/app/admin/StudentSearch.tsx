@@ -15,7 +15,7 @@ import validateStudentId, { getProfileImgUrl } from "../lib/helpers";
 
 interface FindStudent {
   id: string;
-  image_name: string;
+  image_name: string | null;
   suspended: boolean;
 }
 
