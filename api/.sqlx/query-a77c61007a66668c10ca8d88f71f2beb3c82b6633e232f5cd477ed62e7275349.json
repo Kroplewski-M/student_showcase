@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT \n            u.id, \n            u.suspended,\n            f.new_file_name || '.' || f.extension AS image_name\n            FROM users u\n            LEFT JOIN files f ON u.image_id = f.Id\n            WHERE u.is_admin = false\n            AND u.id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 1,
+        "name": "suspended",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 2,
+        "name": "image_name",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "a77c61007a66668c10ca8d88f71f2beb3c82b6633e232f5cd477ed62e7275349"
+}
