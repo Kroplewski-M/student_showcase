@@ -32,7 +32,7 @@ impl AdminRepoTrait for AdminRepo {
             u.suspended,
             f.new_file_name || '.' || f.extension AS image_name
             FROM users u
-            JOIN files f ON u.image_id = f.Id
+            LEFT JOIN files f ON u.image_id = f.Id
             WHERE u.is_admin = false
             AND u.id = $1
             "#,
