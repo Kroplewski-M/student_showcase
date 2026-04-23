@@ -1,6 +1,7 @@
 mod config;
 use crate::config::Config;
 use crate::db::DbClient;
+use crate::service::admin_service::AdminService;
 use crate::service::project_service::ProjectService;
 use crate::service::reference_service::ReferenceService;
 use crate::service::{auth_service::AuthService, user_service::UserService};
@@ -31,6 +32,7 @@ pub struct AppState {
     pub auth_service: AuthService,
     pub user_service: UserService,
     pub project_service: ProjectService,
+    pub admin_service: AdminService,
     pub reference_service: ReferenceService,
 }
 
@@ -91,6 +93,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             embedding.clone(),
             ref_service.clone(),
         ),
+        admin_service: AdminService::new(Arc::new(db_client.admin.clone())),
         reference_service: ref_service.clone(),
     };
 
