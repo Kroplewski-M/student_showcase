@@ -42,7 +42,7 @@ impl AdminRepoTrait for AdminRepo {
         .await
     }
     async fn suspend_student(&self, id: &str) -> Result<(), sqlx::Error> {
-        let res = sqlx::query_scalar!(
+        let res = sqlx::query!(
             r#"
             UPDATE users
             SET suspended = true
@@ -60,7 +60,7 @@ impl AdminRepoTrait for AdminRepo {
         Ok(())
     }
     async fn unsuspend_student(&self, id: &str) -> Result<(), sqlx::Error> {
-        let res = sqlx::query_scalar!(
+        let res = sqlx::query!(
             r#"
             UPDATE users
             SET suspended = false 

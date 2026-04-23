@@ -3,7 +3,7 @@ use actix_web::{HttpResponse, dev::HttpServiceFactory, web};
 use crate::{
     AppState,
     dtos::{Response, auth::validate_student_id},
-    errors::HttpError,
+    errors::{ErrorMessage, HttpError},
     middleware::auth::RequireAuth,
 };
 
@@ -48,7 +48,10 @@ pub async fn suspend_student(
         .admin_service
         .suspend_student(student_id.into_inner())
         .await
-        .map_err(|e| HttpError::server_error(e.to_string()))?;
+        .map_err(|e| match e {
+            ErrorMessage::UserNoLongerExists => HttpError::bad_request(e.to_string()),
+            _ => HttpError::server_error(e.to_string()),
+        })?;
 
     Ok(HttpResponse::Ok().json(Response {
         status: "success",
@@ -64,7 +67,10 @@ pub async fn unsuspend_student(
         .admin_service
         .unsuspend_student(student_id.into_inner())
         .await
-        .map_err(|e| HttpError::server_error(e.to_string()))?;
+        .map_err(|e| match e {
+            ErrorMessage::UserNoLongerExists => HttpError::bad_request(e.to_string()),
+            _ => HttpError::server_error(e.to_string()),
+        })?;
 
     Ok(HttpResponse::Ok().json(Response {
         status: "success",
