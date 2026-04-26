@@ -66,7 +66,9 @@ pub async fn login(
             Err(HttpError::unauthorized("User credentials are invalid"))
         }
         Err(ErrorMessage::UserNotVerified) => Err(HttpError::unauthorized(
-            "User is not verified, please check your emails to verify your account",
+            "User is not verified, please check your emails to verify your account. (Emails may take up to 5 minutes to
+        be delivered, please check the spam folder)
+",
         )),
         Err(_) => Err(HttpError::server_error("error logging in user")),
     }
