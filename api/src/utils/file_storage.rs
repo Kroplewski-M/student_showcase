@@ -65,7 +65,8 @@ fn sanitize_pdf_dict(dict: &mut Dictionary) {
     dict.remove(b"Metadata");
 
     // Sanitize the /Action subtype: if this dict IS an action, check its type
-    if let Ok(Object::Name(subtype)) = dict.get(b"S").map(|o| o.clone()) {
+
+    if let Ok(Object::Name(subtype)) = dict.get(b"S").cloned() {
         let dangerous = matches!(
             subtype.as_slice(),
             b"JavaScript" | b"Launch" | b"SubmitForm" | b"ImportData" | b"GoToR" | b"GoToE"
@@ -427,7 +428,7 @@ mod tests {
     // --- strip_pdf_metadata tests ---
 
     fn create_test_pdf() -> Vec<u8> {
-        use lopdf::{Document, Object, Stream, dictionary};
+        use lopdf::{Document, Object, dictionary};
         let mut doc = Document::with_version("1.5");
         let pages_id = doc.new_object_id();
         let page_id = doc.add_object(lopdf::Object::Dictionary(dictionary! {
