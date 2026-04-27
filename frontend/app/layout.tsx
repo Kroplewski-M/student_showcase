@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 import "@fortawesome/fontawesome-svg-core/styles.css";
 import { config } from "@fortawesome/fontawesome-svg-core";
@@ -35,6 +36,10 @@ export default async function RootLayout({
     <html lang="en">
       <head>
         <link rel="icon" href="/favicon.svg" sizes="any" />
+        <script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-SQ11DTF14N"
+        ></script>
       </head>
       <body className={`${poppins.variable} antialiased overflow-x-hidden`}>
         <AuthProvider initialUser={user}>
@@ -43,6 +48,7 @@ export default async function RootLayout({
           <Footer />
         </AuthProvider>
       </body>
+      <GoogleAnalytics gaId="G-SQ11DTF14N" />
     </html>
   );
 }
