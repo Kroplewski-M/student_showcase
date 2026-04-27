@@ -100,7 +100,7 @@ impl AuthService {
         match self.auth_repo.validate_user(token).await {
             Ok(student_id) => {
                 if let Err(e) = self.email_service.send_tips_email(student_id).await {
-                    error!("error senfing tips email: {}", e.to_string());
+                    error!("error sending tips email: {}", e.to_string());
                 }
                 Ok(())
             }
