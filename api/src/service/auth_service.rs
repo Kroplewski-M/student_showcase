@@ -98,7 +98,12 @@ impl AuthService {
     }
     pub async fn validate_user(&self, token: Uuid) -> Result<(), ErrorMessage> {
         match self.auth_repo.validate_user(token).await {
-            Ok(_) => Ok(()),
+            Ok(student_id) => {
+                if let Err(e) = self.email_service.send_tips_email(student_id).await {
+                    error!("error sending tips email: {}", e.to_string());
+                }
+                Ok(())
+            }
             Err(e) => match &e {
                 sqlx::Error::RowNotFound => Err(ErrorMessage::VerifyTokenDoesNotExist),
                 _ => Err(ErrorMessage::ServerError),
@@ -358,10 +363,14 @@ mod tests {
     async fn validate_user_success() {
         let mut auth_repo = MockAuthRepo::new();
         let user_repo = MockUserRepo::new();
-        let email = MockEmailService::new();
+        let mut email = MockEmailService::new();
         let token = Uuid::new_v4();
 
-        auth_repo.expect_validate_user().returning(|_| Ok(()));
+        auth_repo
+            .expect_validate_user()
+            .returning(|_| Ok("2272098".to_string()));
+
+        email.expect_send_tips_email().returning(|_| Ok(()));
 
         let service = make_service(auth_repo, user_repo, email);
         assert!(service.validate_user(token).await.is_ok());

@@ -36,10 +36,6 @@ export default async function RootLayout({
     <html lang="en">
       <head>
         <link rel="icon" href="/favicon.svg" sizes="any" />
-        <script
-          async
-          src="https://www.googletagmanager.com/gtag/js?id=G-SQ11DTF14N"
-        ></script>
       </head>
       <body className={`${poppins.variable} antialiased overflow-x-hidden`}>
         <AuthProvider initialUser={user}>

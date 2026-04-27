@@ -1,5 +1,5 @@
-use async_trait::async_trait;
 use crate::{config::Config, errors::ErrorMessage, utils::generic};
+use async_trait::async_trait;
 use reqwest::Client;
 use serde::Serialize;
 use tera::{Context, Tera};
@@ -19,6 +19,8 @@ pub trait EmailServiceTrait: Send + Sync {
         student_id: String,
         token: Uuid,
     ) -> Result<(), ErrorMessage>;
+
+    async fn send_tips_email(&self, student_id: String) -> Result<(), ErrorMessage>;
 }
 
 /// Represents the JSON payload expected by the Postmark `/email` API.
@@ -157,6 +159,16 @@ impl EmailServiceTrait for EmailService {
         self.send_email(&email, "Reset Password", "Reset password request", template)
             .await
     }
+    async fn send_tips_email(&self, student_id: String) -> Result<(), ErrorMessage> {
+        let email = generic::get_email_for_student(student_id.as_str());
+        let ctx = Context::new();
+        let template = &self
+            .tera
+            .render("emails/verified_profile_tips.html", &ctx)
+            .map_err(|e| ErrorMessage::EmailSendingFailed(e.to_string()))?;
+        self.send_email(&email, "Tips", "SCE Profile Tips", template)
+            .await
+    }
 }
 
 #[cfg(test)]
@@ -225,6 +237,8 @@ pub mod mocks {
                 student_id: String,
                 token: Uuid,
             ) -> Result<(), ErrorMessage>;
+
+            async fn send_tips_email(&self, student_id: String) -> Result<(), ErrorMessage>;
         }
     }
 }

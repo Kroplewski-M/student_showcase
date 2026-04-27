@@ -25,7 +25,7 @@ pub trait AuthRepoTrait: Send + Sync {
     async fn create_user_reset_password(&self, student_id: &str) -> Result<Uuid, sqlx::Error>;
     async fn user_reset_password_exists(&self, token: Uuid) -> Result<bool, sqlx::Error>;
     async fn update_user_password(&self, token: Uuid, password: &str) -> Result<(), sqlx::Error>;
-    async fn validate_user(&self, token: Uuid) -> Result<(), sqlx::Error>;
+    async fn validate_user(&self, token: Uuid) -> Result<String, sqlx::Error>;
 }
 
 #[async_trait]
@@ -139,7 +139,7 @@ impl AuthRepoTrait for AuthRepo {
         tx.commit().await?;
         Ok(())
     }
-    async fn validate_user(&self, token: Uuid) -> Result<(), sqlx::Error> {
+    async fn validate_user(&self, token: Uuid) -> Result<String, sqlx::Error> {
         let mut tx = self.pool.begin().await?;
         let student_id: Option<String> = sqlx::query_scalar!(
             r#"
@@ -162,13 +162,13 @@ impl AuthRepoTrait for AuthRepo {
             SET verified = true
             WHERE id = $1
             "#,
-            student_id.unwrap()
+            &student_id.clone().unwrap()
         )
         .execute(tx.as_mut())
         .await?;
 
         tx.commit().await?;
-        Ok(())
+        Ok(student_id.unwrap())
     }
 }
 
@@ -187,7 +187,7 @@ pub mod mocks {
             async fn create_user_reset_password(&self, student_id: &str) -> Result<Uuid, sqlx::Error>;
             async fn user_reset_password_exists(&self, token: Uuid) -> Result<bool, sqlx::Error>;
             async fn update_user_password(&self, token: Uuid, password: &str) -> Result<(), sqlx::Error>;
-            async fn validate_user(&self, token: Uuid) -> Result<(), sqlx::Error>;
+            async fn validate_user(&self, token: Uuid) -> Result<String, sqlx::Error>;
         }
     }
 }
