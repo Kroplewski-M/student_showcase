@@ -116,7 +116,7 @@ export default function SearchStudents({
           transition={{ duration: 0.8, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
           className="mt-12"
         >
-          <form onSubmit={handleSubmit} className="relative mx-auto max-w-5xl">
+          <form onSubmit={handleSubmit} className="relative max-w-5xl">
             {/* Ambient glow — always on, intensifies on focus */}
             <div
               className="absolute -inset-3 rounded-3xl transition-opacity duration-500"
