@@ -1,0 +1,161 @@
+{% extends "emails/base.html" %} 
+{% block title %}You're registered — now let's make your profile work for you{% endblock %} 
+
+{% block content %}
+<p style="font-size: 16px; font-weight: 600; color: #204346; margin-bottom: 4px">
+  You&apos;re in. Now make them stop scrolling.
+</p>
+
+<!-- TIP 1 -->
+<table width="100%" cellpadding="0" cellspacing="0" style="margin: 24px 0">
+  <tr>
+    <td style="background-color: #204346; border-radius: 6px 6px 0 0; padding: 10px 16px">
+      <span style="font-size: 11px; font-weight: 600; color: #a1e9f0; letter-spacing: 1px; text-transform: uppercase">Tip 1</span>
+      <p style="margin: 4px 0 0; font-size: 15px; font-weight: 600; color: #ffffff">
+        Name your project — don&apos;t label it
+      </p>
+    </td>
+  </tr>
+  <tr>
+    <td style="background-color: #eaf6f7; border-radius: 0 0 6px 6px; padding: 16px">
+      <p style="font-size: 14px; line-height: 1.6; color: #333333; margin: 0 0 12px">
+        A project title should tell someone what you built and why it matters. The form of the thing ("Website", "App", "System") tells them nothing. The subject and the problem it solves tells them everything.
+      </p>
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td width="48%" style="background-color: #fde8e8; border-radius: 6px; padding: 12px; vertical-align: top">
+            <p style="font-size: 11px; font-weight: 600; color: #c0392b; margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.5px">Instead of this</p>
+            <p style="font-size: 14px; color: #333333; margin: 0; font-style: italic">"A Website"</p>
+          </td>
+          <td width="4%"></td>
+          <td width="48%" style="background-color: #e6f9ec; border-radius: 6px; padding: 12px; vertical-align: top">
+            <p style="font-size: 11px; font-weight: 600; color: #1e7e34; margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.5px">Try this</p>
+            <p style="font-size: 14px; color: #333333; margin: 0">International Motor Museum Digital Archive — searchable catalogue for 200+ historic vehicles</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<!-- TIP 2 -->
+<table width="100%" cellpadding="0" cellspacing="0" style="margin: 24px 0">
+  <tr>
+    <td style="background-color: #204346; border-radius: 6px 6px 0 0; padding: 10px 16px">
+      <span style="font-size: 11px; font-weight: 600; color: #a1e9f0; letter-spacing: 1px; text-transform: uppercase">Tip 2</span>
+      <p style="margin: 4px 0 0; font-size: 15px; font-weight: 600; color: #ffffff">
+        Write your bio for the person reading it, not the person writing it
+      </p>
+    </td>
+  </tr>
+  <tr>
+    <td style="background-color: #eaf6f7; border-radius: 0 0 6px 6px; padding: 16px">
+      <p style="font-size: 14px; line-height: 1.6; color: #333333; margin: 0 0 12px">
+        Every student on every course in every university has "strong communication skills developed through team projects." That sentence does not distinguish you — it buries you. Write one or two sentences about what you actually built, what you find genuinely interesting, or what kind of problem you want to work on next.
+      </p>
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td width="48%" style="background-color: #fde8e8; border-radius: 6px; padding: 12px; vertical-align: top">
+            <p style="font-size: 11px; font-weight: 600; color: #c0392b; margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.5px">Instead of this</p>
+            <p style="font-size: 14px; color: #333333; margin: 0; font-style: italic">I have developed strong communication skills through participating in team projects and understanding different points of view.</p>
+          </td>
+          <td width="4%"></td>
+          <td width="48%" style="background-color: #e6f9ec; border-radius: 6px; padding: 12px; vertical-align: top">
+            <p style="font-size: 11px; font-weight: 600; color: #1e7e34; margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.5px">Try this</p>
+            <p style="font-size: 14px; color: #333333; margin: 0">I spent my final year applying six optimisations to Grover&apos;s search algorithm and building a live archive for a museum. I like problems where the answer isn&apos;t obvious yet.</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<!-- TIP 3 -->
+<table width="100%" cellpadding="0" cellspacing="0" style="margin: 24px 0">
+  <tr>
+    <td style="background-color: #204346; border-radius: 6px 6px 0 0; padding: 10px 16px">
+      <span style="font-size: 11px; font-weight: 600; color: #a1e9f0; letter-spacing: 1px; text-transform: uppercase">Tip 3</span>
+      <p style="margin: 4px 0 0; font-size: 15px; font-weight: 600; color: #ffffff">
+        Say what it does, not just what you used to build it
+      </p>
+    </td>
+  </tr>
+  <tr>
+    <td style="background-color: #eaf6f7; border-radius: 0 0 6px 6px; padding: 16px">
+      <p style="font-size: 14px; line-height: 1.6; color: #333333; margin: 0 0 12px">
+        Your tools list (Python, React, MySQL) tells a technical person you know the tools. Your project description tells everyone what you did with them. Lead with the outcome, then mention the stack.
+      </p>
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td width="48%" style="background-color: #fde8e8; border-radius: 6px; padding: 12px; vertical-align: top">
+            <p style="font-size: 11px; font-weight: 600; color: #c0392b; margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.5px">Instead of this</p>
+            <p style="font-size: 14px; color: #333333; margin: 0; font-style: italic">Built using Python, TensorFlow, and Jupyter Notebook.</p>
+          </td>
+          <td width="4%"></td>
+          <td width="48%" style="background-color: #e6f9ec; border-radius: 6px; padding: 12px; vertical-align: top">
+            <p style="font-size: 11px; font-weight: 600; color: #1e7e34; margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.5px">Try this</p>
+            <p style="font-size: 14px; color: #333333; margin: 0">A classifier that identifies plant diseases from smartphone photos with 91% accuracy — built in Python using TensorFlow.</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<!-- TIP 4 -->
+<table width="100%" cellpadding="0" cellspacing="0" style="margin: 24px 0">
+  <tr>
+    <td style="background-color: #204346; border-radius: 6px 6px 0 0; padding: 10px 16px">
+      <span style="font-size: 11px; font-weight: 600; color: #a1e9f0; letter-spacing: 1px; text-transform: uppercase">Tip 4</span>
+      <p style="margin: 4px 0 0; font-size: 15px; font-weight: 600; color: #ffffff">
+        Label your links so they land
+      </p>
+    </td>
+  </tr>
+  <tr>
+    <td style="background-color: #eaf6f7; border-radius: 0 0 6px 6px; padding: 16px">
+      <p style="font-size: 14px; line-height: 1.6; color: #333333; margin: 0">
+        If you&apos;re linking to something other than GitHub or LinkedIn, tell the reader what they&apos;ll find there. &ldquo;Website&rdquo; could be anything. &ldquo;Live demo — trolleybus museum archive&rdquo; tells them exactly what to click and why.
+      </p>
+    </td>
+  </tr>
+</table>
+
+<!-- Call to action prose -->
+<p style="font-size: 14px; line-height: 1.7; color: #333333; margin: 24px 0 8px">
+  The employers coming on 19th June are not marking your degree. They are looking for someone they want to work with. Your profile is your side of that conversation starting before you&apos;re in the room.
+</p>
+<p style="font-size: 14px; line-height: 1.7; color: #333333; margin: 0 0 24px">
+  Give it fifteen minutes. It will be worth it.
+</p>
+
+<!-- Button -->
+<table cellpadding="0" cellspacing="0" style="margin: 8px 0 32px">
+  <tr>
+    <td style="background-color: #a1e9f0; border-radius: 6px">
+      <a
+        href="{{ profile_url }}"
+        style="
+          display: inline-block;
+          padding: 14px 28px;
+          font-size: 15px;
+          font-weight: 600;
+          color: #204346;
+          text-decoration: none;
+        "
+      >
+        Update your profile &rarr;
+      </a>
+    </td>
+  </tr>
+</table>
+
+<p style="font-size: 14px; color: #476d70; line-height: 1.6; margin: 0">
+  Questions? Speak to your course team or find us on the day. We&apos;re looking forward to seeing what you&apos;ve built.
+</p>
+
+<p style="font-size: 14px; color: #476d70; margin: 16px 0 0">
+  &mdash; The SCE Futures &apos;26 team
+</p>
+
+{% endblock %}
