@@ -7,13 +7,21 @@ import GlassCard from "../components/GlassCard";
 import Avatar from "./Avatar";
 import ProfileInfo from "./ProfileInfo";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faDownload, faPenToSquare, faShield } from "@fortawesome/free-solid-svg-icons";
+import {
+  faDownload,
+  faPenToSquare,
+  faShield,
+  faLightbulb,
+} from "@fortawesome/free-solid-svg-icons";
 import Link from "next/link";
 import EditProfileForm from "./EditProfileForm";
 import UserProjects from "./UserProjects";
 import { getCvUrl } from "../lib/helpers";
 import UpdateCVForm from "./UpdateCVForm";
 import { useAuth } from "../context/auth-context";
+import ProfileTipsModal from "./ProfileTipsModal";
+
+const TIPS_DISMISSED_KEY = "profile_tips_dismissed";
 
 interface Props {
   profile: UserProfile;
@@ -23,7 +31,18 @@ interface Props {
 export default function ProfileView({ profile, canEdit = false }: Props) {
   const [editOpen, setEditOpen] = useState(false);
   const [cvFormOpen, setCvFormOpen] = useState(false);
+  const [tipsOpen, setTipsOpen] = useState(
+    () =>
+      canEdit &&
+      typeof window !== "undefined" &&
+      !localStorage.getItem(TIPS_DISMISSED_KEY),
+  );
   const { user } = useAuth();
+
+  function closeTips() {
+    localStorage.setItem(TIPS_DISMISSED_KEY, "1");
+    setTipsOpen(false);
+  }
   return (
     <>
       <div className="min-h-screen overflow-hidden pt-16 font-[Poppins] text-secondary bg-[radial-gradient(ellipse_at_20%_0%,#1a4a4e_0%,#0d2426_40%,#081618_100%)]">
@@ -37,7 +56,7 @@ export default function ProfileView({ profile, canEdit = false }: Props) {
           <div className="h-full w-full rounded-full bg-third/20" />
         </motion.div>
         <motion.div
-          className="pointer-events-none absolute -bottom-[15%] left-[-10%] h-[35vw] w-[35vw] rounded-full blur-3xl"
+          className="pointer-events-none absolute -bottom-[15%] left-[-10%] w-[35vw] rounded-full blur-3xl"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 2, delay: 0.3, ease: "easeOut" }}
@@ -58,33 +77,48 @@ export default function ProfileView({ profile, canEdit = false }: Props) {
           <div className="flex flex-wrap items-start justify-between">
             <h1 className="mb-5 text-2xl font-bold text-white">Profile</h1>
             <div className="flex items-center gap-2">
-            {user?.is_admin && (
-              <Link
-                href="/admin"
-                className="flex cursor-pointer items-center gap-2 rounded-lg border border-secondary/20 bg-secondary/6 px-4 py-2 text-sm font-medium text-secondary/70 transition-all hover:border-secondary/35 hover:bg-secondary/10 hover:text-secondary"
-              >
-                <FontAwesomeIcon icon={faShield} className="w-[13px] h-[13px]" />
-                Admin
-              </Link>
-            )}
-            {canEdit && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => setEditOpen(true)}
+              {user?.is_admin && (
+                <Link
+                  href="/admin"
                   className="flex cursor-pointer items-center gap-2 rounded-lg border border-secondary/20 bg-secondary/6 px-4 py-2 text-sm font-medium text-secondary/70 transition-all hover:border-secondary/35 hover:bg-secondary/10 hover:text-secondary"
                 >
                   <FontAwesomeIcon
-                    icon={faPenToSquare}
+                    icon={faShield}
                     className="w-[13px] h-[13px]"
                   />
-                  Edit Profile
-                </button>
-                {editOpen && (
-                  <EditProfileForm onClose={() => setEditOpen(false)} />
-                )}
-              </>
-            )}
+                  Admin
+                </Link>
+              )}
+              {canEdit && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setTipsOpen(true)}
+                    className="flex cursor-pointer items-center gap-2 rounded-lg border border-third/30 bg-third/8 px-4 py-2 text-sm font-medium text-third/80 transition-all hover:border-third/50 hover:bg-third/15 hover:text-third"
+                  >
+                    <FontAwesomeIcon
+                      icon={faLightbulb}
+                      className="w-[13px] h-[13px]"
+                    />
+                    Profile Tips
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditOpen(true)}
+                    className="flex cursor-pointer items-center gap-2 rounded-lg border border-secondary/20 bg-secondary/6 px-4 py-2 text-sm font-medium text-secondary/70 transition-all hover:border-secondary/35 hover:bg-secondary/10 hover:text-secondary"
+                  >
+                    <FontAwesomeIcon
+                      icon={faPenToSquare}
+                      className="w-[13px] h-[13px]"
+                    />
+                    Edit Profile
+                  </button>
+                  {editOpen && (
+                    <EditProfileForm onClose={() => setEditOpen(false)} />
+                  )}
+                </>
+              )}
+              {tipsOpen && <ProfileTipsModal onClose={closeTips} />}
             </div>
           </div>
           {/* Profile Card */}

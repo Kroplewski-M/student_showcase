@@ -8,7 +8,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCalendarDays } from "@fortawesome/free-solid-svg-icons";
 
 const schedule = [
-  { time: "12:00 – 13:00", activity: "Setup" },
   { time: "13:00 – 13:30", activity: "Guests arrive" },
   { time: "13:30 – 13:45", activity: "Welcome address" },
   { time: "13:45 – 14:00", activity: "Keynote" },
@@ -96,7 +95,10 @@ export default function About() {
 
             {/* Calendar date card */}
             <div className="flex shrink-0 items-center gap-3 rounded-2xl border border-third/20 bg-third/[0.04] px-5 py-4 backdrop-blur-sm">
-              <FontAwesomeIcon icon={faCalendarDays} className="h-12 w-11 shrink-0" />
+              <FontAwesomeIcon
+                icon={faCalendarDays}
+                className="h-12 w-11 shrink-0"
+              />
               <div className="flex flex-col">
                 <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-secondary">
                   Friday
