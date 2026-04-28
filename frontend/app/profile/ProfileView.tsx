@@ -77,7 +77,7 @@ export default function ProfileView({ profile, canEdit = false }: Props) {
           <div className="flex flex-wrap items-start justify-between">
             <h1 className="mb-5 text-2xl font-bold text-white">Profile</h1>
             <div className="flex items-center gap-2">
-              {user?.is_admin && (
+              {user?.is_admin && canEdit && (
                 <Link
                   href="/admin"
                   className="flex cursor-pointer items-center gap-2 rounded-lg border border-secondary/20 bg-secondary/6 px-4 py-2 text-sm font-medium text-secondary/70 transition-all hover:border-secondary/35 hover:bg-secondary/10 hover:text-secondary"
