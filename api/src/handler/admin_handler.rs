@@ -77,3 +77,6 @@ pub async fn unsuspend_student(
         message: "user unsuspended".to_string(),
     }))
 }
+pub async fn dashboard() -> Result<HttpResponse, HttpError> {
+    Ok(HttpResponse::Ok().json(""))
+}
