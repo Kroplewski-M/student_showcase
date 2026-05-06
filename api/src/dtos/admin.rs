@@ -7,7 +7,7 @@ pub struct FindStudent {
     pub suspended: bool,
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Serialize, sqlx::FromRow)]
 pub struct ChartData {
     pub name: String,
     pub value: i32,
