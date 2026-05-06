@@ -22,7 +22,8 @@ pub fn admin_handler() -> impl HttpServiceFactory {
             .route(
                 "/unsuspend_student/{student_id}",
                 web::post().to(unsuspend_student),
-            ),
+            )
+            .route("/dashboard", web::get().to(dashboard)),
     )
 }
 
@@ -77,6 +78,12 @@ pub async fn unsuspend_student(
         message: "user unsuspended".to_string(),
     }))
 }
-pub async fn dashboard() -> Result<HttpResponse, HttpError> {
-    Ok(HttpResponse::Ok().json(""))
+pub async fn dashboard(app_state: web::Data<AppState>) -> Result<HttpResponse, HttpError> {
+    let data = app_state
+        .admin_service
+        .get_dashboard()
+        .await
+        .map_err(HttpError::server_error)?;
+
+    Ok(HttpResponse::Ok().json(data))
 }

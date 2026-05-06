@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use sqlx::{Pool, Postgres};
 
-use crate::dtos::admin::FindStudent;
+use crate::dtos::admin::{ChartData, Dashboard, FindStudent};
 
 #[derive(Clone)]
 pub struct AdminRepo {
@@ -19,6 +19,7 @@ pub trait AdminRepoTrait: Send + Sync {
     async fn search_student(&self, id: &str) -> Result<Option<FindStudent>, sqlx::Error>;
     async fn suspend_student(&self, id: &str) -> Result<(), sqlx::Error>;
     async fn unsuspend_student(&self, id: &str) -> Result<(), sqlx::Error>;
+    async fn get_dashboard_data(&self) -> Result<Dashboard, sqlx::Error>;
 }
 
 #[async_trait]
@@ -76,5 +77,64 @@ impl AdminRepoTrait for AdminRepo {
             return Err(sqlx::Error::RowNotFound);
         }
         Ok(())
+    }
+
+    async fn get_dashboard_data(&self) -> Result<Dashboard, sqlx::Error> {
+        let students_verified = sqlx::query_as!(
+            ChartData,
+            r#"
+            SELECT
+                CASE WHEN verified THEN 'Verified' ELSE 'Unverified' END as "name!",
+                COUNT(*)::int as "value!"
+            FROM users
+            WHERE id NOT LIKE '0%'
+            GROUP BY verified
+            "#
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        let student_interests = sqlx::query_as!(
+            ChartData,
+            r#"
+            SELECT t.name, COUNT(*)::int as "value!"
+            FROM user_tools si
+            JOIN software_tools t ON t.id = si.software_tool_id
+            GROUP BY t.id, t.name
+            "#
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        let student_courses = sqlx::query_as!(
+            ChartData,
+            r#"
+            SELECT c.name, COUNT(*)::int as "value!" 
+            FROM users u
+            JOIN courses c ON c.Id = u.course_id
+            GROUP BY c.Id, c.name
+        "#
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        let project_stack = sqlx::query_as!(
+            ChartData,
+            r#"
+                SELECT st.name, COUNT(*)::int as "value!"
+                FROM project_tools pt
+                JOIN software_tools st ON pt.tool_id = st.id
+                GROUP BY st.id, st.name
+            "#
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(Dashboard {
+            students_verified,
+            student_interests,
+            student_courses,
+            project_stack,
+        })
     }
 }

@@ -1,6 +1,10 @@
 use std::sync::Arc;
 
-use crate::{db::admin_repo::AdminRepoTrait, dtos::admin::FindStudent, errors::ErrorMessage};
+use crate::{
+    db::admin_repo::AdminRepoTrait,
+    dtos::admin::{Dashboard, FindStudent},
+    errors::ErrorMessage,
+};
 
 #[derive(Clone)]
 pub struct AdminService {
@@ -37,5 +41,11 @@ impl AdminService {
                 sqlx::Error::RowNotFound => ErrorMessage::UserNoLongerExists,
                 _ => ErrorMessage::ServerError,
             })
+    }
+    pub async fn get_dashboard(&self) -> Result<Dashboard, ErrorMessage> {
+        self.admin_repo
+            .get_dashboard_data()
+            .await
+            .map_err(|_| ErrorMessage::ServerError)
     }
 }
