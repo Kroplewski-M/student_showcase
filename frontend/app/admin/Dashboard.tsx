@@ -3,20 +3,26 @@
 import GlassCard from "../components/GlassCard";
 import { PieChart, Pie, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
+const withColors = (data: { name: string; value: number }[]) =>
+  data.map((item, i) => ({
+    ...item,
+    fill: `hsl(${(i * 360) / data.length}, 65%, 55%)`,
+  }));
+
 const courseData = [
-  { name: "Computer Science", value: 42, fill: "#6366f1" },
-  { name: "Mathematics", value: 28, fill: "#8b5cf6" },
-  { name: "Physics", value: 19, fill: "#a78bfa" },
-  { name: "Engineering", value: 35, fill: "#c4b5fd" },
-  { name: "Biology", value: 14, fill: "#ddd6fe" },
+  { name: "Computer Science", value: 42 },
+  { name: "Mathematics", value: 28 },
+  { name: "Physics", value: 19 },
+  { name: "Engineering", value: 35 },
+  { name: "Biology", value: 14 },
 ];
 
 const gradeData = [
-  { name: "A", value: 38, fill: "#6366f1" },
-  { name: "B", value: 45, fill: "#8b5cf6" },
-  { name: "C", value: 27, fill: "#a78bfa" },
-  { name: "D", value: 12, fill: "#c4b5fd" },
-  { name: "F", value: 6, fill: "#ddd6fe" },
+  { name: "A", value: 38 },
+  { name: "B", value: 45 },
+  { name: "C", value: 27 },
+  { name: "D", value: 12 },
+  { name: "F", value: 6 },
 ];
 
 export default function Dashboard() {
@@ -28,42 +34,52 @@ export default function Dashboard() {
       </p>
 
       <div className="flex flex-wrap gap-8 justify-center">
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center bg-white/5 border border-white/10 rounded-2xl p-6 shadow-lg">
           <h2 className="text-sm font-semibold text-secondary/70 mb-3">
             Students by Course
           </h2>
           <ResponsiveContainer width={300} height={300}>
             <PieChart>
               <Pie
-                data={courseData}
+                data={withColors(courseData)}
                 dataKey="value"
                 cx="50%"
                 cy="50%"
                 outerRadius={100}
-                label
               />
               <Tooltip />
-              <Legend />
+              <Legend
+                iconSize={10}
+                wrapperStyle={{
+                  whiteSpace: "nowrap",
+                  overflow: "scroll",
+                }}
+              />
             </PieChart>
           </ResponsiveContainer>
         </div>
 
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center bg-white/5 border border-white/10 rounded-2xl p-6 shadow-lg">
           <h2 className="text-sm font-semibold text-secondary/70 mb-3">
             Grade Distribution
           </h2>
           <ResponsiveContainer width={300} height={300}>
             <PieChart>
               <Pie
-                data={gradeData}
+                data={withColors(gradeData)}
                 dataKey="value"
                 cx="50%"
                 cy="50%"
                 outerRadius={100}
-                label
               />
               <Tooltip />
-              <Legend />
+              <Legend
+                iconSize={10}
+                wrapperStyle={{
+                  whiteSpace: "nowrap",
+                  overflow: "scroll",
+                }}
+              />
             </PieChart>
           </ResponsiveContainer>
         </div>

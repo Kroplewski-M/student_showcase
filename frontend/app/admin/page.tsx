@@ -12,7 +12,7 @@ enum AdminView {
 export default function Admin() {
   const [view, setView] = useState<AdminView>(AdminView.Dashboard);
   return (
-    <main className="mx-auto max-w-2xl px-5  min-h-screen">
+    <main className="mx-auto  px-5  min-h-screen">
       <div className="flex items-center justify-center gap-2 mb-5 mt-32">
         <button
           onClick={() => setView(AdminView.Dashboard)}
