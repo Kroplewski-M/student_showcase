@@ -35,7 +35,7 @@ services:
     env_file: .env.dev
     volumes:
       - ./frontend:/app
-      - /app/node_modules
+      - npm-cache:/root/.npm
     depends_on:
       - api
     networks:
@@ -59,6 +59,7 @@ services:
 volumes:
   pgdata:
   cargo-cache:
+  npm-cache:
   uploads:
   hf_cache:
 
