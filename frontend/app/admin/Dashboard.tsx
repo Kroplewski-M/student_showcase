@@ -1,13 +1,7 @@
 "use client";
 
+import DrawPieChart from "../components/charts/PieChart";
 import GlassCard from "../components/GlassCard";
-import { PieChart, Pie, Tooltip, Legend, ResponsiveContainer } from "recharts";
-
-const withColors = (data: { name: string; value: number }[]) =>
-  data.map((item, i) => ({
-    ...item,
-    fill: `hsl(${(i * 360) / data.length}, 65%, 55%)`,
-  }));
 
 const courseData = [
   { name: "Computer Science", value: 42 },
@@ -34,55 +28,18 @@ export default function Dashboard() {
       </p>
 
       <div className="flex flex-wrap gap-8 justify-center">
-        <div className="flex flex-col items-center bg-white/5 border border-white/10 rounded-2xl p-6 shadow-lg">
-          <h2 className="text-sm font-semibold text-secondary/70 mb-3">
-            Students by Course
-          </h2>
-          <ResponsiveContainer width={300} height={300}>
-            <PieChart>
-              <Pie
-                data={withColors(courseData)}
-                dataKey="value"
-                cx="50%"
-                cy="50%"
-                outerRadius={100}
-              />
-              <Tooltip />
-              <Legend
-                iconSize={10}
-                wrapperStyle={{
-                  whiteSpace: "nowrap",
-                  overflow: "scroll",
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="flex flex-col items-center bg-white/5 border border-white/10 rounded-2xl p-6 shadow-lg">
-          <h2 className="text-sm font-semibold text-secondary/70 mb-3">
-            Grade Distribution
-          </h2>
-          <ResponsiveContainer width={300} height={300}>
-            <PieChart>
-              <Pie
-                data={withColors(gradeData)}
-                dataKey="value"
-                cx="50%"
-                cy="50%"
-                outerRadius={100}
-              />
-              <Tooltip />
-              <Legend
-                iconSize={10}
-                wrapperStyle={{
-                  whiteSpace: "nowrap",
-                  overflow: "scroll",
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+        <DrawPieChart
+          data={courseData}
+          width={300}
+          height={300}
+          title="Students by course"
+        />
+        <DrawPieChart
+          data={gradeData}
+          width={300}
+          height={300}
+          title="Grade Distribution"
+        />
       </div>
     </GlassCard>
   );
