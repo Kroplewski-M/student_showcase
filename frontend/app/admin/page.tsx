@@ -21,6 +21,9 @@ export default async function Admin({
         `${process.env.API_INTERNAL_URL}/admin/dashboard`,
         { cache: "no-store" },
       );
+      if (!res.ok) {
+        redirect("/admin?view=student-lookup");
+      }
       dashboardData = await res.json();
     } catch {
       redirect("/admin?view=student-lookup");

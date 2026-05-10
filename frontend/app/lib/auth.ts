@@ -6,8 +6,14 @@ export async function authFetch(
   options: RequestInit = {},
 ): Promise<Response> {
   const cookieStore = await cookies();
-  const cookieName = process.env.COOKIE_NAME ?? "";
+  const cookieName = process.env.COOKIE_NAME;
+  if (!cookieName) {
+    throw new Error("COOKIE_NAME env not set");
+  }
   const sessionCookie = cookieStore.get(cookieName);
+  if (!sessionCookie) {
+    return fetch(url, options);
+  }
   return fetch(url, {
     ...options,
     headers: {

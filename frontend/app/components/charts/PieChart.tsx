@@ -22,10 +22,10 @@ export default function DrawPieChart({
   return (
     <div className="flex flex-col items-center bg-white/5 border border-white/10 rounded-2xl p-6 shadow-lg">
       <h2 className="text-sm font-semibold text-secondary/70 mb-3">{title}</h2>
-      <ResponsiveContainer width={width} height={height}>
-        {data === null || data === undefined ? (
-          <p>no data</p>
-        ) : (
+      {data === null || data === undefined ? (
+        <p>no data</p>
+      ) : (
+        <ResponsiveContainer width={width} height={height}>
           <PieChart>
             <Pie
               data={withColors(data)}
@@ -43,8 +43,8 @@ export default function DrawPieChart({
               }}
             />
           </PieChart>
-        )}
-      </ResponsiveContainer>
+        </ResponsiveContainer>
+      )}
     </div>
   );
 }
