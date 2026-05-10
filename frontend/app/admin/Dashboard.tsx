@@ -2,24 +2,19 @@
 
 import DrawPieChart from "../components/charts/PieChart";
 import GlassCard from "../components/GlassCard";
+import { chartData } from "../lib/models";
 
-const courseData = [
-  { name: "Computer Science", value: 42 },
-  { name: "Mathematics", value: 28 },
-  { name: "Physics", value: 19 },
-  { name: "Engineering", value: 35 },
-  { name: "Biology", value: 14 },
-];
+export interface DashboardData {
+  studentsVerified: chartData[];
+  studentInterests: chartData[];
+  studentCourses: chartData[];
+  projectStack: chartData[];
+}
+interface DashboardProps {
+  data: DashboardData;
+}
 
-const gradeData = [
-  { name: "A", value: 38 },
-  { name: "B", value: 45 },
-  { name: "C", value: 27 },
-  { name: "D", value: 12 },
-  { name: "F", value: 6 },
-];
-
-export default function Dashboard() {
+export default function Dashboard({ data }: DashboardProps) {
   return (
     <GlassCard className="p-8">
       <h1 className="text-2xl font-bold text-light mb-1">Dashboard</h1>
@@ -29,16 +24,28 @@ export default function Dashboard() {
 
       <div className="flex flex-wrap gap-8 justify-center">
         <DrawPieChart
-          data={courseData}
+          data={data.studentsVerified}
           width={300}
           height={300}
-          title="Students by course"
+          title="Students Verified"
         />
         <DrawPieChart
-          data={gradeData}
+          data={data.studentInterests}
           width={300}
           height={300}
-          title="Grade Distribution"
+          title="Student Interests"
+        />
+        <DrawPieChart
+          data={data.studentCourses}
+          width={300}
+          height={300}
+          title="Student Courses"
+        />
+        <DrawPieChart
+          data={data.projectStack}
+          width={300}
+          height={300}
+          title="Project Stacks"
         />
       </div>
     </GlassCard>

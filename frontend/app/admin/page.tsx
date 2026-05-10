@@ -1,35 +1,52 @@
-"use client";
-
-import { useState } from "react";
+import Link from "next/link";
 import StudentLookup from "./StudentLookup";
 import Dashboard from "./Dashboard";
+import { DashboardData } from "./Dashboard";
+import { redirect } from "next/navigation";
+import { authFetch } from "../lib/auth";
 
-enum AdminView {
-  Dashboard,
-  StudentLookup,
-}
+export default async function Admin({
+  searchParams,
+}: {
+  searchParams: Promise<{ view?: string }>;
+}) {
+  const { view } = await searchParams;
+  const isStudentLookup = view === "student-lookup";
 
-export default function Admin() {
-  const [view, setView] = useState<AdminView>(AdminView.Dashboard);
+  let dashboardData: DashboardData | null = null;
+
+  if (!isStudentLookup) {
+    try {
+      const res = await authFetch(
+        `${process.env.API_INTERNAL_URL}/admin/dashboard`,
+        { cache: "no-store" },
+      );
+      dashboardData = await res.json();
+    } catch {
+      redirect("/admin?view=student-lookup");
+    }
+  }
+
+  const btnClass =
+    "cursor-pointer gap-2 rounded-lg border border-secondary/20 bg-secondary/6 px-4 py-2 text-sm font-medium text-secondary/70 transition-all hover:border-secondary/35 hover:bg-secondary/10 hover:text-secondary";
+
   return (
-    <main className="mx-auto  px-5  min-h-screen">
+    <main className="mx-auto px-5 min-h-screen">
       <div className="flex items-center justify-center gap-2 mb-5 mt-32">
-        <button
-          onClick={() => setView(AdminView.Dashboard)}
-          className="cursor-pointer gap-2 rounded-lg border border-secondary/20 bg-secondary/6 px-4 py-2 text-sm font-medium text-secondary/70 transition-all hover:border-secondary/35 hover:bg-secondary/10 hover:text-secondary"
-        >
+        <Link href="/admin" className={btnClass}>
           Dashboard
-        </button>
-        <button
-          onClick={() => setView(AdminView.StudentLookup)}
-          className="cursor-pointer gap-2 rounded-lg border border-secondary/20 bg-secondary/6 px-4 py-2 text-sm font-medium text-secondary/70 transition-all hover:border-secondary/35 hover:bg-secondary/10 hover:text-secondary"
-        >
+        </Link>
+        <Link href="/admin?view=student-lookup" className={btnClass}>
           Student Lookup
-        </button>
+        </Link>
       </div>
 
       <div className="flex items-center justify-center">
-        {view == AdminView.StudentLookup ? <StudentLookup /> : <Dashboard />}
+        {isStudentLookup ? (
+          <StudentLookup />
+        ) : (
+          dashboardData && <Dashboard data={dashboardData} />
+        )}
       </div>
     </main>
   );

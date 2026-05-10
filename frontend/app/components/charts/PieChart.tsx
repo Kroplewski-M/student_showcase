@@ -23,23 +23,27 @@ export default function DrawPieChart({
     <div className="flex flex-col items-center bg-white/5 border border-white/10 rounded-2xl p-6 shadow-lg">
       <h2 className="text-sm font-semibold text-secondary/70 mb-3">{title}</h2>
       <ResponsiveContainer width={width} height={height}>
-        <PieChart>
-          <Pie
-            data={withColors(data)}
-            dataKey="value"
-            cx="50%"
-            cy="50%"
-            outerRadius={100}
-          />
-          <Tooltip />
-          <Legend
-            iconSize={10}
-            wrapperStyle={{
-              whiteSpace: "nowrap",
-              overflow: "scroll",
-            }}
-          />
-        </PieChart>
+        {data === null || data === undefined ? (
+          <p>no data</p>
+        ) : (
+          <PieChart>
+            <Pie
+              data={withColors(data)}
+              dataKey="value"
+              cx="50%"
+              cy="50%"
+              outerRadius={100}
+            />
+            <Tooltip />
+            <Legend
+              iconSize={10}
+              wrapperStyle={{
+                whiteSpace: "nowrap",
+                overflow: "scroll",
+              }}
+            />
+          </PieChart>
+        )}
       </ResponsiveContainer>
     </div>
   );

@@ -14,6 +14,7 @@ pub struct ChartData {
 }
 
 #[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Dashboard {
     pub students_verified: Vec<ChartData>,
     pub student_interests: Vec<ChartData>,
