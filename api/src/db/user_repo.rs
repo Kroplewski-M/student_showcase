@@ -61,7 +61,11 @@ pub trait UserRepoTrait: Send + Sync {
         data: UpdateUserInfo,
         embedding: Vector,
     ) -> Result<(), sqlx::Error>;
-    async fn search_students(&self, embedding: Vector) -> Result<Vec<UserCardInfo>, sqlx::Error>;
+    async fn search_students(
+        &self,
+        embedding: Vector,
+        query: &str,
+    ) -> Result<Vec<UserCardInfo>, sqlx::Error>;
 }
 
 #[async_trait]
@@ -597,7 +601,11 @@ impl UserRepoTrait for UserRepo {
         Ok(())
     }
 
-    async fn search_students(&self, embedding: Vector) -> Result<Vec<UserCardInfo>, sqlx::Error> {
+    async fn search_students(
+        &self,
+        embedding: Vector,
+        query: &str,
+    ) -> Result<Vec<UserCardInfo>, sqlx::Error> {
         struct StudentBaseRow {
             user_id: String,
             first_name: Option<String>,
@@ -794,7 +802,7 @@ pub mod mocks {
                 data: UpdateUserInfo,
                 embedding: Vector,
             ) -> Result<(), sqlx::Error>;
-           async fn search_students(&self, embedding: Vector) -> Result<Vec<UserCardInfo>, sqlx::Error>;
+           async fn search_students(&self, embedding: Vector,query: &str) -> Result<Vec<UserCardInfo>, sqlx::Error>;
            async fn get_user_current_cv(&self, user_id: &str) -> Result<Option<File>, sqlx::Error>;
            async fn update_user_cv(
                     &self,

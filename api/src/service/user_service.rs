@@ -233,10 +233,10 @@ impl UserService {
     }
 
     pub async fn search_students(&self, query: String) -> Result<StudentSearchDto, ErrorMessage> {
-        let vector = pgvector::Vector::from(self.embedding.embed_document(query).await?);
+        let vector = pgvector::Vector::from(self.embedding.embed_document(query.clone()).await?);
         let data = self
             .user_repo
-            .search_students(vector)
+            .search_students(vector, &query)
             .await
             .map_err(|_| ErrorMessage::ServerError)?;
         Ok(StudentSearchDto { students: data })
