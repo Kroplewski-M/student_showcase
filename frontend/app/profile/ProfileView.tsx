@@ -74,7 +74,7 @@ export default function ProfileView({ profile, canEdit = false }: Props) {
             ease: [0.16, 1, 0.3, 1],
           }}
         >
-          <div className="flex flex-wrap items-start justify-between">
+          <div className="flex flex-wrap items-start justify-between mb-5">
             <h1 className="mb-5 text-2xl font-bold text-white">Profile</h1>
             <div className="flex items-center gap-2">
               {user?.is_admin && canEdit && (
@@ -100,7 +100,7 @@ export default function ProfileView({ profile, canEdit = false }: Props) {
                       icon={faLightbulb}
                       className="w-[13px] h-[13px]"
                     />
-                    Profile Tips
+                    Tips
                   </button>
                   <button
                     type="button"
