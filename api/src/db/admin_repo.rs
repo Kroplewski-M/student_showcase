@@ -130,11 +130,31 @@ impl AdminRepoTrait for AdminRepo {
         .fetch_all(&self.pool)
         .await?;
 
+        let students_with_project = sqlx::query_as!(
+            ChartData,
+            r#"
+            SELECT
+                CASE WHEN project_count > 0 THEN 'Atleast 1 Project'
+                ELSE 'No Projects' END as "name!",
+                COUNT(*)::int as "value!"
+            FROM (
+                SELECT u.id, COUNT(p.id) as project_count
+                FROM users u
+                LEFT JOIN projects p ON p.user_id = u.id
+                GROUP BY u.id
+            ) counts
+            GROUP BY project_count > 0
+            "#
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
         Ok(Dashboard {
             students_verified,
             student_interests,
             student_courses,
             project_stack,
+            students_with_project,
         })
     }
 }

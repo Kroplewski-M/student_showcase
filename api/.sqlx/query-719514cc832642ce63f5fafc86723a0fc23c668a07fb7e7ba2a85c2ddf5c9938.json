@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                CASE WHEN project_count > 0 THEN 'Atleast 1 Project'\n                ELSE 'No Projects' END as \"name!\",\n                COUNT(*)::int as \"value!\"\n            FROM (\n                SELECT u.id, COUNT(p.id) as project_count\n                FROM users u\n                LEFT JOIN projects p ON p.user_id = u.id\n                GROUP BY u.id\n            ) counts\n            GROUP BY project_count > 0\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "name!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "value!",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "719514cc832642ce63f5fafc86723a0fc23c668a07fb7e7ba2a85c2ddf5c9938"
+}

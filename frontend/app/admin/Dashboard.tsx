@@ -9,6 +9,7 @@ export interface DashboardData {
   studentInterests: chartData[];
   studentCourses: chartData[];
   projectStack: chartData[];
+  studentsWithProject: chartData[];
 }
 interface DashboardProps {
   data: DashboardData;
@@ -46,6 +47,12 @@ export default function Dashboard({ data }: DashboardProps) {
           width={300}
           height={300}
           title="Project Stacks"
+        />
+        <DrawPieChart
+          data={data.studentsWithProject}
+          width={300}
+          height={300}
+          title="Students With Atleast One Project"
         />
       </div>
     </GlassCard>

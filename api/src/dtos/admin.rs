@@ -20,4 +20,5 @@ pub struct Dashboard {
     pub student_interests: Vec<ChartData>,
     pub student_courses: Vec<ChartData>,
     pub project_stack: Vec<ChartData>,
+    pub students_with_project: Vec<ChartData>,
 }
