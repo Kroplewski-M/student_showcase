@@ -61,7 +61,11 @@ pub trait UserRepoTrait: Send + Sync {
         data: UpdateUserInfo,
         embedding: Vector,
     ) -> Result<(), sqlx::Error>;
-    async fn search_students(&self, embedding: Vector) -> Result<Vec<UserCardInfo>, sqlx::Error>;
+    async fn search_students(
+        &self,
+        embedding: Vector,
+        query: &str,
+    ) -> Result<Vec<UserCardInfo>, sqlx::Error>;
 }
 
 #[async_trait]
@@ -597,7 +601,11 @@ impl UserRepoTrait for UserRepo {
         Ok(())
     }
 
-    async fn search_students(&self, embedding: Vector) -> Result<Vec<UserCardInfo>, sqlx::Error> {
+    async fn search_students(
+        &self,
+        embedding: Vector,
+        query: &str,
+    ) -> Result<Vec<UserCardInfo>, sqlx::Error> {
         struct StudentBaseRow {
             user_id: String,
             first_name: Option<String>,
@@ -613,47 +621,87 @@ impl UserRepoTrait for UserRepo {
         let bases = sqlx::query_as!(
             StudentBaseRow,
             r#"
-            WITH
-            search_vec AS (
-                SELECT $1::vector AS vec
-            ),
-            best_project_dist AS (
-                SELECT p.user_id, MIN(p.embedding <=> sv.vec) AS min_dist
-                FROM projects p
-                CROSS JOIN search_vec sv
-                WHERE p.embedding IS NOT NULL
-                GROUP BY p.user_id
-            )
+        WITH search_vec AS (SELECT $1::vector AS vec),
+        search_q AS (
+        SELECT to_tsquery('english',
+                array_to_string(
+                    array(
+                        SELECT lexeme
+                        FROM unnest(to_tsvector('english', $2))
+                    ),
+                    ' | '
+                )
+            ) AS q
+        ),
+        user_tools_text AS (
+          SELECT ut.user_id, string_agg(st.name, ' ') AS tools_text
+          FROM user_tools ut
+          JOIN software_tools st ON st.id = ut.software_tool_id
+          GROUP BY ut.user_id
+        ),
+        project_text AS (
+            SELECT p.user_id,
+                string_agg(p.name || ' ' || COALESCE(p.description, ''), ' ') AS text
+            FROM projects p
+            GROUP BY p.user_id
+        ),
+        best_project_dist AS (
+          SELECT p.user_id, MIN(p.embedding <=> sv.vec) AS min_dist
+          FROM projects p
+          CROSS JOIN search_vec sv
+          WHERE p.embedding IS NOT NULL
+          GROUP BY p.user_id
+        )
             SELECT
-                u.id AS "user_id!",
-                u.first_name,
-                u.last_name,
-                f.new_file_name || '.' || f.extension AS image_name,
-                u.description,
-                c.name AS "course",
-                fp.id AS "featured_project_id?",
-                fp.name AS "featured_project_name?",
-                fp.description AS "featured_project_description?"
-            FROM users u
-            CROSS JOIN search_vec sv
-            LEFT JOIN courses c ON u.course_id = c.id
-            INNER JOIN projects fp ON fp.user_id = u.id AND fp.featured = true
-            LEFT JOIN best_project_dist bpd ON bpd.user_id = u.id
-            LEFT JOIN files f ON f.id = u.image_id 
-            WHERE
-            u.verified = true
-            AND u.suspended = false
-            AND u.id NOT LIKE '0%'
-            AND (
-                (u.embedding IS NOT NULL AND u.embedding <=> sv.vec <= 0.7)
-                OR bpd.min_dist <= 0.7
-            )
-            ORDER BY LEAST(
+            u.id AS "user_id!",
+            u.first_name,
+            u.last_name,
+            f.new_file_name || '.' || f.extension AS image_name,
+            u.description,
+            c.name AS "course",
+            fp.id AS "featured_project_id?",
+            fp.name AS "featured_project_name?",
+            fp.description AS "featured_project_description?"
+        FROM users u
+        CROSS JOIN search_vec sv
+        CROSS JOIN search_q sq
+        LEFT JOIN courses c ON u.course_id = c.id
+        INNER JOIN projects fp ON fp.user_id = u.id AND fp.featured = true
+        LEFT JOIN best_project_dist bpd ON bpd.user_id = u.id
+        LEFT JOIN files f ON f.id = u.image_id
+        LEFT JOIN user_tools_text utt ON utt.user_id = u.id
+        LEFT JOIN project_text pt ON pt.user_id = u.id
+        WHERE
+        u.verified = true
+        AND u.suspended = false
+        AND u.id NOT LIKE '0%'
+        AND (
+            (u.embedding IS NOT NULL AND u.embedding <=> sv.vec <= 0.65)
+            OR bpd.min_dist <= 0.65
+            OR to_tsvector('english',
+                COALESCE(u.description, '') || ' ' ||
+                COALESCE(c.name, '') || ' ' ||
+                COALESCE(utt.tools_text, '') || ' ' ||
+                COALESCE(pt.text, '')
+            ) @@ sq.q
+        )
+        ORDER BY
+            CASE
+                WHEN to_tsvector('english',
+                    COALESCE(u.description, '') || ' ' ||
+                    COALESCE(c.name, '') || ' ' ||
+                    COALESCE(utt.tools_text, '') || ' ' ||
+                    COALESCE(pt.text, '')
+                ) @@ sq.q THEN 0
+                ELSE 1
+            END,
+            LEAST(
                 COALESCE(u.embedding <=> sv.vec, 1.0),
                 COALESCE(bpd.min_dist, 1.0)
-            ) ASC
-            "#,
-            embedding as Vector
+            ) ASC 
+        "#,
+            embedding as Vector,
+            query
         )
         .fetch_all(&self.pool)
         .await?;
@@ -794,7 +842,7 @@ pub mod mocks {
                 data: UpdateUserInfo,
                 embedding: Vector,
             ) -> Result<(), sqlx::Error>;
-           async fn search_students(&self, embedding: Vector) -> Result<Vec<UserCardInfo>, sqlx::Error>;
+           async fn search_students(&self, embedding: Vector,query: &str) -> Result<Vec<UserCardInfo>, sqlx::Error>;
            async fn get_user_current_cv(&self, user_id: &str) -> Result<Option<File>, sqlx::Error>;
            async fn update_user_cv(
                     &self,
