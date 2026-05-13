@@ -93,7 +93,7 @@ impl ReferenceRepoTrait for ReferenceRepo {
             r#"
             SELECT st.name
             FROM software_tools st
-            LEFT JOIN
+            INNER JOIN
             (
                 SELECT tool_id FROM project_tools
                 UNION ALL

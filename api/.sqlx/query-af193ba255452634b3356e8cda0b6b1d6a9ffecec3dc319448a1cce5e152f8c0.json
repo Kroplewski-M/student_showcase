@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT st.name\n            FROM software_tools st\n            INNER JOIN\n            (\n                SELECT tool_id FROM project_tools\n                UNION ALL\n                SELECT software_tool_id FROM user_tools\n            ) combined ON st.id = combined.tool_id\n            GROUP BY st.id, st.name\n            ORDER BY COUNT(combined.tool_id) DESC\n            LIMIT 10\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "name",
+        "type_info": "Varchar"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "af193ba255452634b3356e8cda0b6b1d6a9ffecec3dc319448a1cce5e152f8c0"
+}
