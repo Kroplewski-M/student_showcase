@@ -238,7 +238,10 @@ impl UserService {
             .user_repo
             .search_students(vector, &query)
             .await
-            .map_err(|_| ErrorMessage::ServerError)?;
+            .map_err(|e| {
+                error!("search_students db error for query '{}': {e}", query);
+                ErrorMessage::ServerError
+            })?;
         Ok(StudentSearchDto { students: data })
     }
 }
