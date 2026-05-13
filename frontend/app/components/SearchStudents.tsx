@@ -140,19 +140,23 @@ export default function SearchStudents({
                 filter: "blur(8px)",
               }}
             />
-            <p className="text-xs text-support/40 uppercase tracking-widest mb-1 mt-3">
-              Top technologies used among students
-            </p>
-            <div className="flex flex-wrap mt-2 text-dark font-semibold text-sm">
-              {topInterests.map((interest) => (
-                <div
-                  className="mr-2 mb-2 rounded-lg bg-secondary py-1 px-3"
-                  key={interest}
-                >
-                  {interest}
+            {topInterests.length > 0 && (
+              <div>
+                <p className="text-xs text-support/40 uppercase tracking-widest mb-1 mt-3">
+                  Top technologies used among students
+                </p>
+                <div className="flex flex-wrap mt-2 text-dark font-semibold text-sm">
+                  {topInterests.map((interest) => (
+                    <div
+                      className="mr-2 mb-2 rounded-lg bg-secondary py-1 px-3"
+                      key={interest}
+                    >
+                      {interest}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
 
             {/* Search container */}
             <div
