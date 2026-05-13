@@ -650,7 +650,7 @@ impl UserRepoTrait for UserRepo {
             u.last_name,
             f.new_file_name || '.' || f.extension AS image_name,
             u.description,
-            c.name AS "course",
+            c.name AS "course?",
             fp.id AS "featured_project_id?",
             fp.name AS "featured_project_name?",
             fp.description AS "featured_project_description?"
