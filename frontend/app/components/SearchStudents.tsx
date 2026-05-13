@@ -128,18 +128,6 @@ export default function SearchStudents({
                 opacity: focused ? 1 : 0.5,
               }}
             />
-
-            {/* Hard glow ring — focus only */}
-            <div
-              className={`absolute -inset-[2px] rounded-2xl transition-opacity duration-500 ${
-                focused ? "opacity-100" : "opacity-0"
-              }`}
-              style={{
-                background:
-                  "linear-gradient(135deg, #a1e9f0 0%, #476d70 50%, #a1e9f0 100%)",
-                filter: "blur(8px)",
-              }}
-            />
             {topInterests.length > 0 && (
               <div>
                 <p className="text-xs text-support/40 uppercase tracking-widest mb-1 mt-3">
@@ -160,7 +148,7 @@ export default function SearchStudents({
 
             {/* Search container */}
             <div
-              className={`relative rounded-2xl border-2 bg-[#172e30] backdrop-blur-md transition-all duration-300 mt-5 ${
+              className={`relative rounded-2xl border-2 bg-[#172e30]  transition-all duration-300 mt-5 ${
                 focused
                   ? "border-secondary/60 shadow-[0_0_0_1px_rgba(161,233,240,0.15)]"
                   : "border-third/50 hover:border-third/70"
