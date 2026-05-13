@@ -44,7 +44,7 @@ export default function ProfileInfo({ user }: Props) {
             No description added
           </p>
         )}
-        <div className="flex flex-wrap items-start md:gap-16 gap-2">
+        <div className="flex flex-wrap items-start md:gap-5 gap-2">
           {/* tech interests */}
           <div className="mt-6 ">
             <p className="text-xs font-semibold uppercase tracking-wider text-secondary/50">
@@ -68,11 +68,12 @@ export default function ProfileInfo({ user }: Props) {
             )}
           </div>
           {/* certificates */}
-          <div className="mt-6 block">
-            <p className="text-xs font-semibold uppercase tracking-wider text-secondary/50">
-              Certificates ({user.certificates?.length ?? 0})
-            </p>
-            {user.certificates != undefined && user.certificates.length > 0 ? (
+          {user.certificates != undefined && user.certificates.length > 0 ? (
+            <div className="mt-2 w-full">
+              <p className="text-xs font-semibold uppercase tracking-wider text-secondary/50">
+                Certificates ({user.certificates?.length ?? 0})
+              </p>
+
               <div className="mt-3 flex flex-wrap gap-2">
                 {user.certificates.map((certificate, key) => (
                   <span
@@ -84,12 +85,10 @@ export default function ProfileInfo({ user }: Props) {
                   </span>
                 ))}
               </div>
-            ) : (
-              <p className="mt-3 text-sm italic text-secondary/40">
-                No certificates added
-              </p>
-            )}
-          </div>
+            </div>
+          ) : (
+            <></>
+          )}
         </div>
         {/* Links */}
         <div className="mt-8">
