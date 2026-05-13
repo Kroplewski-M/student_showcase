@@ -623,15 +623,7 @@ impl UserRepoTrait for UserRepo {
             r#"
         WITH search_vec AS (SELECT $1::vector AS vec),
         search_q AS (
-        SELECT to_tsquery('english',
-                array_to_string(
-                    array(
-                        SELECT lexeme
-                        FROM unnest(to_tsvector('english', $2))
-                    ),
-                    ' | '
-                )
-            ) AS q
+            SELECT websearch_to_tsquery('english', $2) AS q
         ),
         user_tools_text AS (
           SELECT ut.user_id, string_agg(st.name, ' ') AS tools_text
