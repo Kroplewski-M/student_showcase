@@ -32,4 +32,5 @@ pub struct FileInfo {
 pub struct SiteInfo {
     pub student_count: i64,
     pub project_count: i64,
+    pub top_interests: Vec<String>,
 }

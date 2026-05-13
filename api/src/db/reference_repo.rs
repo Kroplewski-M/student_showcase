@@ -79,7 +79,7 @@ impl ReferenceRepoTrait for ReferenceRepo {
         .await
     }
     async fn get_site_info(&self) -> Result<SiteInfo, sqlx::Error> {
-        let info = sqlx::query!(
+        let counts = sqlx::query!(
             r#"
             SELECT
             (SELECT COUNT(*) FROM users WHERE verified = true AND id NOT LIKE '0%') AS student_count,
@@ -88,9 +88,29 @@ impl ReferenceRepoTrait for ReferenceRepo {
         )
         .fetch_one(&self.pool)
         .await?;
+
+        let top_interests = sqlx::query_scalar!(
+            r#"
+            SELECT st.name
+            FROM software_tools st
+            LEFT JOIN
+            (
+                SELECT tool_id FROM project_tools
+                UNION ALL
+                SELECT software_tool_id FROM user_tools
+            ) combined ON st.id = combined.tool_id
+            GROUP BY st.id, st.name
+            ORDER BY COUNT(combined.tool_id) DESC
+            LIMIT 10
+        "#
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
         Ok(SiteInfo {
-            student_count: info.student_count.unwrap_or(0),
-            project_count: info.project_count.unwrap_or(0),
+            student_count: counts.student_count.unwrap_or(0),
+            project_count: counts.project_count.unwrap_or(0),
+            top_interests,
         })
     }
 }
