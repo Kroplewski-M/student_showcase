@@ -617,7 +617,8 @@ impl UserRepoTrait for UserRepo {
             featured_project_name: Option<String>,
             featured_project_description: Option<String>,
         }
-        //inner joining on projects as we dont want to return students without any projects
+        //inner joining on projects, and courses as we dont want to return students without this
+        //data
         let bases = sqlx::query_as!(
             StudentBaseRow,
             r#"
@@ -650,14 +651,14 @@ impl UserRepoTrait for UserRepo {
             u.last_name,
             f.new_file_name || '.' || f.extension AS image_name,
             u.description,
-            c.name AS "course?",
+            c.name AS "course",
             fp.id AS "featured_project_id?",
             fp.name AS "featured_project_name?",
             fp.description AS "featured_project_description?"
         FROM users u
         CROSS JOIN search_vec sv
         CROSS JOIN search_q sq
-        LEFT JOIN courses c ON u.course_id = c.id
+        JOIN courses c ON u.course_id = c.id
         INNER JOIN projects fp ON fp.user_id = u.id AND fp.featured = true
         LEFT JOIN best_project_dist bpd ON bpd.user_id = u.id
         LEFT JOIN files f ON f.id = u.image_id
