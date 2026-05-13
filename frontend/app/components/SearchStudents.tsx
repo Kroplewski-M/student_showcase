@@ -12,11 +12,13 @@ import GridBackground from "./GridBackground";
 
 interface SearchStudentsProps {
   query: string | undefined;
+  topInterests: string[];
   children?: React.ReactNode;
 }
 
 export default function SearchStudents({
   query,
+  topInterests,
   children,
 }: SearchStudentsProps) {
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -138,10 +140,27 @@ export default function SearchStudents({
                 filter: "blur(8px)",
               }}
             />
+            {topInterests.length > 0 && (
+              <div>
+                <p className="text-xs text-support/40 uppercase tracking-widest mb-1 mt-3">
+                  Top technologies used among students
+                </p>
+                <div className="flex flex-wrap mt-2 text-dark font-semibold text-sm">
+                  {topInterests.map((interest) => (
+                    <div
+                      className="mr-2 mb-2 rounded-lg bg-secondary py-1 px-3"
+                      key={interest}
+                    >
+                      {interest}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Search container */}
             <div
-              className={`relative rounded-2xl border-2 bg-[#172e30] backdrop-blur-md transition-all duration-300 ${
+              className={`relative rounded-2xl border-2 bg-[#172e30] backdrop-blur-md transition-all duration-300 mt-5 ${
                 focused
                   ? "border-secondary/60 shadow-[0_0_0_1px_rgba(161,233,240,0.15)]"
                   : "border-third/50 hover:border-third/70"
@@ -210,7 +229,6 @@ export default function SearchStudents({
               </div>
             </div>
           </form>
-
           {/* Active query pill */}
           {query && (
             <motion.div

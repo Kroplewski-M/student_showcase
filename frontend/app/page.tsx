@@ -25,7 +25,7 @@ export default async function Home({
       <div className="sticky top-0">
         <About />
       </div>
-      <SearchStudents query={query}>
+      <SearchStudents query={query} topInterests={data?.topInterests ?? []}>
         {query && <StudentsResult query={query} />}
       </SearchStudents>
     </div>
